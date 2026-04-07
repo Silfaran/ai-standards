@@ -55,6 +55,21 @@ Code is organized in three layers:
 - Symfony Messenger worker runs as a Docker container — no manual console commands needed
 - Events are used for cross-service communication
 
+## General Naming Conventions
+
+These apply to both backend and frontend across all projects:
+
+| Context | Convention | Example |
+|---|---|---|
+| PHP classes | PascalCase | `UserFinderService` |
+| PHP methods & variables | camelCase | `findByEmail()`, `$userId` |
+| API payload parameters | snake_case | `first_name`, `created_at` |
+| Database tables | snake_case | `user_boards` |
+| Database columns | snake_case | `created_at`, `board_id` |
+| All table primary keys | UUID v4 | `id UUID DEFAULT gen_random_uuid()` |
+| Vue components | PascalCase | `UserCard.vue` |
+| TypeScript variables & methods | camelCase | `findUser()`, `userId` |
+
 ## Coding Conventions
 
 ### Backend (PHP / Symfony)
@@ -179,12 +194,12 @@ src/
 **Naming conventions**
 | Type | Example |
 |---|---|
-| Component | `BoardCard.vue` |
-| Page | `BoardDetailPage.vue` |
-| Composable | `useBoardFinder.ts` |
-| Store | `BoardStore.ts` |
-| Service | `BoardApiService.ts` |
-| Type/Interface | `BoardType.ts` |
+| Component | `UserCard.vue` |
+| Page | `UserDetailPage.vue` |
+| Composable | `useUserFinder.ts` |
+| Store | `UserStore.ts` |
+| Service | `UserApiService.ts` |
+| Type/Interface | `UserType.ts` |
 
 ## AI Behavior Rules
 
