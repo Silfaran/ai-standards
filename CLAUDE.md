@@ -9,6 +9,7 @@ Every service must include a CLAUDE.md that references this document.
 It also serves as the central hub for:
 - Shared agent skills that can be executed across any project in the workspace.
 - Agent definitions: which agents exist, their roles, and how they behave — see `ai-standards/agents/`.
+- Commands: developer-invoked workflows that orchestrate agents — see `ai-standards/commands/`.
 
 This repository contains no business logic or application code.
 
@@ -20,6 +21,7 @@ This repository contains no business logic or application code.
 | Frontend | Vue 3 + TypeScript + Vite |
 | UI Components | shadcn/ui (Vue) |
 | Database | PostgreSQL |
+| Messaging | RabbitMQ (Symfony Messenger) |
 | Package Manager (PHP) | Composer |
 | Infrastructure | Docker |
 
@@ -105,7 +107,8 @@ src/
 └── Infrastructure/
     ├── Persistence/        ← DBAL repositories, Phinx migrations
     ├── Messenger/          ← bus configuration
-    ├── Http/               ← one controller per command/query
+    ├── Http/               ← one controller per command/query, grouped by aggregate
+    │   └── {Aggregate}/
     └── External/           ← calls to external services
 ```
 
@@ -233,6 +236,7 @@ These rules apply to every agent in this workspace without exception:
 - Every service must have specs documenting how each feature has been implemented
 - Specs must be written before or alongside code — not after
 - The AI must read the relevant spec before implementing or modifying a feature
+- Specs are version-controlled via git — every spec update must be committed so history is preserved
 - Each service must have a `Makefile` with at minimum the following commands:
   - `make up` — start Docker containers
   - `make down` — stop Docker containers
@@ -244,8 +248,13 @@ These rules apply to every agent in this workspace without exception:
 - `ai-standards` must have a root `Makefile` that calls each service Makefile to orchestrate the full environment
 
 ### Git & Collaboration
+- Main branches: `master` (production) and `develop` (development)
 - Always work from the `develop` branch — update it with the latest changes before creating a new branch
-- Never commit directly to `main` or `develop`
+- Never commit directly to `master` or `develop`
+- Branch naming convention:
+  - `feature/{aggregate}/{short-description}` — for new features
+  - `fix/{aggregate}/{short-description}` — for bug fixes
+  - `hotfix/{short-description}` — for urgent production fixes
 - Never push without passing all tests
 - Never push commits or create pull requests without asking first
 - Never change a public API of a service without warning — it may break other services

@@ -19,7 +19,9 @@ and infrastructure (Docker, RabbitMQ, PostgreSQL) to produce accurate and detail
 - Never start writing a spec until all ambiguities are resolved
 - Always write specs before any code is written — no exceptions
 - Specs must be written in English
+- Specs must follow the template defined in `ai-standards/templates/feature-specs-template.md`
 - Specs must be stored in: `ai-standards/projects/{project-name}/specs/{Aggregate}/{feature-name}-specs.md`
+- Task files must follow the template defined in `ai-standards/templates/feature-task-template.md`
 - Task files must be stored in: `ai-standards/projects/{project-name}/specs/{Aggregate}/{feature-name}-task.md`
 - Do not suggest implementation details that conflict with the standards defined in `ai-standards/CLAUDE.md`
 

@@ -10,19 +10,21 @@ architecture patterns (Hexagonal Architecture, DDD, CQRS, Event-Driven).
 
 - **CLAUDE.md** — global standards and rules for the AI assistant
 - **agents/** — agent definitions (roles, responsibilities, tools)
+- **commands/** — developer-invoked workflows that orchestrate agents
+- **templates/** — file templates (specs, tasks...)
 - **projects/** — project-specific documentation (services, specs)
 
 ## Agents
 
 | Agent | Responsibility |
 |---|---|
-| [Spec Analyzer](agents/spec-analyzer.md) | Analyzes tasks, asks questions, creates specs and execution plans |
-| [Backend Developer](agents/backend-developer.md) | Implements backend features following Hexagonal, DDD and CQRS |
-| [Frontend Developer](agents/frontend-developer.md) | Implements frontend features with Vue 3 and TypeScript |
-| [Backend Reviewer](agents/backend-reviewer.md) | Reviews backend code quality, architecture and security |
-| [Frontend Reviewer](agents/frontend-reviewer.md) | Reviews frontend code quality, standards and security |
-| [Tester](agents/tester.md) | Writes and executes integration and unit tests |
-| [DevOps](agents/devops.md) | Configures Docker, Makefiles and infrastructure |
+| [Spec Analyzer](agents/spec-analyzer-agent.md) | Analyzes tasks, asks questions, creates specs and execution plans |
+| [Backend Developer](agents/backend-developer-agent.md) | Implements backend features following Hexagonal, DDD and CQRS |
+| [Frontend Developer](agents/frontend-developer-agent.md) | Implements frontend features with Vue 3 and TypeScript |
+| [Backend Reviewer](agents/backend-reviewer-agent.md) | Reviews backend code quality, architecture and security |
+| [Frontend Reviewer](agents/frontend-reviewer-agent.md) | Reviews frontend code quality, standards and security |
+| [Tester](agents/tester-agent.md) | Writes and executes integration and unit tests |
+| [DevOps](agents/devops-agent.md) | Configures Docker, Makefiles and infrastructure |
 
 ## Tech Stack
 
@@ -33,6 +35,40 @@ architecture patterns (Hexagonal Architecture, DDD, CQRS, Event-Driven).
 | Database | PostgreSQL |
 | Messaging | RabbitMQ |
 | Infrastructure | Docker |
+
+## Commands
+
+| Command | Description |
+|---|---|
+| [create-specs](commands/create-specs-command.md) | Creates a business-level spec from a feature description |
+| [refine-specs](commands/refine-specs-command.md) | Refines business specs into technical specs and generates the execution plan |
+| [build-plan](commands/build-plan-command.md) | Executes the plan, invoking agents in the defined order |
+| [update-specs](commands/update-specs-command.md) | Updates specs to match the final implementation |
+
+## Workflow
+
+A typical feature goes through the following flow:
+
+```
+Developer describes the feature
+        │
+        ▼
+  create-specs ─── Spec Analyzer creates business spec
+        │
+        ▼
+  refine-specs ─── Spec Analyzer refines into technical spec + plan + task
+        │
+        ▼
+   build-plan ──┬─ Backend Developer implements
+                │  Backend Reviewer reviews ←→ (loop if changes needed)
+                │  Frontend Developer implements
+                │  Frontend Reviewer reviews ←→ (loop if changes needed)
+                │  DevOps configures infrastructure (if needed)
+                │  Tester writes and runs tests ←→ (loop if tests fail)
+                │
+                ▼
+  update-specs ─── Spec Analyzer updates specs to match final implementation
+```
 
 ## How to use in a project
 

@@ -15,6 +15,7 @@ Expert in PHP, Symfony, DDD, CQRS, Hexagonal Architecture, Symfony Messenger and
 - Ensure all code passes PHPStan at level 9
 - Dispatch domain events via the EventBus when required
 - When a task spans multiple services, determine what goes where based on each service's responsibility — ask the developer if unsure
+- Add OpenAPI/Swagger annotations to every controller for auto-generated API documentation
 - Verify the Definition of Done from the task file before considering the implementation complete
 
 ## Behavior Rules
