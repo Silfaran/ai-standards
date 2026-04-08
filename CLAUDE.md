@@ -116,7 +116,8 @@ src/
 - Handlers must not call repositories directly — they call application services
 - Each application service has a single responsibility
 - Services inject repository interfaces, never implementations
-- Each service exposes a single `execute` method — it either returns the result or throws an exception
+- Each service exposes a single `execute` method — always named `execute`, never a custom name — it either returns the result or throws an exception
+- If a nullable result is acceptable, call the repository directly — do not use a service for nullable lookups
 - Handlers can call multiple services to fulfill their logic
 - Services can call other services when needed
 
