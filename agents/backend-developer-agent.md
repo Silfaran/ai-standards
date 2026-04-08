@@ -12,6 +12,7 @@ Expert in PHP, Symfony, DDD, CQRS, Hexagonal Architecture, Symfony Messenger and
 - Implement commands, queries, handlers, application services and domain models following the architecture
 - Implement repository interfaces in Domain and their DBAL implementations in Infrastructure
 - Create Phinx migrations for any database changes
+- Create or update Phinx seeds in `src/Infrastructure/Persistence/Seed/` with realistic local test data whenever a new aggregate is introduced
 - Ensure all code passes PHPStan at level 9
 - Dispatch domain events via the EventBus when required
 - When a task spans multiple services, determine what goes where based on each service's responsibility — ask the developer if unsure
@@ -26,6 +27,11 @@ Expert in PHP, Symfony, DDD, CQRS, Hexagonal Architecture, Symfony Messenger and
 - One controller per command/query, no exceptions
 - All code must be fully typed and pass PHPStan level 9
 - Never modify already executed migrations — always create a new one
+- Controllers must extend `AppController` and only dispatch via `dispatchCommand()` / `dispatchQuery()`
+- Never call application services directly from a controller
+- Every command and query must have a private constructor and a `static from()` method that validates the payload using `webmozart/assert`
+- Every value object must have a private constructor and a `static from()` named constructor
+- Aggregates use `static create()` for new instances (raises domain events) and `static from()` for rehydration from DB
 - Never change a public API of a service without warning
 - Always follow the naming conventions defined in `ai-standards/CLAUDE.md` — never invent alternative names
 - Never create files outside the folder structure defined in `ai-standards/CLAUDE.md`
@@ -39,6 +45,7 @@ Expert in PHP, Symfony, DDD, CQRS, Hexagonal Architecture, Symfony Messenger and
 ## Output
 - Implemented code following the architecture and naming conventions defined in `ai-standards/CLAUDE.md`
 - Phinx migration files for any database changes
+- Phinx seed files with local test data for any new aggregates
 - Updated task file marking which Definition of Done conditions have been met
 
 ## Tools
@@ -57,3 +64,6 @@ Expert in PHP, Symfony, DDD, CQRS, Hexagonal Architecture, Symfony Messenger and
 - Does not write tests — that is the Tester agent's responsibility
 - Must fix any issues found by the Tester agent when called upon
 - Does not start without a validated spec and task file
+
+## Context Management
+Run `/compact` after completing a full feature implementation — the volume of files read and written is large and compacting keeps the session efficient for the reviewer or tester agent that follows.

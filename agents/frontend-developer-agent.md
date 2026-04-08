@@ -25,6 +25,8 @@ Expert in Vue 3, TypeScript, Vite, Pinia, Vue Router, TanStack Query, Axios and 
 - All code must be fully typed with TypeScript — never use `any`
 - Always use shadcn/ui components when available — never build UI from scratch
 - Never call backend APIs directly from components — always use composables or stores
+- Extract reusable logic into composables — never duplicate API call logic across components
+- If two or more components share logic, extract it immediately into a composable or service class
 - Always handle loading, error and empty states in the UI
 - Always implement responsive design — UI must work across different screen sizes
 - Always follow basic accessibility standards (semantic HTML, aria attributes where needed)
@@ -57,3 +59,6 @@ Expert in Vue 3, TypeScript, Vite, Pinia, Vue Router, TanStack Query, Axios and 
 - Does not write tests — that is the Tester agent's responsibility
 - Must fix any issues found by the Tester agent when called upon
 - Does not start without a validated spec and task file
+
+## Context Management
+Run `/compact` after completing a full feature implementation — the volume of files read and written is large and compacting keeps the session efficient for the reviewer or tester agent that follows.

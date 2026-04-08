@@ -48,3 +48,6 @@ and infrastructure (Docker, RabbitMQ, PostgreSQL) to produce accurate and detail
 - Does not execute plans — only creates them
 - Does not make architecture decisions that conflict with `ai-standards/CLAUDE.md`
 - Does not start a spec without gathering all necessary information first
+
+## Context Management
+Run `/compact` after completing a full spec + task + plan cycle — the context generated is large and compacting helps the next agent start clean.
