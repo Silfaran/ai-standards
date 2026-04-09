@@ -114,6 +114,16 @@ final class User {
 - Never modify already executed migrations — always create a new one
 - Each service with a database must have at least one seed with realistic test data
 
+## Docker
+
+The service `Dockerfile` must run migrations automatically on container start before launching `php-fpm`:
+
+```dockerfile
+CMD ["sh", "-c", "php vendor/bin/phinx migrate --environment=default && php-fpm"]
+```
+
+This ensures the database schema is always up to date when the container starts, regardless of environment.
+
 ## Testing
 
 - PHPUnit integration tests by default
