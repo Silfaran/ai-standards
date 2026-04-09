@@ -16,6 +16,12 @@ Read: `ai-standards/CLAUDE.md` → `services.md` → the plan file.
 - Verify the full environment starts correctly after any change
 - Set up CI/CD pipelines when required
 
+## Migrations
+Every time a feature introduces a new database table or modifies an existing one:
+- Create the corresponding Phinx migration in `src/Infrastructure/Persistence/Migration/`
+- The service `Dockerfile` must run migrations automatically on start — see `ai-standards/standards/backend.md` Docker section
+- Verify migrations run correctly before handing off to the Backend Developer
+
 ## Output
 - Docker and docker-compose files
 - Makefile per service + root Makefile
