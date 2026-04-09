@@ -134,6 +134,7 @@ final class User {
 | Testing | `phpunit/phpunit` + `symfony/browser-kit` |
 | Static analysis | `phpstan/phpstan` (level 9) |
 | Code formatting | `friendsofphp/php-cs-fixer` |
+| API documentation | `nelmio/api-doc-bundle` + `zircote/swagger-php` |
 
 ## Naming Conventions
 
