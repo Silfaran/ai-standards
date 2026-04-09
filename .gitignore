@@ -3,6 +3,7 @@
 .env
 .env.local
 
-# Plans and tasks are local only — not committed to the repository
+# Specs, plans and tasks are local only — not committed to the repository
+projects/**/*-specs.md
 projects/**/*-plan.md
 projects/**/*-task.md
