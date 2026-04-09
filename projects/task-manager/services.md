@@ -1,5 +1,8 @@
 # Task Manager — Services
 
+## Documentation
+Specs, plans and tasks: `task-manager-docs/specs/{Aggregate}/`
+
 ## Architecture
 
 ```
