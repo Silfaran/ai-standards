@@ -144,17 +144,32 @@ Do not add async infrastructure speculatively. Sync buses are the default.
 
 ### Message types and base contracts
 
-Every async message **must** implement an interface that enforces a `messageName()` method.
-This string is used as the serialization type discriminator — never rely on the PHP FQCN for cross-service identification.
+**Every command, query, domain event, and async message must implement an interface that enforces a `messageName()` method.**
+
+This string serves two purposes:
+- **Logging** — the `LoggingMiddleware` uses it to identify what was being processed when an error occurred
+- **Serialization** — async messages use it as the type discriminator; never rely on the PHP FQCN for cross-service identification
 
 ```php
-// Domain events — raised by aggregates, consumed by other services
+// Sync commands — handled by command.bus within the same service
+interface CommandInterface
+{
+    public function messageName(): string;
+}
+
+// Sync queries — handled by query.bus within the same service
+interface QueryInterface
+{
+    public function messageName(): string;
+}
+
+// Domain events — raised by aggregates, published to RabbitMQ for other services
 interface DomainEventInterface
 {
     public function messageName(): string;
 }
 
-// Cross-service application messages — explicit intent, not domain state
+// Cross-service application messages — explicit async intent, not domain state
 interface ApplicationMessageInterface
 {
     public function messageName(): string;
@@ -163,16 +178,24 @@ interface ApplicationMessageInterface
 
 **`messageName()` naming convention:**
 ```
-{service_name}.{type}.{snake_case_name}
+{service_name}.{type}.{snake_case_action}
+
+Type segment:
+  command  → sync command.bus
+  query    → sync query.bus
+  event    → domain event (async via RabbitMQ)
+  message  → cross-service application message (async via RabbitMQ)
 
 Examples:
+  login_service.command.register_user
+  login_service.command.login_user
+  login_service.command.logout_user
+  login_service.query.get_user_by_email
   login_service.event.user_registered
   login_service.event.user_logged_in
   task_service.event.task_assigned
   login_service.message.send_email
 ```
-
-The `type` segment is always one of: `event`, `command`, `message`.
 
 ---
 

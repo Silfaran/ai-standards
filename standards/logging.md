@@ -21,7 +21,7 @@ Every log entry emitted from the Messenger bus middleware must contain these fie
   "channel": "messenger",
   "message": "Message handling failed",
   "context": {
-    "message_name": "user.register",
+    "message_name": "login_service.command.register_user",
     "message_class": "App\\Application\\Command\\User\\RegisterUser\\RegisterUserCommand",
     "bus": "command.bus",
     "payload": {
