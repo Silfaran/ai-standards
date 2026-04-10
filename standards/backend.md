@@ -107,6 +107,7 @@ final class User {
 
 ## Database
 
+- **Each service owns its own database** — services must never share a PostgreSQL database or directly query another service's tables. Cross-service data access goes through the API or async messages only.
 - PostgreSQL with Doctrine DBAL only — no ORM
 - Phinx for migrations and seeds
 - Migrations: `src/Infrastructure/Persistence/Migration/`
