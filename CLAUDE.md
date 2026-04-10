@@ -12,6 +12,7 @@ Every service must have a `CLAUDE.md` referencing this file.
 - Frontend standards: `ai-standards/standards/frontend.md`
 - Logging standards: `ai-standards/standards/logging.md`
 - Security standards: `ai-standards/standards/security.md`
+- New service scaffold checklist: `ai-standards/standards/new-service-checklist.md`
 - Project service definitions: `ai-standards/projects/{project-name}/services.md`
 - Project documentation (specs, plans, tasks): see path defined in each `services.md`
 

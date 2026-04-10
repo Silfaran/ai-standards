@@ -115,6 +115,23 @@ final class User {
 - Never modify already executed migrations — always create a new one
 - Each service with a database must have at least one seed with realistic test data
 
+## New Service Scaffold
+
+Before committing a new service for the first time, verify it passes the scaffold checklist:
+`ai-standards/standards/new-service-checklist.md`
+
+The single validation rule: **`docker build .` must succeed with exit code 0.**
+
+Common scaffold failures (all documented in the checklist):
+- Missing `src/Kernel.php`
+- Bundles enabled in `bundles.php` without a corresponding config file
+- `config/routes.yaml` referencing a directory that does not exist yet
+- Symfony Flex `.env` pollution (`MESSENGER_TRANSPORT_DSN`, `DEFAULT_URI`)
+- `symfony/serializer` missing from `composer.json` when using `messenger.transport.symfony_serializer`
+- `composer.json` and `composer.lock` out of sync
+
+---
+
 ## Docker
 
 The service `Dockerfile` must run migrations automatically on container start before launching `php-fpm`:
