@@ -10,6 +10,8 @@ Every service must have a `CLAUDE.md` referencing this file.
 - Templates: `ai-standards/templates/`
 - Backend standards: `ai-standards/standards/backend.md`
 - Frontend standards: `ai-standards/standards/frontend.md`
+- Logging standards: `ai-standards/standards/logging.md`
+- Security standards: `ai-standards/standards/security.md`
 - Project service definitions: `ai-standards/projects/{project-name}/services.md`
 - Project documentation (specs, plans, tasks): see path defined in each `services.md`
 
@@ -52,10 +54,12 @@ Every service must have a `CLAUDE.md` referencing this file.
 - Run `/compact` after completing a task that involved significant context (full feature, plan, large review) — NOT after small fixes
 
 ### Handoff Protocol
-After completing work, every agent that produces output must create a handoff summary for the next agent:
-- What files were created or modified (list every path)
-- Key decisions made and why
-- What the next agent should focus on and what to ignore
+After completing work, every agent that produces output must create a handoff summary for the next agent.
+Use the template at `ai-standards/templates/feature-handoff-template.md` — it defines the required sections:
+- Files Created / Files Modified (every path)
+- Key Decisions (non-obvious choices with reasoning)
+- For the Next Agent (focus, ignore, watch out for)
+- Open Questions (unresolved decisions needing developer input)
 
 The next agent reads the handoff first and only reads the listed files — not the entire codebase.
 Handoff files are temporary and must be deleted when the full feature plan is complete.

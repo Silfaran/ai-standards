@@ -8,7 +8,9 @@ Never starts without a validated spec and plan.
 Read in this order:
 1. `ai-standards/CLAUDE.md`
 2. `ai-standards/standards/backend.md`
-3. `services.md` for the project
+3. `ai-standards/standards/logging.md`
+4. `ai-standards/standards/security.md`
+5. `services.md` for the project
 4. The handoff from the previous agent (if any) — read only the files listed there
 5. The spec and task files
 

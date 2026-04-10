@@ -415,10 +415,205 @@ to `.env` and create new config files (e.g. `config/packages/routing.yaml` with 
 
 ## Testing
 
-- PHPUnit integration tests by default
-- Unit tests only when integration is not possible (external services, emails, etc.)
-- Test database: configure `workspace_test` via `phpunit.dist.xml` + Phinx `test` environment
-- `phpunit.dist.xml` must use `<env>` (not `<server>`) to set `APP_ENV=test` when running in Docker
+### Philosophy
+
+- **Integration tests by default** — they test real behavior through the HTTP layer
+- **Unit tests only** when integration is impractical: pure domain logic with complex rules, external services that can't be stubbed at the transport level (emails, third-party APIs)
+- Every feature must have tests before it is considered complete
+
+### Test structure
+
+```
+tests/
+├── bootstrap.php
+├── Unit/
+│   └── Domain/
+│       └── Model/
+│           └── PasswordTest.php        ← domain rule tests
+└── Integration/
+    └── {Aggregate}/
+        └── {Action}{Aggregate}ControllerTest.php   ← HTTP endpoint tests
+```
+
+### PHPUnit configuration
+
+`phpunit.dist.xml` defines two test suites and environment overrides:
+
+```xml
+<phpunit bootstrap="tests/bootstrap.php" cacheDirectory=".phpunit.cache"
+         colors="true" failOnDeprecation="true" failOnNotice="true" failOnWarning="true">
+    <php>
+        <ini name="display_errors" value="1" />
+        <ini name="error_reporting" value="-1" />
+        <env name="APP_ENV" value="test" force="true" />
+        <env name="KERNEL_CLASS" value="App\Kernel" force="true" />
+        <env name="DATABASE_URL" value="postgresql://workspace:workspace@postgres:5432/workspace?serverVersion=17" force="true" />
+    </php>
+
+    <testsuites>
+        <testsuite name="unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+    </source>
+</phpunit>
+```
+
+**Important:** Use `<env>` tags, not `<server>` — `<server>` does not work reliably in Docker containers.
+
+---
+
+### Integration tests
+
+Integration tests extend `WebTestCase` and test the full HTTP request/response cycle.
+
+```php
+final class RegisterUserControllerTest extends WebTestCase
+{
+    private KernelBrowser $client;
+    private Connection $connection;
+
+    protected function setUp(): void
+    {
+        $this->client = self::createClient();
+        /** @var Connection $connection */
+        $connection = static::getContainer()->get(Connection::class);
+        $this->connection = $connection;
+        // Clean state before each test
+        $this->connection->executeStatement('DELETE FROM refresh_tokens');
+        $this->connection->executeStatement('DELETE FROM users');
+    }
+
+    public function testRegisterWithValidDataReturns201AndUserIsPersisted(): void
+    {
+        $this->client->request(
+            'POST',
+            '/api/register',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            (string) json_encode([
+                'first_name' => 'John',
+                'last_name' => 'Doe',
+                'email' => 'john@example.com',
+                'password' => 'Password1!',
+            ]),
+        );
+
+        self::assertResponseStatusCodeSame(201);
+
+        $count = $this->connection->fetchOne(
+            'SELECT COUNT(*) FROM users WHERE email = ?',
+            ['john@example.com'],
+        );
+        self::assertSame(1, (int) $count);
+    }
+}
+```
+
+#### Rules
+
+- **One test class per controller** — matches the one-controller-per-action pattern
+- **Clean the database in `setUp()`** — delete in reverse FK order, never truncate (avoids lock issues)
+- **Assert both the HTTP response and the database state** — a 201 alone does not prove persistence
+- **Test error paths**: missing fields (422), duplicate data (409), invalid input (422), unauthorized (401)
+- **Use `(string) json_encode()`** for request bodies — always cast to string
+- **PHPDoc `@var` annotations** on container gets for PHPStan compliance
+
+#### Testing async messages
+
+In `when@test`, all async transports must be configured as `in-memory://`:
+
+```yaml
+when@test:
+    framework:
+        messenger:
+            transports:
+                async_events: 'in-memory://'
+                email: 'in-memory://'
+                events_dead: 'in-memory://'
+```
+
+Then assert dispatched messages in tests:
+
+```php
+public function testRegisterDispatchesSendEmailEvent(): void
+{
+    $this->client->request('POST', '/api/register', [], [], ['CONTENT_TYPE' => 'application/json'],
+        (string) json_encode([...]),
+    );
+
+    self::assertResponseStatusCodeSame(201);
+
+    /** @var InMemoryTransport $transport */
+    $transport = static::getContainer()->get('messenger.transport.email');
+
+    $envelopes = $transport->get();
+    self::assertCount(1, $envelopes);
+
+    $message = $envelopes[0]->getMessage();
+    self::assertInstanceOf(SendEmailEvent::class, $message);
+    self::assertSame('john@example.com', $message->to);
+}
+```
+
+---
+
+### Unit tests
+
+Unit tests extend `TestCase` (not `WebTestCase`) and test pure domain logic in isolation.
+
+```php
+final class PasswordTest extends TestCase
+{
+    public function test_valid_password_is_accepted(): void
+    {
+        $password = Password::fromPlainText('Password1!', fn (string $p) => 'hashed_' . $p);
+        self::assertSame('hashed_Password1!', $password->hashedValue());
+    }
+
+    public function test_password_shorter_than_8_chars_throws(): void
+    {
+        $this->expectException(InvalidPasswordException::class);
+        Password::fromPlainText('Pw1!', fn (string $p) => $p);
+    }
+}
+```
+
+#### Rules
+
+- **No Symfony kernel, no database, no HTTP** — if you need any of these, write an integration test instead
+- Use closures or anonymous classes to stub dependencies (e.g. password hasher)
+- Test all validation branches — valid input, each invalid case, edge cases (boundary values, empty strings)
+- Test that domain exceptions carry useful details (error lists, messages)
+- Method naming: `test_descriptive_snake_case` for readability
+
+---
+
+### Test database
+
+- Database name: same as production but tests use `DATABASE_URL` from `phpunit.dist.xml`
+- Phinx `test` environment runs migrations against the test database
+- Never share state between tests — each test cleans up in `setUp()`
+- Seeds are for local dev only — tests create their own data
+
+### Makefile commands
+
+Every service must provide:
+
+```makefile
+make test              # run all tests (unit + integration)
+make test-unit         # run only unit tests
+make test-integration  # run only integration tests
+```
 
 ## Standard Libraries
 

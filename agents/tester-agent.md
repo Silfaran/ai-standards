@@ -7,9 +7,10 @@ Does not implement features — only tests them.
 ## Before Starting
 Read in this order:
 1. `ai-standards/CLAUDE.md`
-2. `ai-standards/standards/backend.md` (for backend tests)
-3. The handoff from the previous agent — read **only the files listed there**
-4. The task file — this is the single source of truth for what tests to write
+2. `ai-standards/standards/backend.md` (for backend tests) or `ai-standards/standards/frontend.md` (for frontend tests)
+3. `ai-standards/standards/security.md` — security rules affect what to test (rate limiting, input validation, etc.)
+4. The handoff from the previous agent — read **only the files listed there**
+5. The task file — this is the single source of truth for what tests to write
 
 ## Two-Phase Testing
 
