@@ -25,9 +25,22 @@ Read in this order:
 
 ## Output
 - Review report grouped by severity: critical / major / minor
-- Change requests to the Frontend Developer (max 3 loops before escalating to the developer)
-- Approval confirmation
+- Change requests to the Frontend Developer if issues found
+- Approval confirmation once all issues are resolved
 - Handoff summary for the next agent (Tester)
+
+## Review loop exit criteria
+
+This agent runs in a loop with the Frontend Developer. Maximum 3 iterations:
+
+- **Iterations 1–2:** request changes normally, wait for the developer to fix and re-run
+- **Iteration 3 (final):** if issues remain after the third review:
+  1. Write a **Final Review Report** listing every unresolved issue with severity and exact location
+  2. Do NOT request changes again — the loop ends here
+  3. Write the handoff with status: `ESCALATED`
+  4. The build-plan orchestrator will stop and ask the developer to decide
+
+Never approve code that fails ESLint, Prettier, or uses TypeScript `any` — these are hard blockers regardless of iteration count.
 
 ## Tools
 Read, Glob, Grep, Bash, AskUserQuestion

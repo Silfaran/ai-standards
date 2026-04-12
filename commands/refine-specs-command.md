@@ -21,14 +21,16 @@ The business spec file created by the `create-specs` command:
 ## Steps
 1. Read the existing business spec file
 2. Read `{project-name}-docs/services.md` to understand the available services
-3. Read the relevant codebase in depth to understand the technical context
-4. Ask the developer technical or business questions if information is missing or ambiguous
-5. Refine the spec with technical details — architecture decisions, affected aggregates, services involved
-6. Generate the execution plan specifying:
+3. Read `{project-name}-docs/decisions.md` to understand existing architectural decisions
+4. Read the relevant codebase in depth to understand the technical context
+5. Ask the developer technical or business questions if information is missing or ambiguous
+6. Refine the spec with technical details — architecture decisions, affected aggregates, services involved
+7. If this feature introduces a new architectural decision or changes an existing one, update `decisions.md` accordingly
+8. Generate the execution plan specifying:
    - Which agents must intervene and in what order
    - Which service each part of the code belongs to
    - Dependencies between steps
-7. Create the task file with required tests and Definition of Done
+9. Create the task file with required tests and Definition of Done
 
 ## Output
 - The refined technical spec file updated in place: `{project-name}-docs/specs/{Aggregate}/{feature-name}-specs.md`

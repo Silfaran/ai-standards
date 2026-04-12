@@ -28,14 +28,17 @@ Example input:
 3. Create the folder structure:
    ```
    {project-name}-docs/
-   └── services.md
+   ├── services.md
+   └── decisions.md
    ```
 4. Generate `services.md` using the information provided — follow the template below
-5. Create `ai-standards/workspace.md` with the project paths — this file is gitignored and acts as the local config all agents read to discover the project
-6. Report what was created and instruct the developer to run `/create-specs` for the first feature
+5. Generate `decisions.md` as an empty ADR log — the Spec Analyzer will populate it as features are built
+6. Create `ai-standards/workspace.md` with the project paths — this file is gitignored and acts as the local config all agents read to discover the project
+7. Report what was created and instruct the developer to run `/create-specs` for the first feature
 
 ## Output
 - `{project-name}-docs/services.md` — project service catalog
+- `{project-name}-docs/decisions.md` — architecture decision records (starts empty)
 - `ai-standards/workspace.md` — local workspace config (gitignored), content:
 
 ```markdown
@@ -44,6 +47,7 @@ Example input:
 project: {project-name}
 services: {project-name}-docs/services.md
 specs: {project-name}-docs/specs/
+decisions: {project-name}-docs/decisions.md
 ```
 
 All agents read `ai-standards/workspace.md` to discover the project paths — no manual configuration needed.

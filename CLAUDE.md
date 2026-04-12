@@ -42,8 +42,9 @@ Every service must have a `CLAUDE.md` referencing this file.
 ## AI Behavior Rules
 
 ### For All Agents
-- Read this file, the relevant `standards/` file, and `ai-standards/workspace.md` before doing anything — `workspace.md` tells you where to find `services.md` and specs
+- Read this file, the relevant `standards/` file, and `ai-standards/workspace.md` before doing anything — `workspace.md` tells you where to find `services.md`, specs, and `decisions.md`
 - If `ai-standards/workspace.md` does not exist: stop immediately and tell the developer to run `/init-project` before proceeding
+- Read `decisions.md` (path in workspace.md) before implementing anything — if your implementation contradicts a recorded decision, stop and ask the developer before proceeding
 - Read the spec file before implementing or modifying any feature
 - All files, code, and documentation must be written in English
 - When in doubt about any decision, ask the developer before proceeding

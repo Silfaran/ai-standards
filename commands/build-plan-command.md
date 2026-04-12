@@ -8,6 +8,23 @@ For full-stack features, Backend Developer and Frontend Developer run **in paral
 
 ---
 
+## Step 0 — Spec sign-off (mandatory, before spawning any agent)
+
+1. Read the spec file and plan file
+2. Display a summary to the developer:
+   - Feature name and affected services
+   - Phases that will run and in what order
+   - Key API contracts defined in the spec (endpoints, request/response shapes)
+   - Any edge cases explicitly covered
+3. Ask the developer:
+   > "Does this spec look complete and correct? Any gaps or ambiguous edge cases before I start?
+   > Confirm to proceed, or describe what needs to change and run `/refine-specs` first."
+4. **Do not spawn any agent until the developer explicitly confirms.**
+
+This step exists because fixing a gap in a spec costs 30 seconds. Fixing it after implementation costs an hour.
+
+---
+
 ## How agent phases work
 
 Each phase is spawned with `Agent(subagent_type: "general-purpose")`.
@@ -15,54 +32,55 @@ The subagent starts with a clean context — it does **not** inherit this conver
 The only connection between phases is the handoff file written by the previous agent.
 
 The prompt passed to each subagent must be **self-contained** and include:
-- The absolute path to the agent definition file (role, responsibilities, tools)
-- The absolute path to the previous agent's handoff (if any)
+- The absolute path to the agent definition file
 - The absolute paths to the spec and task files
-- A clear instruction on what to produce
-
-The main conversation only receives the final handoff summary back as the Agent tool result.
+- The absolute path to the previous handoff (if any)
+- The working directory for the relevant service
+- One clear instruction
 
 ---
 
 ## Standard Flow (full-stack feature)
 
 ```
-Tester [Phase 1: unit tests]                      ← sequential: defines contracts
-  → DevOps (only if new infra is needed)          ← sequential: both devs may depend on it
-    → Backend Developer ‖ Frontend Developer       ← PARALLEL: both read the same spec
-      → Backend Reviewer ‖ Frontend Reviewer       ← PARALLEL: independent codebases
-        → Tester [Phase 2: integration + run]      ← sequential: needs both sides complete
-          → update-specs
-            → Done
+[Sign-off]
+  → Tester [Phase 1: unit tests]                    ← sequential: defines contracts
+    → DevOps (only if new infra is needed)          ← sequential: both devs may depend on it
+      → Backend Developer ‖ Frontend Developer       ← PARALLEL: both read the same spec
+        → Backend Reviewer ‖ Frontend Reviewer       ← PARALLEL: independent codebases
+          → Tester [Phase 2: integration + run]      ← sequential: needs both sides complete
+            → update-specs
+              → Done
 ```
-
-**Condition for parallel execution:** the spec must define the API contract explicitly (endpoints, request/response shapes, status codes). All specs produced by `refine-specs` include this — parallel is the default for full-stack features.
 
 **Feedback loops (per side, independent):**
 - Backend Reviewer → Backend Developer → Backend Reviewer (max 3 iterations)
 - Frontend Reviewer → Frontend Developer → Frontend Reviewer (max 3 iterations)
 - Both sides must be approved before Tester Phase 2 starts
 
+**If max iterations reached without approval:** stop that side, report the final review report to the developer, and wait for a decision before continuing (see Failure Handling).
+
 ---
 
 ## Standard Flow (backend-only feature)
 
 ```
-Tester [Phase 1: unit tests]
-  → Backend Developer
-    → Backend Reviewer (loop if needed)
-      → Tester [Phase 2: integration + run] (loop if needed)
-        → update-specs
-          → Done
+[Sign-off]
+  → Tester [Phase 1: unit tests]
+    → Backend Developer
+      → Backend Reviewer (loop if needed, max 3)
+        → Tester [Phase 2: integration + run] (loop if needed, max 3)
+          → update-specs
+            → Done
 ```
 
 ---
 
 ## Steps
 
-1. Read the plan file
-2. Read the task file (Definition of Done)
-3. Execute each phase as a subagent using the prompt template below:
+1. **Sign-off** — show summary, wait for developer confirmation (see Step 0)
+2. Read the plan file and task file
+3. Execute each phase as a subagent using the prompt examples below:
    - **Sequential phases**: spawn and wait for the result before proceeding
    - **Parallel phases**: spawn the first with `run_in_background: true`, immediately spawn the second (foreground), then process both results before continuing
 4. Handle feedback loops per side — each loop reruns only the affected side
@@ -73,41 +91,144 @@ Tester [Phase 1: unit tests]
 
 ---
 
-## Subagent prompt template
+## Subagent prompt examples
 
-Construct the prompt for each phase as follows — fill in the bracketed values:
+Use these as the exact structure for each phase. Replace the paths with the absolute paths for the current workspace and feature.
+
+### Tester — Phase 1 (unit tests)
 
 ```
-You are the [Agent Role] for the Task Manager project.
-
-Working directory: [absolute path to the relevant service, e.g. /Users/.../task-service]
+You are the Tester agent for the Task Manager project.
 
 Read these files in order before doing anything else:
-1. [absolute path to agent definition, e.g. ai-standards/agents/backend-developer-agent.md]
-2. ai-standards/CLAUDE.md
-3. ai-standards/standards/[backend.md | frontend.md] — whichever applies
-4. ai-standards/workspace.md — read this to find the services.md path for this workspace
-5. [absolute path to previous agent's handoff] — omit if this is the first phase
-6. [absolute path to spec file]
-7. [absolute path to task file]
+1. /absolute/path/to/ai-standards/agents/tester-agent.md
+2. /absolute/path/to/ai-standards/CLAUDE.md
+3. /absolute/path/to/ai-standards/workspace.md
+4. /absolute/path/to/{project-name}-docs/specs/{Aggregate}/{feature}-specs.md
+5. /absolute/path/to/{project-name}-docs/specs/{Aggregate}/{feature}-task.md
 
-[One clear instruction, e.g.:
-  "Implement the backend for the boards feature as described in the spec."
-  "Review the backend code listed in the handoff."
-  "Write Phase 1 unit tests as described in the task file — do not execute them."
-  "Run all tests. If any fail, call the corresponding developer to fix and re-run."]
+Write Phase 1 unit tests for the backend domain rules described in the spec.
+Do NOT execute them yet — write files only.
+Target service working directory: /absolute/path/to/task-service
 
-When done, write your handoff to: ai-standards/handoffs/[phase-name]-handoff.md
+When done, write your handoff to: /absolute/path/to/ai-standards/handoffs/tester-p1-handoff.md
+```
+
+### Backend Developer
+
+```
+You are the Backend Developer agent for the Task Manager project.
+
+Read these files in order before doing anything else:
+1. /absolute/path/to/ai-standards/agents/backend-developer-agent.md
+2. /absolute/path/to/ai-standards/CLAUDE.md
+3. /absolute/path/to/ai-standards/standards/backend.md
+4. /absolute/path/to/ai-standards/workspace.md
+5. /absolute/path/to/ai-standards/handoffs/tester-p1-handoff.md
+6. /absolute/path/to/{project-name}-docs/specs/{Aggregate}/{feature}-specs.md
+7. /absolute/path/to/{project-name}-docs/specs/{Aggregate}/{feature}-task.md
+
+Implement the backend for the {feature} feature as described in the spec.
+Working directory: /absolute/path/to/task-service
+
+When done, write your handoff to: /absolute/path/to/ai-standards/handoffs/backend-dev-handoff.md
+```
+
+### Frontend Developer
+
+```
+You are the Frontend Developer agent for the Task Manager project.
+
+Read these files in order before doing anything else:
+1. /absolute/path/to/ai-standards/agents/frontend-developer-agent.md
+2. /absolute/path/to/ai-standards/CLAUDE.md
+3. /absolute/path/to/ai-standards/standards/frontend.md
+4. /absolute/path/to/ai-standards/workspace.md
+5. /absolute/path/to/ai-standards/handoffs/tester-p1-handoff.md
+6. /absolute/path/to/{project-name}-docs/specs/{Aggregate}/{feature}-specs.md
+7. /absolute/path/to/{project-name}-docs/specs/{Aggregate}/{feature}-task.md
+
+Implement the frontend for the {feature} feature as described in the spec.
+Working directory: /absolute/path/to/task-front
+
+When done, write your handoff to: /absolute/path/to/ai-standards/handoffs/frontend-dev-handoff.md
+```
+
+### Backend Reviewer
+
+```
+You are the Backend Reviewer agent for the Task Manager project.
+
+Read these files in order before doing anything else:
+1. /absolute/path/to/ai-standards/agents/backend-reviewer-agent.md
+2. /absolute/path/to/ai-standards/CLAUDE.md
+3. /absolute/path/to/ai-standards/standards/backend.md
+4. /absolute/path/to/ai-standards/standards/security.md
+5. /absolute/path/to/ai-standards/handoffs/backend-dev-handoff.md
+6. /absolute/path/to/{project-name}-docs/specs/{Aggregate}/{feature}-task.md
+
+Review the backend code listed in the handoff. This is review iteration {N} of max 3.
+Working directory: /absolute/path/to/task-service
+
+When done, write your handoff to: /absolute/path/to/ai-standards/handoffs/backend-reviewer-handoff.md
+```
+
+### Frontend Reviewer
+
+```
+You are the Frontend Reviewer agent for the Task Manager project.
+
+Read these files in order before doing anything else:
+1. /absolute/path/to/ai-standards/agents/frontend-reviewer-agent.md
+2. /absolute/path/to/ai-standards/CLAUDE.md
+3. /absolute/path/to/ai-standards/standards/frontend.md
+4. /absolute/path/to/ai-standards/handoffs/frontend-dev-handoff.md
+5. /absolute/path/to/{project-name}-docs/specs/{Aggregate}/{feature}-task.md
+
+Review the frontend code listed in the handoff. This is review iteration {N} of max 3.
+Working directory: /absolute/path/to/task-front
+
+When done, write your handoff to: /absolute/path/to/ai-standards/handoffs/frontend-reviewer-handoff.md
+```
+
+### Tester — Phase 2 (integration + run)
+
+```
+You are the Tester agent for the Task Manager project.
+
+Read these files in order before doing anything else:
+1. /absolute/path/to/ai-standards/agents/tester-agent.md
+2. /absolute/path/to/ai-standards/CLAUDE.md
+3. /absolute/path/to/ai-standards/workspace.md
+4. /absolute/path/to/ai-standards/handoffs/backend-reviewer-handoff.md
+5. /absolute/path/to/ai-standards/handoffs/frontend-reviewer-handoff.md
+6. /absolute/path/to/{project-name}-docs/specs/{Aggregate}/{feature}-specs.md
+7. /absolute/path/to/{project-name}-docs/specs/{Aggregate}/{feature}-task.md
+
+Write Phase 2 integration tests and run all tests (unit + integration).
+If any fail, identify which developer needs to fix them and request fixes before re-running.
+
+When done, write your handoff to: /absolute/path/to/ai-standards/handoffs/tester-p2-handoff.md
 ```
 
 ---
 
 ## Failure Handling
 
-If a subagent returns a failure:
+**Subagent returns an error:**
 - Stop immediately — do not continue to the next phase
 - Report the failure to the developer with a clear description of what went wrong
 - Wait for the developer to decide: retry, skip, or abort
+
+**Max review iterations reached without approval:**
+- Stop the affected side (backend or frontend)
+- Report to the developer with the full list of unresolved issues from the final review
+- Ask the developer to choose:
+  - **(a) Accept with known issues** — document them in the task file and continue
+  - **(b) Fix manually** — developer fixes, then re-run the reviewer once more
+  - **(c) Abort** — stop the entire feature
+
+Do not continue to Tester Phase 2 until both sides are either approved or explicitly accepted by the developer.
 
 ---
 
