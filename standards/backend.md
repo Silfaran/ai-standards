@@ -100,6 +100,184 @@ final class User {
 - One controller per command/query — always
 - All controllers must have OpenAPI/Swagger annotations
 
+### AppController
+
+Every service must include this class at `src/Infrastructure/Http/AppController.php`. Copy it verbatim — do not modify:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Infrastructure\Http;
+
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
+
+abstract class AppController
+{
+    public function __construct(
+        protected readonly MessageBusInterface $commandBus,
+        protected readonly MessageBusInterface $queryBus,
+    ) {}
+
+    protected function dispatchCommand(object $command): mixed
+    {
+        $envelope = $this->commandBus->dispatch($command);
+        return $envelope->last(HandledStamp::class)?->getResult();
+    }
+
+    protected function dispatchQuery(object $query): mixed
+    {
+        $envelope = $this->queryBus->dispatch($query);
+        return $envelope->last(HandledStamp::class)?->getResult();
+    }
+
+    /** @return array<string, mixed> */
+    protected function body(Request $request): array
+    {
+        $data = json_decode($request->getContent(), true);
+        return is_array($data) ? $data : [];
+    }
+
+    protected function json(mixed $data = null, int $status = JsonResponse::HTTP_OK): JsonResponse
+    {
+        return new JsonResponse($data, $status);
+    }
+
+    protected function noContent(): JsonResponse
+    {
+        return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
+    }
+
+    protected function created(): JsonResponse
+    {
+        return new JsonResponse(null, JsonResponse::HTTP_CREATED);
+    }
+}
+```
+
+**`services.yaml` wiring** — the two buses must be injected by name, not by type:
+
+```yaml
+App\Infrastructure\Http\AppController:
+    abstract: true
+    arguments:
+        $commandBus: '@command.bus'
+        $queryBus: '@query.bus'
+```
+
+**Usage example:**
+
+```php
+final class CreateBoardController extends AppController
+{
+    #[Route('/api/boards', methods: ['POST'])]
+    public function __invoke(Request $request): JsonResponse
+    {
+        $body = $this->body($request);
+        $data = $this->dispatchCommand(CreateBoardCommand::from($body));
+        return $this->json($data, JsonResponse::HTTP_CREATED);
+    }
+}
+```
+
+---
+
+### ApiExceptionSubscriber
+
+Every service must include this class at `src/Infrastructure/Http/EventSubscriber/ApiExceptionSubscriber.php`.
+
+It converts domain exceptions into HTTP responses, unwraps `HandlerFailedException` (thrown by Symfony Messenger), and lets Symfony's own HTTP exceptions (404, 405, etc.) pass through untouched.
+
+**Base structure — adapt the `match` block for each service's domain exceptions:**
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Infrastructure\Http\EventSubscriber;
+
+use InvalidArgumentException;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Messenger\Exception\HandlerFailedException;
+
+final class ApiExceptionSubscriber implements EventSubscriberInterface
+{
+    public static function getSubscribedEvents(): array
+    {
+        return [KernelEvents::EXCEPTION => ['onKernelException', 10]];
+    }
+
+    public function onKernelException(ExceptionEvent $event): void
+    {
+        $exception = $event->getThrowable();
+
+        // Unwrap exceptions thrown inside Messenger handlers
+        if ($exception instanceof HandlerFailedException) {
+            $exception = $exception->getPrevious() ?? $exception;
+        }
+
+        // Let Symfony handle its own HTTP exceptions (404, 405, etc.)
+        if ($exception instanceof HttpExceptionInterface) {
+            return;
+        }
+
+        $response = match (true) {
+            // Map your domain exceptions here:
+            // $exception instanceof SomeDomainException => $this->notFound('Resource not found'),
+            $exception instanceof InvalidArgumentException => $this->unprocessable($exception->getMessage()),
+            default => null,
+        };
+
+        if (null !== $response) {
+            $event->setResponse($response);
+        }
+    }
+
+    private function conflict(string $error): JsonResponse
+    {
+        return new JsonResponse(['error' => $error], Response::HTTP_CONFLICT);
+    }
+
+    private function notFound(string $error): JsonResponse
+    {
+        return new JsonResponse(['error' => $error], Response::HTTP_NOT_FOUND);
+    }
+
+    /** @param string[] $details */
+    private function unprocessable(string $error, array $details = []): JsonResponse
+    {
+        $body = ['error' => $error];
+        if ([] !== $details) {
+            $body['details'] = $details;
+        }
+        return new JsonResponse($body, Response::HTTP_UNPROCESSABLE_ENTITY);
+    }
+
+    private function unauthorized(string $error): JsonResponse
+    {
+        return new JsonResponse(['error' => $error], Response::HTTP_UNAUTHORIZED);
+    }
+}
+```
+
+**Rules:**
+- `InvalidArgumentException` → 422 is always present — it covers command/query validation failures
+- Add one `match` arm per domain exception — keep the mapping exhaustive and explicit
+- Never return 500 from a domain exception — every expected failure must have a mapped HTTP status
+- The `default => null` case intentionally leaves unmapped exceptions unhandled — Symfony will return 500, which is correct for truly unexpected errors
+
+---
+
 ## Command Handlers
 
 - Tagged to `command.bus` via `services.yaml` — autowiring alone is not enough
