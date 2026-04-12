@@ -37,4 +37,4 @@ Read, Glob, Grep, Bash, AskUserQuestion
 - Does not review backend code or write tests or specs
 
 ## Context Management
-Run `/compact` after completing a full review cycle.
+This agent runs as an isolated subagent via the `Agent` tool — it does not inherit the parent conversation's history. No `/compact` needed.

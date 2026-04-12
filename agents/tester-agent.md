@@ -43,4 +43,4 @@ Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion
 - Does not create or modify specs
 
 ## Context Management
-Run `/compact` after completing Phase 2.
+This agent runs as an isolated subagent via the `Agent` tool — it does not inherit the parent conversation's history. No `/compact` needed.

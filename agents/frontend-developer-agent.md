@@ -33,4 +33,4 @@ Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion
 - Must fix issues found by the Frontend Reviewer or Tester when called upon
 
 ## Context Management
-Run `/compact` after completing a full feature implementation.
+This agent runs as an isolated subagent via the `Agent` tool — it does not inherit the parent conversation's history. No `/compact` needed.
