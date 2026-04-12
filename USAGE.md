@@ -30,10 +30,13 @@ The agent will ask for your project name and list of services, then create:
 ```
 workspace/
 ├── ai-standards/
+│   └── workspace.md     ← local config (gitignored) — all agents read this
 ├── {project-name}-docs/
 │   └── services.md      ← your project catalog
 └── (your services...)
 ```
+
+`workspace.md` is the single source of truth for project paths. All agents read it automatically — no manual configuration needed.
 
 Every service you create must have a `CLAUDE.md` pointing to `ai-standards`. Use this as the template:
 ```markdown

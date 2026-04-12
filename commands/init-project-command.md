@@ -31,21 +31,22 @@ Example input:
    └── services.md
    ```
 4. Generate `services.md` using the information provided — follow the template below
-5. Report what was created and show the developer exactly which lines to update in their `.claude/commands/` files
+5. Create `ai-standards/workspace.md` with the project paths — this file is gitignored and acts as the local config all agents read to discover the project
+6. Report what was created and instruct the developer to run `/create-specs` for the first feature
 
 ## Output
 - `{project-name}-docs/services.md` — project service catalog
-- A confirmation message telling the developer to update their workspace `.claude/commands/` files:
+- `ai-standards/workspace.md` — local workspace config (gitignored), content:
 
+```markdown
+# Workspace
+
+project: {project-name}
+services: {project-name}-docs/services.md
+specs: {project-name}-docs/specs/
 ```
-Setup complete. Update these lines in your .claude/commands/ files:
 
-  create-specs.md  → replace {project-name}-docs with: {project-name}-docs/services.md
-  refine-specs.md  → replace {project-name}-docs with: {project-name}-docs/services.md
-
-These files are templates — they must reference your actual project path, not a placeholder.
-Next step: run /create-specs to create your first feature spec.
-```
+All agents read `ai-standards/workspace.md` to discover the project paths — no manual configuration needed.
 
 ## services.md template
 

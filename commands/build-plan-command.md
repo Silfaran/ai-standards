@@ -86,7 +86,7 @@ Read these files in order before doing anything else:
 1. [absolute path to agent definition, e.g. ai-standards/agents/backend-developer-agent.md]
 2. ai-standards/CLAUDE.md
 3. ai-standards/standards/[backend.md | frontend.md] — whichever applies
-4. {project-name}-docs/services.md — derive this from the plan file path: go up to the *-docs/ root directory
+4. ai-standards/workspace.md — read this to find the services.md path for this workspace
 5. [absolute path to previous agent's handoff] — omit if this is the first phase
 6. [absolute path to spec file]
 7. [absolute path to task file]
