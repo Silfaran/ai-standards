@@ -31,11 +31,21 @@ Example input:
    └── services.md
    ```
 4. Generate `services.md` using the information provided — follow the template below
-5. Report what was created and instruct the developer to run `create-specs` for the first feature
+5. Report what was created and show the developer exactly which lines to update in their `.claude/commands/` files
 
 ## Output
 - `{project-name}-docs/services.md` — project service catalog
-- A confirmation message with the next step
+- A confirmation message telling the developer to update their workspace `.claude/commands/` files:
+
+```
+Setup complete. Update these lines in your .claude/commands/ files:
+
+  create-specs.md  → replace {project-name}-docs with: {project-name}-docs/services.md
+  refine-specs.md  → replace {project-name}-docs with: {project-name}-docs/services.md
+
+These files are templates — they must reference your actual project path, not a placeholder.
+Next step: run /create-specs to create your first feature spec.
+```
 
 ## services.md template
 
