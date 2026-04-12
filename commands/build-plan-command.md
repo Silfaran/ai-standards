@@ -85,7 +85,7 @@ The prompt passed to each subagent must be **self-contained** and include:
    - **Parallel phases**: spawn the first with `run_in_background: true`, immediately spawn the second (foreground), then process both results before continuing
 4. Handle feedback loops per side — each loop reruns only the affected side
 5. After both sides are approved and all tests pass, run `update-specs`
-6. Delete all handoff files
+6. Delete the entire `ai-standards/handoffs/{feature-name}/` directory
 7. Verify all Definition of Done conditions are met
 8. Report final status to the developer
 
@@ -111,7 +111,7 @@ Write Phase 1 unit tests for the backend domain rules described in the spec.
 Do NOT execute them yet — write files only.
 Target service working directory: /absolute/path/to/task-service
 
-When done, write your handoff to: /absolute/path/to/ai-standards/handoffs/tester-p1-handoff.md
+When done, write your handoff to: /absolute/path/to/ai-standards/handoffs/{feature-name}/tester-p1-handoff.md
 ```
 
 ### Backend Developer
@@ -131,7 +131,7 @@ Read these files in order before doing anything else:
 Implement the backend for the {feature} feature as described in the spec.
 Working directory: /absolute/path/to/task-service
 
-When done, write your handoff to: /absolute/path/to/ai-standards/handoffs/backend-dev-handoff.md
+When done, write your handoff to: /absolute/path/to/ai-standards/handoffs/{feature-name}/backend-dev-handoff.md
 ```
 
 ### Frontend Developer
@@ -151,7 +151,7 @@ Read these files in order before doing anything else:
 Implement the frontend for the {feature} feature as described in the spec.
 Working directory: /absolute/path/to/task-front
 
-When done, write your handoff to: /absolute/path/to/ai-standards/handoffs/frontend-dev-handoff.md
+When done, write your handoff to: /absolute/path/to/ai-standards/handoffs/{feature-name}/frontend-dev-handoff.md
 ```
 
 ### Backend Reviewer
@@ -170,7 +170,7 @@ Read these files in order before doing anything else:
 Review the backend code listed in the handoff. This is review iteration {N} of max 3.
 Working directory: /absolute/path/to/task-service
 
-When done, write your handoff to: /absolute/path/to/ai-standards/handoffs/backend-reviewer-handoff.md
+When done, write your handoff to: /absolute/path/to/ai-standards/handoffs/{feature-name}/backend-reviewer-handoff.md
 ```
 
 ### Frontend Reviewer
@@ -188,7 +188,7 @@ Read these files in order before doing anything else:
 Review the frontend code listed in the handoff. This is review iteration {N} of max 3.
 Working directory: /absolute/path/to/task-front
 
-When done, write your handoff to: /absolute/path/to/ai-standards/handoffs/frontend-reviewer-handoff.md
+When done, write your handoff to: /absolute/path/to/ai-standards/handoffs/{feature-name}/frontend-reviewer-handoff.md
 ```
 
 ### Tester — Phase 2 (integration + run)
@@ -208,7 +208,7 @@ Read these files in order before doing anything else:
 Write Phase 2 integration tests and run all tests (unit + integration).
 If any fail, identify which developer needs to fix them and request fixes before re-running.
 
-When done, write your handoff to: /absolute/path/to/ai-standards/handoffs/tester-p2-handoff.md
+When done, write your handoff to: /absolute/path/to/ai-standards/handoffs/{feature-name}/tester-p2-handoff.md
 ```
 
 ---

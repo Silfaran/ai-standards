@@ -33,8 +33,9 @@ Example input:
    ```
 4. Generate `services.md` using the information provided — follow the template below
 5. Generate `decisions.md` as an empty ADR log — the Spec Analyzer will populate it as features are built
-6. Create `ai-standards/workspace.md` with the project paths — this file is gitignored and acts as the local config all agents read to discover the project
-7. Report what was created and instruct the developer to run `/create-specs` for the first feature
+6. Create `ai-standards/workspace.md` with the project paths — gitignored, read by all agents
+7. Create `ai-standards/workspace.mk` with the service lists — gitignored, included by the Makefile for dynamic test targets
+8. Report what was created and instruct the developer to run `/create-specs` for the first feature
 
 ## Output
 - `{project-name}-docs/services.md` — project service catalog
@@ -50,7 +51,15 @@ specs: {project-name}-docs/specs/
 decisions: {project-name}-docs/decisions.md
 ```
 
+- `ai-standards/workspace.mk` — Makefile variables (gitignored), content:
+
+```makefile
+BACKEND_SERVICES = {backend-service-1} {backend-service-2}
+FRONTEND_SERVICES = {frontend-service-1} {frontend-service-2}
+```
+
 All agents read `ai-standards/workspace.md` to discover the project paths — no manual configuration needed.
+The Makefile includes `workspace.mk` automatically — `make test` runs tests for all listed services.
 
 ## services.md template
 
