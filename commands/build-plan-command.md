@@ -86,7 +86,7 @@ Read these files in order before doing anything else:
 1. [absolute path to agent definition, e.g. ai-standards/agents/backend-developer-agent.md]
 2. ai-standards/CLAUDE.md
 3. ai-standards/standards/[backend.md | frontend.md] — whichever applies
-4. ai-standards/projects/task-manager/services.md
+4. task-manager-docs/services.md
 5. [absolute path to previous agent's handoff] — omit if this is the first phase
 6. [absolute path to spec file]
 7. [absolute path to task file]

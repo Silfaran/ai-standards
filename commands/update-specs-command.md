@@ -14,7 +14,7 @@ Developer
 Spec Analyzer
 
 ## Input
-- The spec file: `ai-standards/projects/{project-name}/specs/{Aggregate}/{feature-name}-specs.md`
+- The spec file: `{project-name}-docs/specs/{Aggregate}/{feature-name}-specs.md`
 - The implemented code across the affected services
 
 ## Steps

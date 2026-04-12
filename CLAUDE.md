@@ -13,8 +13,8 @@ Every service must have a `CLAUDE.md` referencing this file.
 - Logging standards: `ai-standards/standards/logging.md`
 - Security standards: `ai-standards/standards/security.md`
 - New service scaffold checklist: `ai-standards/standards/new-service-checklist.md`
-- Project service definitions: `ai-standards/projects/{project-name}/services.md`
-- Project documentation (specs, plans, tasks): see path defined in each `services.md`
+- Project service definitions: `{project-name}-docs/services.md` (at workspace root)
+- Project documentation (specs, plans, tasks): `{project-name}-docs/specs/{Aggregate}/`
 
 ## Tech Stack
 
@@ -67,7 +67,7 @@ Handoff files are temporary and must be deleted when the full feature plan is co
 
 ### Specs & Documentation
 - Specs must be written before any code — never implement without a validated spec
-- Specs, plans and tasks live in the project docs folder defined in `services.md`
+- Specs, plans and tasks live in `{project-name}-docs/specs/{Aggregate}/`
 - Specs are version-controlled — every spec update must be committed
 
 ### Git

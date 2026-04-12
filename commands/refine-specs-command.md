@@ -16,11 +16,11 @@ Spec Analyzer
 
 ## Input
 The business spec file created by the `create-specs` command:
-`ai-standards/projects/{project-name}/specs/{Aggregate}/{feature-name}-specs.md`
+`{project-name}-docs/specs/{Aggregate}/{feature-name}-specs.md`
 
 ## Steps
 1. Read the existing business spec file
-2. Read `ai-standards/projects/{project-name}/services.md` to understand the available services
+2. Read `{project-name}-docs/services.md` to understand the available services
 3. Read the relevant codebase in depth to understand the technical context
 4. Ask the developer technical or business questions if information is missing or ambiguous
 5. Refine the spec with technical details — architecture decisions, affected aggregates, services involved
@@ -31,9 +31,9 @@ The business spec file created by the `create-specs` command:
 7. Create the task file with required tests and Definition of Done
 
 ## Output
-- The refined technical spec file updated in place: `ai-standards/projects/{project-name}/specs/{Aggregate}/{feature-name}-specs.md`
-- A plan file: `ai-standards/projects/{project-name}/specs/{Aggregate}/{feature-name}-plan.md`
-- A task file: `ai-standards/projects/{project-name}/specs/{Aggregate}/{feature-name}-task.md`
+- The refined technical spec file updated in place: `{project-name}-docs/specs/{Aggregate}/{feature-name}-specs.md`
+- A plan file: `{project-name}-docs/specs/{Aggregate}/{feature-name}-plan.md`
+- A task file: `{project-name}-docs/specs/{Aggregate}/{feature-name}-task.md`
 
 ## Integrations
 <!-- If a project management tool is configured (Jira, Trello, Linear...), the refined spec and plan details

@@ -21,14 +21,14 @@ Example:
 
 ## Steps
 1. Receive the business description from the developer
-2. Read existing specs in `ai-standards/projects/{project-name}/specs/` to understand the current context
+2. Read existing specs in `{project-name}-docs/specs/` to understand the current context
 3. Read relevant code if needed to better understand the existing implementation
 4. Detect and warn the developer about any incompatibilities with existing features
 5. Ask clarifying questions if business information is missing or ambiguous
 6. Create the spec file once all information is clear
 
 ## Output
-- A business-level spec file: `ai-standards/projects/{project-name}/specs/{Aggregate}/{feature-name}-specs.md`
+- A business-level spec file: `{project-name}-docs/specs/{Aggregate}/{feature-name}-specs.md`
 - A warning report if incompatibilities with existing features are detected
 
 ## Integrations

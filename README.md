@@ -72,8 +72,7 @@ ai-standards/
 │   ├── logging.md              ← Structured JSON logs, redaction, Monolog config
 │   ├── security.md             ← Headers, CORS, JWT, rate limiting, input validation
 │   └── new-service-checklist.md ← Pre-commit checklist derived from real bootstrap failures
-└── projects/                   ← Per-project service catalogs and spec paths
-    └── task-manager/
+└── commands/init-project-command.md  ← creates {project-name}-docs/ at workspace root
 ```
 
 ---
@@ -99,6 +98,7 @@ Agents communicate only via handoff files — never via shared context.
 
 | Command | What it does |
 |---|---|
+| [init-project](commands/init-project-command.md) | Creates `{project-name}-docs/services.md` at the workspace root — run once per project |
 | [create-specs](commands/create-specs-command.md) | Spec Analyzer converts a feature description into a structured business spec |
 | [refine-specs](commands/refine-specs-command.md) | Spec Analyzer produces the technical spec, execution plan, and task checklist |
 | [build-plan](commands/build-plan-command.md) | Executes the full plan: spawns agents in order, handles parallel phases, loops on failures |
@@ -175,5 +175,6 @@ Every service in the workspace must have a `CLAUDE.md` that references this repo
 Read `ai-standards/CLAUDE.md` and the relevant `ai-standards/standards/*.md` before doing anything.
 ```
 
-Project-specific documentation (service catalog, spec paths) lives under `projects/{project-name}/`.
-Specs, plans, and task files live in the project docs folder defined in that service catalog.
+Run `init-project` to create the documentation structure for a new project.
+This creates `{project-name}-docs/services.md` at the workspace root — outside of `ai-standards/`.
+Specs, plans, and task files live in `{project-name}-docs/specs/{Aggregate}/`.
