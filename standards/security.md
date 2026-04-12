@@ -322,14 +322,20 @@ Vue 3 escapes all template interpolation (`{{ }}`) by default. The main risk is 
 
 ### Authentication Token Storage
 
-The project stores JWT access tokens in `localStorage`. This is a known trade-off:
+Token storage strategy depends on the frontend's role:
+
+| Frontend type | Access token storage | Reason |
+|---|---|---|
+| Auth frontend (`login-front`) | `localStorage` | Receives token directly from login form. 15-min TTL limits exposure window. |
+| Consumer frontends (`task-front`, others) | Memory only (`ref`) | Recovers token via `POST /api/token/refresh` on load — never touches localStorage. |
 
 | Storage method | XSS risk | CSRF risk | Simplicity |
 |---|---|---|---|
 | `localStorage` | Vulnerable (JS can read it) | Immune | Simple |
+| Memory (`ref`) | Lost on page reload — recovered via refresh cookie | Immune | Moderate |
 | `httpOnly` cookie | Immune | Vulnerable (needs CSRF token) | Complex |
 
-**Current choice: `localStorage`** — simpler to implement. The backend sends the refresh token as an `httpOnly` cookie (not accessible from JS), which limits the damage if the access token is stolen (15-minute window).
+In all cases, the refresh token is stored in an `httpOnly` cookie (not accessible from JS). The 15-minute access token TTL limits the damage window if a token is stolen.
 
 **Mitigation:** keep access token lifetime short (15 min) and rely on the `httpOnly` refresh token for session continuity.
 

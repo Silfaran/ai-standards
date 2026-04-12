@@ -33,6 +33,3 @@ Spec Analyzer
 - A diff report highlighting what changed between the original spec and the final implementation
 - Warnings if significant deviations from the original spec were detected
 
-## Integrations
-<!-- If a project management tool is configured (Jira, Trello, Linear...), comments will be added
-to the task documenting what changed from the original spec and why -->

@@ -31,5 +31,3 @@ Example:
 - A business-level spec file: `{project-name}-docs/specs/{Aggregate}/{feature-name}-specs.md`
 - A warning report if incompatibilities with existing features are detected
 
-## Integrations
-<!-- If a project management tool is configured (Jira, Trello, Linear...), the task will also be created there -->

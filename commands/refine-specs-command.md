@@ -37,6 +37,3 @@ The business spec file created by the `create-specs` command:
 - A plan file: `{project-name}-docs/specs/{Aggregate}/{feature-name}-plan.md`
 - A task file: `{project-name}-docs/specs/{Aggregate}/{feature-name}-task.md`
 
-## Integrations
-<!-- If a project management tool is configured (Jira, Trello, Linear...), the refined spec and plan details
-can be synced to the task. Comments will be added documenting any business changes and the reasoning behind them -->
