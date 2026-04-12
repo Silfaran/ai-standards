@@ -158,3 +158,44 @@ If source files changed (e.g., a new `Kernel.php`), the running container still 
 
 Always run `make build` (or `make update`) after modifying `composer.json`, `Dockerfile`, or any file
 that affects the Docker image build context.
+
+---
+
+## New Frontend Service — Integration Checklist
+
+When adding a new frontend application that calls existing backend services, verify these before testing.
+
+### 10. CORS — add the new origin to every backend this frontend calls
+
+Every backend using NelmioCorsBundle has an allowlist of permitted origins. A new frontend at a new port or domain will receive silent CORS rejections — the app gets no useful error, only a generic network failure.
+
+For each backend this frontend calls:
+
+1. Find `CORS_ALLOW_ORIGIN` in the backend `.env`
+2. Add the new origin — use a regex when multiple origins must be allowed:
+   ```dotenv
+   CORS_ALLOW_ORIGIN=^http://localhost:(3001|3002)$
+   ```
+3. Ensure `origin_regex: true` is set in `nelmio_cors.yaml` (both `defaults` and `paths` blocks)
+4. Recreate the backend container to apply the change (see item 11)
+
+To diagnose: open DevTools → Network, filter XHR/Fetch, look for a failed preflight (`OPTIONS`) request or a response missing the `Access-Control-Allow-Origin` header.
+
+---
+
+### 11. Docker env var changes require container recreation, not restart
+
+`docker restart <service>` restarts the existing container with its **original** environment. It does NOT re-read `.env` files or `env_file` entries from `docker-compose.yml`.
+
+| Command | Re-reads env_file / .env |
+|---|---|
+| `docker restart <service>` | No |
+| `docker compose up -d <service>` | Yes (recreates the container) |
+
+**Always use `docker compose up -d <service>`** after changing any `.env` file or environment variable referenced in `docker-compose.yml`.
+
+Verify the change was applied:
+
+```bash
+docker exec <service> printenv VARIABLE_NAME
+```

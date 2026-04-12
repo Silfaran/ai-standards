@@ -267,6 +267,9 @@ export const useAuthStore = defineStore('auth', () => {
 - Stores can call service classes directly (e.g. `logout` calls `UserApiService.logout()`)
 - Never store server-fetched lists or entities in Pinia — use TanStack Query for server state
 - Auth pattern: token in memory (`ref`) + `localStorage` for persistence across reloads
+- **Never destructure reactive state from a store** — `const { isLoading } = authStore` captures the value at mount time and loses reactivity. Access state through the store proxy: `authStore.isLoading`, not a destructured local
+- **Only actions (functions) are safe to destructure** — `const { logout } = authStore` is fine because functions are not reactive
+- **When mocking a store whose properties a template accesses via the proxy, use `reactive()`** — `reactive({ isLoading: false })`. A plain object with `ref()` values won't auto-unwrap when accessed as `mockStore.isLoading`, causing template comparisons to receive a Ref object instead of a boolean
 
 ---
 
@@ -427,6 +430,34 @@ app.mount('#app')
 ```
 
 **Order matters:** interceptors call `useAuthStore()`, which requires Pinia to be installed. Breaking this order causes runtime errors.
+
+---
+
+## Environment Variables
+
+### Base URL convention
+
+All `VITE_*_URL` variables that point to an API must include the **full path prefix** at which the API is actually mounted. Never use a bare host.
+
+```dotenv
+# Wrong — missing /api prefix
+VITE_API_URL=http://localhost:8080
+
+# Correct
+VITE_API_URL=http://localhost:8080/api
+```
+
+Service classes build paths relative to this base URL:
+
+```ts
+// With VITE_API_URL=http://localhost:8080/api
+api.post('/token/refresh')  // → POST http://localhost:8080/api/token/refresh  ✓
+
+// With VITE_API_URL=http://localhost:8080
+api.post('/token/refresh')  // → POST http://localhost:8080/token/refresh       ✗ (404)
+```
+
+**Rule:** the env var owns the full base — service classes never prepend `/api`.
 
 ---
 
