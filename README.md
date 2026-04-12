@@ -148,6 +148,24 @@ They include concrete code examples, error patterns to avoid, and rules derived 
 
 ---
 
+## Ethical use
+
+This project is released under the MIT License. You are free to use, modify, and distribute it for any purpose, including commercial use.
+
+However, the author does not endorse and explicitly discourages use of this work in any context that:
+
+- Develops, supports, or facilitates weapons systems or military targeting
+- Enables mass surveillance, tracking, or profiling of individuals without consent
+- Powers systems designed to discriminate based on race, gender, religion, nationality, or any protected characteristic
+- Generates or distributes disinformation, propaganda, or deceptive content at scale
+- Facilitates fraud, scams, or platforms designed to deceive or defraud users
+- Develops malware, cyberweapons, or software intended to attack systems without authorization
+- Violates applicable human rights law or international humanitarian law
+
+This notice is not a legal restriction — it is a statement of values.
+
+---
+
 ## How to use in a project
 
 Every service in the workspace must have a `CLAUDE.md` that references this repository:
