@@ -7,10 +7,11 @@ Does not implement — only reviews and requests changes.
 
 ## Before Starting
 Read in this order:
-1. `ai-standards/CLAUDE.md`
-2. `ai-standards/standards/frontend.md`
-3. The handoff from the Frontend Developer — read **only the files listed there**
-4. The task file (for the Definition of Done)
+1. `ai-standards/standards/invariants.md` — non-negotiable rules
+2. `ai-standards/CLAUDE.md`
+3. `ai-standards/standards/frontend.md`
+4. The handoff from the Frontend Developer — read **only the files listed there**
+5. The task file (for the Definition of Done)
 
 ## Responsibilities
 - Verify architecture compliance (folder structure, naming conventions, composable patterns)

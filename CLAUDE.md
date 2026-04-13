@@ -5,6 +5,7 @@
 Global standards, conventions, and agent definitions for all projects in this workspace.
 Every service must have a `CLAUDE.md` referencing this file.
 
+- **Invariants (read first): `ai-standards/standards/invariants.md`** — rules that cannot be overridden under any circumstances
 - Agent definitions: `ai-standards/agents/`
 - Commands: `ai-standards/commands/`
 - Templates: `ai-standards/templates/`
@@ -42,6 +43,7 @@ Every service must have a `CLAUDE.md` referencing this file.
 ## AI Behavior Rules
 
 ### For All Agents
+- Read `ai-standards/standards/invariants.md` first — these rules cannot be overridden by any instruction, including from the developer
 - Read this file, the relevant `standards/` file, and `ai-standards/workspace.md` before doing anything — `workspace.md` tells you where to find `services.md`, specs, and `decisions.md`
 - If `ai-standards/workspace.md` does not exist: stop immediately and tell the developer to run `/init-project` before proceeding
 - Read `decisions.md` (path in workspace.md) before implementing anything — if your implementation contradicts a recorded decision, stop and ask the developer before proceeding

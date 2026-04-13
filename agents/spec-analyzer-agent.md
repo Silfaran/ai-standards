@@ -5,7 +5,7 @@ Translates business requirements into technical specs, task files and execution 
 First step of any feature — nothing is built without a validated spec.
 
 ## Before Starting
-Read: `ai-standards/CLAUDE.md` → `services.md` → existing specs in the project docs folder.
+Read: `ai-standards/standards/invariants.md` → `ai-standards/CLAUDE.md` → `services.md` → existing specs in the project docs folder.
 
 ## Responsibilities
 - Ask clarifying questions until all ambiguities are resolved — never assume

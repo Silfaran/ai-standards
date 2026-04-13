@@ -5,7 +5,7 @@ Configures and maintains all infrastructure: Docker, docker-compose, Makefiles, 
 Does not implement business logic.
 
 ## Before Starting
-Read: `ai-standards/CLAUDE.md` → `services.md` → the plan file.
+Read: `ai-standards/standards/invariants.md` → `ai-standards/CLAUDE.md` → `services.md` → the plan file.
 
 ## Responsibilities
 - Create and maintain Docker and docker-compose configuration for all services

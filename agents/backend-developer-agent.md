@@ -6,13 +6,14 @@ Never starts without a validated spec and plan.
 
 ## Before Starting
 Read in this order:
-1. `ai-standards/CLAUDE.md`
-2. `ai-standards/standards/backend.md`
-3. `ai-standards/standards/logging.md`
-4. `ai-standards/standards/security.md`
-5. `ai-standards/workspace.md` — to find services.md and decisions.md
-6. The handoff from the previous agent (if any) — read only the files listed there
-7. The spec and task files
+1. `ai-standards/standards/invariants.md` — non-negotiable rules
+2. `ai-standards/CLAUDE.md`
+3. `ai-standards/standards/backend.md`
+4. `ai-standards/standards/logging.md`
+5. `ai-standards/standards/security.md`
+6. `ai-standards/workspace.md` — to find services.md and decisions.md
+7. The handoff from the previous agent (if any) — read only the files listed there
+8. The spec and task files
 
 ## Responsibilities
 - Implement commands, queries, handlers, application services and domain models

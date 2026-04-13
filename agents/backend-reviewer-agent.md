@@ -7,12 +7,13 @@ Does not implement — only reviews and requests changes.
 
 ## Before Starting
 Read in this order:
-1. `ai-standards/CLAUDE.md`
-2. `ai-standards/standards/backend.md`
-3. `ai-standards/standards/logging.md`
-4. `ai-standards/standards/security.md`
-5. The handoff from the Backend Developer — read **only the files listed there**
-6. The task file (for the Definition of Done)
+1. `ai-standards/standards/invariants.md` — non-negotiable rules
+2. `ai-standards/CLAUDE.md`
+3. `ai-standards/standards/backend.md`
+4. `ai-standards/standards/logging.md`
+5. `ai-standards/standards/security.md`
+6. The handoff from the Backend Developer — read **only the files listed there**
+7. The task file (for the Definition of Done)
 
 ## Responsibilities
 - Verify architecture compliance (Hexagonal, DDD, CQRS, naming conventions)
