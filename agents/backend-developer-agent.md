@@ -11,9 +11,10 @@ Read in this order:
 3. `ai-standards/standards/backend.md`
 4. `ai-standards/standards/logging.md`
 5. `ai-standards/standards/security.md`
-6. `ai-standards/workspace.md` — to find services.md and decisions.md
-7. The handoff from the previous agent (if any) — read only the files listed there
-8. The spec and task files
+6. `ai-standards/standards/performance.md`
+7. `ai-standards/workspace.md` — to find services.md and decisions.md
+8. The handoff from the previous agent (if any) — read only the files listed there
+9. The spec and task files
 
 ## Responsibilities
 - Implement commands, queries, handlers, application services and domain models

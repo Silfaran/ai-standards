@@ -12,8 +12,9 @@ Read in this order:
 3. `ai-standards/standards/backend.md`
 4. `ai-standards/standards/logging.md`
 5. `ai-standards/standards/security.md`
-6. The handoff from the Backend Developer — read **only the files listed there**
-7. The task file (for the Definition of Done)
+6. `ai-standards/standards/performance.md`
+7. The handoff from the Backend Developer — read **only the files listed there**
+8. The task file (for the Definition of Done)
 
 ## Responsibilities
 - Verify architecture compliance (Hexagonal, DDD, CQRS, naming conventions)
