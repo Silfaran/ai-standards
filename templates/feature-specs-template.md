@@ -17,19 +17,26 @@
 <!-- List the business rules that apply to this feature -->
 
 ## Technical Details
-<!-- Added during refine-specs — architecture decisions, endpoints, data model changes -->
+<!-- ⚠️ DO NOT fill this section during create-specs. It is filled exclusively by refine-specs. -->
+<!-- Attempting to fill technical details before refine-specs skips codebase validation. -->
 
 ### API Endpoints
-<!-- REST endpoints involved -->
+<!-- Added by refine-specs -->
 
 ### Data Model Changes
-<!-- New tables, columns, or migrations needed -->
+<!-- Added by refine-specs -->
+
+### Domain Architecture
+<!-- Added by refine-specs -->
+
+### Frontend Architecture
+<!-- Added by refine-specs -->
 
 ### Domain Events
-<!-- Events dispatched or consumed by this feature -->
+<!-- Added by refine-specs -->
 
 ### Inter-Service Communication
-<!-- How this feature interacts with other services, if applicable -->
+<!-- Added by refine-specs -->
 
 ## Edge Cases
 <!-- List known edge cases and how they should be handled -->

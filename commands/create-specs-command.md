@@ -31,3 +31,24 @@ Example:
 - A business-level spec file: `{project-name}-docs/specs/{Aggregate}/{feature-name}-specs.md`
 - A warning report if incompatibilities with existing features are detected
 
+## Sections to fill in the spec file
+
+Fill **only** these sections — use the template at `ai-standards/templates/feature-specs-template.md`:
+
+| Section | Fill? |
+|---|---|
+| Status | Yes — always `Pending implementation` |
+| Business Description | Yes |
+| Affected Aggregate(s) | Yes |
+| Affected Service(s) | Yes — service names only, no technical detail |
+| User Stories | Yes |
+| Business Rules | Yes |
+| Out of Scope | Yes |
+| Dependencies | Yes — feature-level only (e.g. "Board CRUD must be implemented") |
+| Technical Details (and all subsections) | **NO — leave empty with the placeholder comment** |
+
+> **STOP before Technical Details.** That section and everything under it (API endpoints, data model,
+> domain architecture, frontend architecture, folder structure, migrations, etc.) is filled exclusively
+> by `refine-specs`. Writing technical content in `create-specs` skips a required step and produces
+> specs that have not been validated against the actual codebase.
+
