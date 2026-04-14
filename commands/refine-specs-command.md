@@ -30,7 +30,37 @@ The business spec file created by the `create-specs` command:
    - Which agents must intervene and in what order
    - Which service each part of the code belongs to
    - Dependencies between steps
+   - A **Standards Scope** section (see below) — this controls which files each subagent reads
 9. Create the task file with required tests and Definition of Done
+
+## Standards Scope
+
+The plan file must include a `Standards Scope` section that tells the `build-plan` orchestrator which standards each agent needs. This prevents agents from reading irrelevant standards and reduces token consumption.
+
+Analyze the feature and determine which of these apply:
+
+| Condition | Include |
+|---|---|
+| Feature uses async messaging (RabbitMQ, domain events cross-service) | `backend-reference.md` (async sections) |
+| Feature scaffolds a new backend service | `backend-reference.md` + `new-service-checklist.md` |
+| First controller, AppController, or ApiExceptionSubscriber in a service | `backend-reference.md` (scaffold sections) |
+| First composable, store, or page pattern in a frontend service | `frontend-reference.md` |
+| Feature adds a new frontend that calls existing backends | `new-service-checklist.md` (CORS section) |
+
+Write the section in this format in the plan file:
+
+```markdown
+## Standards Scope
+
+| Agent | Extra reads (beyond standard rules files) |
+|---|---|
+| Backend Developer | `backend-reference.md` (async messaging) |
+| Frontend Developer | `frontend-reference.md` (composable pattern) |
+| Tester | `backend-reference.md` (PHPUnit config, test examples) |
+| DevOps | `backend-reference.md` (consumer worker), `new-service-checklist.md` |
+```
+
+If no extra reads are needed for an agent, write `none` — the agent will still read its standard rules files as defined in its agent definition.
 
 ## Output
 - The refined technical spec file updated in place: `{project-name}-docs/specs/{Aggregate}/{feature-name}-specs.md`

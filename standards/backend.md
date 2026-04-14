@@ -1,15 +1,20 @@
 # Backend Standards
 
+> Full code examples, scaffold implementations, and detailed configurations: `backend-reference.md`
+> Copy-verbatim scaffold files: `ai-standards/scaffolds/`
+
 ## Code Architecture
 
 All backend services follow Hexagonal Architecture + DDD + CQRS + Event-Driven.
 
 ### Layers
+
 - **Domain** — aggregates, entities, value objects, domain events, repository interfaces, domain exceptions
 - **Application** — commands, queries, handlers, application services
 - **Infrastructure** — Symfony, Doctrine DBAL, repository implementations, controllers, external services
 
 ### CQRS
+
 - **CommandBus** — write operations (synchronous via Symfony Messenger)
 - **QueryBus** — read operations (synchronous via Symfony Messenger)
 - **EventBus** — async domain events via RabbitMQ
@@ -40,7 +45,8 @@ src/
     └── External/           ← calls to external services
 ```
 
-**Important:** Exclude `Migration/` and `Seed/` from Symfony service auto-discovery in `services.yaml`:
+Exclude `Migration/` and `Seed/` from Symfony service auto-discovery in `services.yaml`:
+
 ```yaml
 App\:
     resource: '../src/'
@@ -57,25 +63,6 @@ Every class that should not be instantiated directly must use a **private constr
 - `static create(): self` — **aggregates only**, new instance (raises domain events, sets timestamps)
 - `static from(): self` — **aggregates only**, rehydration from DB (no domain events)
 - Specific variants like `fromPlainText()` are acceptable when semantics differ significantly
-
-```php
-final class Email {
-    private function __construct(private readonly string $value) {}
-    public static function from(string $value): self { ... }
-}
-
-final class LoginUserCommand {
-    private function __construct(public readonly string $email, ...) {}
-    /** @param array<string, mixed> $payload */
-    public static function from(array $payload): self { Assert::...; return new self(...); }
-}
-
-final class User {
-    private function __construct(...) {}
-    public static function create(...): self { /* raises domain events */ }
-    public static function from(...): self   { /* rehydrates from DB */ }
-}
-```
 
 ## Commands and Queries
 
@@ -94,198 +81,30 @@ final class User {
 
 ## Controllers
 
-- Extend `AppController` — provides `dispatchCommand()`, `dispatchQuery()`, `body()`, `json()`, `noContent()`, `created()`
+- Extend `AppController` — copy from `ai-standards/scaffolds/AppController.php` if it doesn't exist
+- Provides `dispatchCommand()`, `dispatchQuery()`, `body()`, `json()`, `noContent()`, `created()`
 - Only interact with buses via `dispatchCommand()` / `dispatchQuery()` — never call services directly
 - Build commands/queries via `SomeCommand::from(...)` — no validation logic in the controller
 - One controller per command/query — always
 - All controllers must have OpenAPI/Swagger annotations
-
-### AppController
-
-Every service must include this class at `src/Infrastructure/Http/AppController.php`. Copy it verbatim — do not modify:
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Infrastructure\Http;
-
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\Messenger\Stamp\HandledStamp;
-
-abstract class AppController
-{
-    public function __construct(
-        protected readonly MessageBusInterface $commandBus,
-        protected readonly MessageBusInterface $queryBus,
-    ) {}
-
-    protected function dispatchCommand(object $command): mixed
-    {
-        $envelope = $this->commandBus->dispatch($command);
-        return $envelope->last(HandledStamp::class)?->getResult();
-    }
-
-    protected function dispatchQuery(object $query): mixed
-    {
-        $envelope = $this->queryBus->dispatch($query);
-        return $envelope->last(HandledStamp::class)?->getResult();
-    }
-
-    /** @return array<string, mixed> */
-    protected function body(Request $request): array
-    {
-        $data = json_decode($request->getContent(), true);
-        return is_array($data) ? $data : [];
-    }
-
-    protected function json(mixed $data = null, int $status = JsonResponse::HTTP_OK): JsonResponse
-    {
-        return new JsonResponse($data, $status);
-    }
-
-    protected function noContent(): JsonResponse
-    {
-        return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
-    }
-
-    protected function created(): JsonResponse
-    {
-        return new JsonResponse(null, JsonResponse::HTTP_CREATED);
-    }
-}
-```
-
-**`services.yaml` wiring** — the two buses must be injected by name, not by type:
-
-```yaml
-App\Infrastructure\Http\AppController:
-    abstract: true
-    arguments:
-        $commandBus: '@command.bus'
-        $queryBus: '@query.bus'
-```
-
-**Usage example:**
-
-```php
-final class CreateBoardController extends AppController
-{
-    #[Route('/api/boards', methods: ['POST'])]
-    public function __invoke(Request $request): JsonResponse
-    {
-        $body = $this->body($request);
-        $data = $this->dispatchCommand(CreateBoardCommand::from($body));
-        return $this->json($data, JsonResponse::HTTP_CREATED);
-    }
-}
-```
-
----
+- `services.yaml` wiring: inject `$commandBus: '@command.bus'` and `$queryBus: '@query.bus'` by name
 
 ### ApiExceptionSubscriber
 
-Every service must include this class at `src/Infrastructure/Http/EventSubscriber/ApiExceptionSubscriber.php`.
+Every service must include the subscriber — copy from `ai-standards/scaffolds/ApiExceptionSubscriber.php` if it doesn't exist. Rules:
 
-It converts domain exceptions into HTTP responses, unwraps `HandlerFailedException` (thrown by Symfony Messenger), and lets Symfony's own HTTP exceptions (404, 405, etc.) pass through untouched.
-
-**Base structure — adapt the `match` block for each service's domain exceptions:**
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Infrastructure\Http\EventSubscriber;
-
-use InvalidArgumentException;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Event\ExceptionEvent;
-use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
-use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\Messenger\Exception\HandlerFailedException;
-
-final class ApiExceptionSubscriber implements EventSubscriberInterface
-{
-    public static function getSubscribedEvents(): array
-    {
-        return [KernelEvents::EXCEPTION => ['onKernelException', 10]];
-    }
-
-    public function onKernelException(ExceptionEvent $event): void
-    {
-        $exception = $event->getThrowable();
-
-        // Unwrap exceptions thrown inside Messenger handlers
-        if ($exception instanceof HandlerFailedException) {
-            $exception = $exception->getPrevious() ?? $exception;
-        }
-
-        // Let Symfony handle its own HTTP exceptions (404, 405, etc.)
-        if ($exception instanceof HttpExceptionInterface) {
-            return;
-        }
-
-        $response = match (true) {
-            // Map your domain exceptions here:
-            // $exception instanceof SomeDomainException => $this->notFound('Resource not found'),
-            $exception instanceof InvalidArgumentException => $this->unprocessable($exception->getMessage()),
-            default => null,
-        };
-
-        if (null !== $response) {
-            $event->setResponse($response);
-        }
-    }
-
-    private function conflict(string $error): JsonResponse
-    {
-        return new JsonResponse(['error' => $error], Response::HTTP_CONFLICT);
-    }
-
-    private function notFound(string $error): JsonResponse
-    {
-        return new JsonResponse(['error' => $error], Response::HTTP_NOT_FOUND);
-    }
-
-    /** @param string[] $details */
-    private function unprocessable(string $error, array $details = []): JsonResponse
-    {
-        $body = ['error' => $error];
-        if ([] !== $details) {
-            $body['details'] = $details;
-        }
-        return new JsonResponse($body, Response::HTTP_UNPROCESSABLE_ENTITY);
-    }
-
-    private function unauthorized(string $error): JsonResponse
-    {
-        return new JsonResponse(['error' => $error], Response::HTTP_UNAUTHORIZED);
-    }
-}
-```
-
-**Rules:**
-- `InvalidArgumentException` → 422 is always present — it covers command/query validation failures
+- `InvalidArgumentException` → 422 is always present — covers command/query validation failures
 - Add one `match` arm per domain exception — keep the mapping exhaustive and explicit
 - Never return 500 from a domain exception — every expected failure must have a mapped HTTP status
-- The `default => null` case intentionally leaves unmapped exceptions unhandled — Symfony will return 500, which is correct for truly unexpected errors
-
----
 
 ## Command Handlers
 
 - Tagged to `command.bus` via `services.yaml` — autowiring alone is not enough
-- MAY return data via HandledStamp when the HTTP layer needs it — not a CQRS violation here
+- MAY return data via HandledStamp when the HTTP layer needs it
 
 ## Database
 
-- **Each service owns its own database** — services must never share a PostgreSQL database or directly query another service's tables. Cross-service data access goes through the API or async messages only.
+- **Each service owns its own database** — never share or directly query another service's tables
 - PostgreSQL with Doctrine DBAL only — no ORM
 - Phinx for migrations and seeds
 - Migrations: `src/Infrastructure/Persistence/Migration/`
@@ -295,37 +114,22 @@ final class ApiExceptionSubscriber implements EventSubscriberInterface
 
 ## New Service Scaffold
 
-Before committing a new service for the first time, verify it passes the scaffold checklist:
-`ai-standards/standards/new-service-checklist.md`
-
-The single validation rule: **`docker build .` must succeed with exit code 0.**
-
-Common scaffold failures (all documented in the checklist):
-- Missing `src/Kernel.php`
-- Bundles enabled in `bundles.php` without a corresponding config file
-- `config/routes.yaml` referencing a directory that does not exist yet
-- Symfony Flex `.env` pollution (`MESSENGER_TRANSPORT_DSN`, `DEFAULT_URI`)
-- `symfony/serializer` missing from `composer.json` when using `messenger.transport.symfony_serializer`
-- `composer.json` and `composer.lock` out of sync
-
----
+Before committing a new service, verify it passes `ai-standards/standards/new-service-checklist.md`.
+The single validation rule: `docker build .` must succeed with exit code 0.
 
 ## Docker
 
-The service `Dockerfile` must run migrations automatically on container start before launching `php-fpm`:
+The service `Dockerfile` must run migrations on container start:
 
 ```dockerfile
 CMD ["sh", "-c", "php vendor/bin/phinx migrate --environment=default && php-fpm"]
 ```
 
-This ensures the database schema is always up to date when the container starts, regardless of environment.
-
 ## RabbitMQ & Messaging
 
-### When to use async messaging
+> Full configuration (exchanges, queues, dead letter, retry, cross-service contracts, consumer workers): see `backend-reference.md`
 
-Async messaging via RabbitMQ is **optional** — only introduce it when a feature genuinely requires it.
-Do not add async infrastructure speculatively. Sync buses are the default.
+### When to use async messaging
 
 | Scenario | Use |
 |---|---|
@@ -335,309 +139,26 @@ Do not add async infrastructure speculatively. Sync buses are the default.
 | Cross-service application message (e.g. send email) | Async via RabbitMQ |
 | Long-running background job | Async via RabbitMQ |
 
----
+### Key rules
 
-### Message types and base contracts
-
-**Every command, query, domain event, and async message must implement an interface that enforces a `messageName()` method.**
-
-This string serves two purposes:
-- **Logging** — the `LoggingMiddleware` uses it to identify what was being processed when an error occurred
-- **Serialization** — async messages use it as the type discriminator; never rely on the PHP FQCN for cross-service identification
-
-```php
-// Sync commands — handled by command.bus within the same service
-interface CommandInterface
-{
-    public function messageName(): string;
-}
-
-// Sync queries — handled by query.bus within the same service
-interface QueryInterface
-{
-    public function messageName(): string;
-}
-
-// Domain events — raised by aggregates, published to RabbitMQ for other services
-interface DomainEventInterface
-{
-    public function messageName(): string;
-}
-
-// Cross-service application messages — explicit async intent, not domain state
-interface ApplicationMessageInterface
-{
-    public function messageName(): string;
-}
-```
-
-**`messageName()` naming convention:**
-```
-{service_name}.{type}.{snake_case_action}
-
-Type segment:
-  command  → sync command.bus
-  query    → sync query.bus
-  event    → domain event (async via RabbitMQ)
-  message  → cross-service application message (async via RabbitMQ)
-
-Examples:
-  login_service.command.register_user
-  login_service.command.login_user
-  login_service.command.logout_user
-  login_service.query.get_user_by_email
-  login_service.event.user_registered
-  login_service.event.user_logged_in
-  task_service.event.task_assigned
-  login_service.message.send_email
-```
-
----
-
-### Serializer
-
-**All async transports MUST use `messenger.transport.symfony_serializer`** (JSON), never the default `PhpSerializer`.
-
-**Why this is critical:**
-- `PhpSerializer` (default) embeds a `BusNameStamp` with the origin bus name (e.g. `event.bus`) in the serialized payload. When the consumer service receives it, Symfony tries to route the message to that bus — which does not exist in the consumer → crash. This failure is silent in logs and very hard to debug.
-- JSON serializer does not embed bus stamps — the consumer handles the message without any cross-service bus dependency.
-- JSON is readable in the RabbitMQ Management UI.
-- JSON is language-agnostic for future non-PHP consumers.
-
-**Required dependencies** (add to every service that uses async messaging):
-```json
-"symfony/serializer": "8.0.*",
-"symfony/property-access": "8.0.*"
-```
-
-**Transport configuration** (`messenger.yaml`):
-```yaml
-transports:
-    async_events:
-        dsn: '%env(RABBITMQ_URL)%'
-        serializer: messenger.transport.symfony_serializer
-        options: ...
-```
-
-**Always run `composer update` after adding these dependencies to regenerate `composer.lock`.**
-Never edit `composer.json` manually and leave the lock file out of sync — the Docker build will fail.
-
----
-
-### Symfony Messenger bus configuration
-
-When a service defines multiple buses (e.g. `command.bus`, `event.bus`, `message.bus`):
-
-1. Always set `default_bus` explicitly — Symfony requires it when more than one bus is defined:
-```yaml
-framework:
-    messenger:
-        default_bus: command.bus
-        buses:
-            command.bus: ~
-            event.bus:
-                default_middleware:
-                    enabled: true
-                    allow_no_handlers: true
-            message.bus:
-                default_middleware:
-                    enabled: true
-                    allow_no_handlers: true
-```
-
-2. Use a dedicated `message.bus` (not `event.bus`) to dispatch cross-service application messages.
-This ensures no domain-event bus stamp leaks into the payload.
-
-3. In consumer services (e.g. `notification-service`), register the handler explicitly for the bus that matches the incoming stamp:
-```yaml
-# services.yaml
-App\Application\Handler\SendEmailHandler:
-    tags:
-        - { name: messenger.message_handler, bus: message.bus }
-```
-
----
-
-### Exchanges
-
-| Exchange | Type | Purpose |
-|---|---|---|
-| `events` | fanout | Domain events published by this service |
-| `commands` | direct | Async commands between services (only if needed) |
-| One per application message category | fanout | e.g. `emails` for `SendEmailEvent` |
-
-Never route commands and events through the same exchange. Add a dedicated exchange per distinct message category.
-
----
-
-### Queues and dead letter topology
-
-Each service that consumes messages must declare:
-
-| Queue | Purpose |
-|---|---|
-| `{service}.commands` | Async commands consumed by this service |
-| `{service}.events` | Domain events consumed by this service |
-| `{service}.commands.dead` | Failed commands after max retries |
-| `{service}.events.dead` | Failed events after max retries |
-
-**Why separate dead letter queues per type:**
-A failed command (an action that did not execute) has a different urgency and recovery strategy than a failed event (a notification that was not delivered). Separating them allows targeted monitoring and reprocessing as the system grows.
-
-Example for `notification-service`:
-```
-notification_service.events           ← consumes SendEmailEvent
-notification_service.events.dead      ← emails that failed after 3 retries
-```
-
----
-
-### Retry and dead letter configuration
-
-- **Max retries:** 3
-- **Retry delay:** 5 minutes (300,000 ms), constant (multiplier: 1)
-- **After max retries:** message moved to the dead letter transport
-- **Dead letter queues are NOT retried automatically** — they require explicit manual or tooling intervention
-
-```yaml
-framework:
-    messenger:
-        default_bus: command.bus
-        failure_transport: events_dead   # use commands_dead for command transports
-
-        transports:
-            async_events:
-                dsn: '%env(RABBITMQ_URL)%'
-                serializer: messenger.transport.symfony_serializer
-                options:
-                    exchange:
-                        name: events
-                        type: fanout
-                    queues:
-                        my_service.events: ~
-                retry_strategy:
-                    max_retries: 3
-                    delay: 300000
-                    multiplier: 1
-
-            events_dead:
-                dsn: '%env(RABBITMQ_URL)%'
-                serializer: messenger.transport.symfony_serializer
-                options:
-                    exchange:
-                        name: events.dead
-                        type: direct
-                    queues:
-                        my_service.events.dead: ~
-
-when@test:
-    framework:
-        messenger:
-            transports:
-                async_events: 'in-memory://'
-                events_dead: 'in-memory://'
-```
-
----
-
-### Cross-service message contracts
-
-When two services exchange a message:
-
-1. **Both must define the same class** under the **exact same FQCN**: `App\Infrastructure\Messenger\Message\{MessageName}.php`
-2. Both definitions must be **byte-for-byte identical** in constructor signature, property types, and `@param` PHPDoc annotations (required for PHPStan level 9)
-3. Any change to the constructor is a **breaking change** — must be coordinated and deployed simultaneously in both services
-4. The `messageName()` return value must also match exactly — it is the JSON type discriminator
-
-```php
-// login-service/src/Infrastructure/Messenger/Message/SendEmailEvent.php
-// notification-service/src/Infrastructure/Messenger/Message/SendEmailEvent.php
-// Both files must be identical:
-
-final class SendEmailEvent implements ApplicationMessageInterface
-{
-    /**
-     * @param array<string, mixed> $variables
-     */
-    public function __construct(
-        public readonly string $to,
-        public readonly string $subject,
-        public readonly string $template,
-        public readonly array $variables = [],
-    ) {}
-
-    public function messageName(): string
-    {
-        return 'login_service.message.send_email';
-    }
-}
-```
-
----
-
-### Consumer worker services
-
-Services that only consume messages (no HTTP layer) follow different infrastructure rules:
-
-**Dockerfile:**
-```dockerfile
-FROM php:8.4-cli   # NOT php-fpm — no HTTP server needed
-
-# No pdo_pgsql, no pgsql if no database
-# Install amqp extension for RabbitMQ
-RUN pecl install amqp && docker-php-ext-enable amqp
-
-# Clear Symfony cache on start — CRITICAL when using volume mounts in dev.
-# Without this, the container may boot with stale compiled cache from a previous
-# build, causing silent failures (wrong serializer, missing buses, etc.)
-CMD ["sh", "-c", "php bin/console cache:clear --no-warmup && php bin/console messenger:consume async_events --no-debug --time-limit=3600"]
-```
-
-**Why `cache:clear` on every start:**
-In development, the source code is mounted as a Docker volume. The compiled Symfony cache
-(`var/cache/`) is also part of that volume. If the cache was generated by a previous image
-(with a different configuration), the new container will use stale compiled config — causing
-silent failures that are very hard to trace. Always clear it on startup.
-
-**Why `--no-debug`:**
-In `APP_ENV=dev`, Symfony wraps the event dispatcher with `TraceableEventDispatcher`.
-This causes a fatal crash in `messenger:consume` when the worker receives a `WorkerRunningEvent`.
-The `--no-debug` flag disables it without changing the environment.
-
-**Why `--time-limit=3600`:**
-Prevents memory leaks from accumulating over long-running processes. The container's `restart: unless-stopped` policy ensures the worker is restarted automatically after each cycle.
-
-**`docker-compose.yml` requirements for worker containers:**
-```yaml
-notification-service:
-    restart: unless-stopped   # REQUIRED — restarts after crashes or time-limit exits
-    depends_on:
-        - rabbitmq
-        # also depend on any other service it connects to (e.g. mailpit in dev)
-```
-
-**No Nginx companion container** — worker services have no HTTP interface.
-
----
-
-### Composer recipes and `.env` pollution
-
-When running `composer require` or `composer update`, Symfony Flex may append recipe boilerplate
-to `.env` and create new config files (e.g. `config/packages/routing.yaml` with `DEFAULT_URI`).
-
-**Always review and clean up after adding dependencies:**
-- Remove any auto-appended blocks from `.env` that duplicate or conflict with existing variables
-- Remove or simplify generated config files that reference env vars not needed by this service
-  (e.g. `routing.yaml` with `DEFAULT_URI` is not needed in a worker-only service)
-- Never leave `composer.json` and `composer.lock` out of sync — the Docker build will fail with
-  `"Required package X is not present in the lock file"`
+- Every command, query, domain event, and async message must implement an interface with `messageName()`
+- `messageName()` format: `{service_name}.{type}.{snake_case_action}` — type: `command`, `query`, `event`, `message`
+- All async transports MUST use `messenger.transport.symfony_serializer` (JSON), never `PhpSerializer`
+- When defining multiple buses, always set `default_bus` explicitly
+- Use a dedicated `message.bus` (not `event.bus`) for cross-service application messages
+- Cross-service messages must have identical FQCN, constructor signature, and `messageName()` in both services
+- Required dependencies for async: `symfony/serializer` + `symfony/property-access`
+- Always run `composer update` after adding dependencies to regenerate `composer.lock`
+- Never leave `composer.json` and `composer.lock` out of sync — Docker build will fail
 
 ## Testing
 
+> Full test examples (integration, unit, async messages, PHPUnit config): see `backend-reference.md`
+
 ### Philosophy
 
-- **Integration tests by default** — they test real behavior through the HTTP layer
-- **Unit tests only** when integration is impractical: pure domain logic with complex rules, external services that can't be stubbed at the transport level (emails, third-party APIs)
+- **Integration tests by default** — test real behavior through the HTTP layer
+- **Unit tests only** when integration is impractical: pure domain logic, external services
 - Every feature must have tests before it is considered complete
 
 ### Test structure
@@ -646,193 +167,33 @@ to `.env` and create new config files (e.g. `config/packages/routing.yaml` with 
 tests/
 ├── bootstrap.php
 ├── Unit/
-│   └── Domain/
-│       └── Model/
-│           └── PasswordTest.php        ← domain rule tests
+│   └── Domain/Model/       ← domain rule tests
 └── Integration/
     └── {Aggregate}/
-        └── {Action}{Aggregate}ControllerTest.php   ← HTTP endpoint tests
+        └── {Action}{Aggregate}ControllerTest.php
 ```
 
-### PHPUnit configuration
+### Integration test rules
 
-`phpunit.dist.xml` defines two test suites and environment overrides:
+- One test class per controller
+- Clean the database in `setUp()` — delete in reverse FK order, never truncate
+- Assert both the HTTP response and the database state
+- Test error paths: missing fields (422), duplicate data (409), invalid input (422), unauthorized (401)
+- Use `(string) json_encode()` for request bodies
+- PHPDoc `@var` annotations on container gets for PHPStan
+- In `when@test`, all async transports must be `in-memory://`
+- Use `<env>` tags in `phpunit.dist.xml`, not `<server>`
 
-```xml
-<phpunit bootstrap="tests/bootstrap.php" cacheDirectory=".phpunit.cache"
-         colors="true" failOnDeprecation="true" failOnNotice="true" failOnWarning="true">
-    <php>
-        <ini name="display_errors" value="1" />
-        <ini name="error_reporting" value="-1" />
-        <env name="APP_ENV" value="test" force="true" />
-        <env name="KERNEL_CLASS" value="App\Kernel" force="true" />
-        <env name="DATABASE_URL" value="postgresql://workspace:workspace@postgres:5432/workspace?serverVersion=17" force="true" />
-    </php>
+### Unit test rules
 
-    <testsuites>
-        <testsuite name="unit">
-            <directory>tests/Unit</directory>
-        </testsuite>
-        <testsuite name="integration">
-            <directory>tests/Integration</directory>
-        </testsuite>
-    </testsuites>
-
-    <source>
-        <include>
-            <directory>src</directory>
-        </include>
-    </source>
-</phpunit>
-```
-
-**Important:** Use `<env>` tags, not `<server>` — `<server>` does not work reliably in Docker containers.
-
----
-
-### Integration tests
-
-Integration tests extend `WebTestCase` and test the full HTTP request/response cycle.
-
-```php
-final class RegisterUserControllerTest extends WebTestCase
-{
-    private KernelBrowser $client;
-    private Connection $connection;
-
-    protected function setUp(): void
-    {
-        $this->client = self::createClient();
-        /** @var Connection $connection */
-        $connection = static::getContainer()->get(Connection::class);
-        $this->connection = $connection;
-        // Clean state before each test
-        $this->connection->executeStatement('DELETE FROM refresh_tokens');
-        $this->connection->executeStatement('DELETE FROM users');
-    }
-
-    public function testRegisterWithValidDataReturns201AndUserIsPersisted(): void
-    {
-        $this->client->request(
-            'POST',
-            '/api/register',
-            [],
-            [],
-            ['CONTENT_TYPE' => 'application/json'],
-            (string) json_encode([
-                'first_name' => 'John',
-                'last_name' => 'Doe',
-                'email' => 'john@example.com',
-                'password' => 'Password1!',
-            ]),
-        );
-
-        self::assertResponseStatusCodeSame(201);
-
-        $count = $this->connection->fetchOne(
-            'SELECT COUNT(*) FROM users WHERE email = ?',
-            ['john@example.com'],
-        );
-        self::assertSame(1, (int) $count);
-    }
-}
-```
-
-#### Rules
-
-- **One test class per controller** — matches the one-controller-per-action pattern
-- **Clean the database in `setUp()`** — delete in reverse FK order, never truncate (avoids lock issues)
-- **Assert both the HTTP response and the database state** — a 201 alone does not prove persistence
-- **Test error paths**: missing fields (422), duplicate data (409), invalid input (422), unauthorized (401)
-- **Use `(string) json_encode()`** for request bodies — always cast to string
-- **PHPDoc `@var` annotations** on container gets for PHPStan compliance
-
-#### Testing async messages
-
-In `when@test`, all async transports must be configured as `in-memory://`:
-
-```yaml
-when@test:
-    framework:
-        messenger:
-            transports:
-                async_events: 'in-memory://'
-                email: 'in-memory://'
-                events_dead: 'in-memory://'
-```
-
-Then assert dispatched messages in tests:
-
-```php
-public function testRegisterDispatchesSendEmailEvent(): void
-{
-    $this->client->request('POST', '/api/register', [], [], ['CONTENT_TYPE' => 'application/json'],
-        (string) json_encode([...]),
-    );
-
-    self::assertResponseStatusCodeSame(201);
-
-    /** @var InMemoryTransport $transport */
-    $transport = static::getContainer()->get('messenger.transport.email');
-
-    $envelopes = $transport->get();
-    self::assertCount(1, $envelopes);
-
-    $message = $envelopes[0]->getMessage();
-    self::assertInstanceOf(SendEmailEvent::class, $message);
-    self::assertSame('john@example.com', $message->to);
-}
-```
-
----
-
-### Unit tests
-
-Unit tests extend `TestCase` (not `WebTestCase`) and test pure domain logic in isolation.
-
-```php
-final class PasswordTest extends TestCase
-{
-    public function test_valid_password_is_accepted(): void
-    {
-        $password = Password::fromPlainText('Password1!', fn (string $p) => 'hashed_' . $p);
-        self::assertSame('hashed_Password1!', $password->hashedValue());
-    }
-
-    public function test_password_shorter_than_8_chars_throws(): void
-    {
-        $this->expectException(InvalidPasswordException::class);
-        Password::fromPlainText('Pw1!', fn (string $p) => $p);
-    }
-}
-```
-
-#### Rules
-
-- **No Symfony kernel, no database, no HTTP** — if you need any of these, write an integration test instead
-- Use closures or anonymous classes to stub dependencies (e.g. password hasher)
-- Test all validation branches — valid input, each invalid case, edge cases (boundary values, empty strings)
-- Test that domain exceptions carry useful details (error lists, messages)
-- Method naming: `test_descriptive_snake_case` for readability
-
----
-
-### Test database
-
-- Database name: same as production but tests use `DATABASE_URL` from `phpunit.dist.xml`
-- Phinx `test` environment runs migrations against the test database
-- Never share state between tests — each test cleans up in `setUp()`
-- Seeds are for local dev only — tests create their own data
+- No Symfony kernel, no database, no HTTP — if you need these, write an integration test
+- Use closures or anonymous classes to stub dependencies
+- Test all validation branches — valid input, each invalid case, edge cases
+- Method naming: `test_descriptive_snake_case`
 
 ### Makefile commands
 
-Every service must provide:
-
-```makefile
-make test              # run all tests (unit + integration)
-make test-unit         # run only unit tests
-make test-integration  # run only integration tests
-```
+Every service must provide: `make test`, `make test-unit`, `make test-integration`
 
 ## Standard Libraries
 

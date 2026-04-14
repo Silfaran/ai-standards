@@ -115,10 +115,17 @@ workspace/
 
 ## Standards reference
 
+Standards are split into **rules** (concise, always loaded by agents) and **reference** (full examples, loaded conditionally).
+
 | File | What it governs |
 |---|---|
-| `standards/backend.md` | PHP/Symfony: architecture, patterns, testing |
-| `standards/frontend.md` | Vue 3/TS: composables, stores, services, testing |
+| `standards/invariants.md` | Non-negotiable rules — read first by all agents |
+| `standards/backend.md` | PHP/Symfony: architecture rules (concise) |
+| `standards/backend-reference.md` | Full code examples, configs, scaffold usage |
+| `standards/frontend.md` | Vue 3/TS: rules (concise) |
+| `standards/frontend-reference.md` | Full code examples, test patterns |
 | `standards/logging.md` | Structured logs, Monolog config |
 | `standards/security.md` | Headers, CORS, JWT, rate limiting |
+| `standards/performance.md` | Database, API, and frontend performance |
 | `standards/new-service-checklist.md` | Pre-commit checklist for new services |
+| `scaffolds/` | Copy-verbatim PHP classes (AppController, etc.) |

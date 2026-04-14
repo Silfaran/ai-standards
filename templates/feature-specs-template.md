@@ -17,29 +17,20 @@
 <!-- List the business rules that apply to this feature -->
 
 ## Technical Details
-<!-- ⚠️ DO NOT fill this section during create-specs. It is filled exclusively by refine-specs. -->
-<!-- Attempting to fill technical details before refine-specs skips codebase validation. -->
+<!-- DO NOT fill during create-specs. Filled exclusively by refine-specs after codebase validation. -->
 
 ### API Endpoints
-<!-- Added by refine-specs -->
 
 ### Data Model Changes
-<!-- Added by refine-specs -->
 
 ### Domain Architecture
-<!-- Added by refine-specs -->
 
 ### Frontend Architecture
-<!-- Added by refine-specs -->
 
 ### Domain Events
-<!-- Added by refine-specs -->
 
 ### Inter-Service Communication
-<!-- Added by refine-specs -->
 
 ## Edge Cases
-<!-- List known edge cases and how they should be handled -->
 
 ## Out of Scope
-<!-- Explicitly list what is NOT part of this feature to avoid scope creep -->

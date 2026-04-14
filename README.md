@@ -62,18 +62,25 @@ The Tester runs in two phases: domain rules encoded before code exists, integrat
 
 ```
 ai-standards/
-├── CLAUDE.md                   ← Global AI rules, naming conventions, git workflow
-├── agents/                     ← 7 agent definitions (role, responsibilities, tools, limits)
-├── commands/                   ← 4 developer-invoked orchestration commands
-├── templates/                  ← Spec, task, and handoff file templates
-├── standards/                  ← Technical standards by layer
-│   ├── backend.md              ← PHP/Symfony: architecture, patterns, testing
-│   ├── frontend.md             ← Vue 3/TS: composables, stores, services, testing
-│   ├── logging.md              ← Structured JSON logs, redaction, Monolog config
-│   ├── security.md             ← Headers, CORS, JWT, rate limiting, input validation
-│   └── new-service-checklist.md ← Pre-commit checklist derived from real bootstrap failures
-└── commands/init-project-command.md  ← creates {project-name}-docs/ at workspace root
+├── CLAUDE.md                       ← Global AI rules, naming conventions, git workflow
+├── agents/                         ← 7 agent definitions (role, responsibilities, tools, limits)
+├── commands/                       ← 5 developer-invoked orchestration commands
+├── templates/                      ← Spec, task, and handoff file templates
+├── scaffolds/                      ← Copy-verbatim PHP classes (AppController, etc.)
+├── standards/
+│   ├── invariants.md               ← Non-negotiable rules — read first, cannot be overridden
+│   ├── backend.md                  ← PHP/Symfony: architecture rules (concise)
+│   ├── backend-reference.md        ← Full code examples, configs, scaffold usage
+│   ├── frontend.md                 ← Vue 3/TS: rules (concise)
+│   ├── frontend-reference.md       ← Full code examples, test patterns
+│   ├── logging.md                  ← Structured JSON logs, redaction, Monolog config
+│   ├── security.md                 ← Headers, CORS, JWT, rate limiting, input validation
+│   ├── performance.md              ← Database, API, and frontend performance rules
+│   └── new-service-checklist.md    ← Pre-commit checklist derived from real bootstrap failures
+└── commands/init-project-command.md
 ```
+
+**Token optimization architecture:** Standards are split into rules files (always loaded) and reference files (loaded conditionally). The `refine-specs` command generates a `Standards Scope` in the plan file that tells `build-plan` which reference files each agent needs. This prevents agents from reading ~600 lines of code examples they don't need for the current feature.
 
 ---
 
@@ -108,16 +115,19 @@ Agents communicate only via handoff files — never via shared context.
 
 ## Standards
 
-Technical standards are detailed reference documents — not aspirational guidelines.
-They include concrete code examples, error patterns to avoid, and rules derived from real failures.
+Standards are split into **rules files** (concise, always loaded) and **reference files** (detailed, loaded conditionally by the `Standards Scope` in the plan file).
 
 | Standard | Covers |
 |---|---|
-| [backend.md](standards/backend.md) | Hexagonal Architecture, DDD, CQRS, Symfony patterns, Phinx migrations, async messaging, OpenAPI, testing |
-| [frontend.md](standards/frontend.md) | Vue 3 Composition API, Pinia (reactivity rules), TanStack Query, Axios interceptors, env vars, Vitest |
-| [logging.md](standards/logging.md) | Structured JSON logs, sensitive field redaction, Monolog configuration, LoggingMiddleware pattern |
-| [security.md](standards/security.md) | HTTP headers, CORS, JWT lifecycle, rate limiting, input validation layers, redirect allowlists |
-| [new-service-checklist.md](standards/new-service-checklist.md) | Bootstrap checklist for new services, CORS setup for new frontends, Docker env var reload behavior |
+| [invariants.md](standards/invariants.md) | Non-negotiable rules — security, code, git, agent behavior |
+| [backend.md](standards/backend.md) | Architecture rules, folder structure, naming, testing rules (concise) |
+| [backend-reference.md](standards/backend-reference.md) | Full code examples, scaffold usage, YAML configs, test examples |
+| [frontend.md](standards/frontend.md) | Vue 3/TS rules, composable patterns, store rules, testing rules (concise) |
+| [frontend-reference.md](standards/frontend-reference.md) | Full code examples, interceptor setup, test examples |
+| [logging.md](standards/logging.md) | Structured JSON logs, sensitive field redaction, Monolog config |
+| [security.md](standards/security.md) | HTTP headers, CORS, JWT lifecycle, rate limiting, input validation |
+| [performance.md](standards/performance.md) | Database indexes, pagination, N+1 prevention, frontend lazy loading |
+| [new-service-checklist.md](standards/new-service-checklist.md) | Bootstrap checklist for new services, CORS setup, Docker env reload |
 
 ---
 

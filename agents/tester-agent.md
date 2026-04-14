@@ -13,6 +13,10 @@ Read in this order:
 5. The handoff from the previous agent — read **only the files listed there**
 6. The task file — this is the single source of truth for what tests to write
 
+**Conditional reads** (only when implementing test patterns for the first time):
+- `ai-standards/standards/backend-reference.md` — PHPUnit config, integration/unit test examples, async message testing
+- `ai-standards/standards/frontend-reference.md` — composable/store/page test examples
+
 ## Two-Phase Testing
 
 ### Phase 1 — Before Backend Developer (unit tests only)

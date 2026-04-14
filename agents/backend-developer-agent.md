@@ -13,15 +13,21 @@ Read in this order:
 5. `ai-standards/standards/security.md`
 6. `ai-standards/standards/performance.md`
 7. `ai-standards/workspace.md` — to find services.md and decisions.md
-8. The handoff from the previous agent (if any) — read only the files listed there
-9. The spec and task files
+8. `decisions.md` for the project — do not contradict existing decisions
+9. The handoff from the previous agent (if any) — read only the files listed there
+10. The spec and task files
+
+**Conditional reads** (only when the plan's Standards Scope indicates):
+- `ai-standards/standards/backend-reference.md` — when scaffolding new components, configuring async messaging, or implementing a pattern for the first time
+- `ai-standards/standards/new-service-checklist.md` — when creating a new service
 
 ## Responsibilities
 - Implement commands, queries, handlers, application services and domain models
 - Implement repository interfaces (Domain) and DBAL implementations (Infrastructure)
 - Create Phinx migrations for any database changes
 - Create Phinx seeds with realistic local data whenever a new aggregate is introduced
-- Create `phpstan.neon` and `.php-cs-fixer.dist.php` if they don't exist in the service
+- Copy `phpstan.neon` and `.php-cs-fixer.dist.php` if they don't exist in the service
+- Copy scaffold files from `ai-standards/scaffolds/` when creating AppController, ApiExceptionSubscriber, etc. for the first time
 - Ensure all code passes PHPStan level 9 and PHP CS Fixer
 - Dispatch domain events via the EventBus when required
 - Add OpenAPI/Swagger annotations to every controller

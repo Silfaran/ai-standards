@@ -10,8 +10,9 @@ Read in this order:
 1. `ai-standards/standards/invariants.md` — non-negotiable rules
 2. `ai-standards/CLAUDE.md`
 3. `ai-standards/standards/frontend.md`
-4. The handoff from the Frontend Developer — read **only the files listed there**
-5. The task file (for the Definition of Done)
+4. `ai-standards/standards/security.md`
+5. The handoff from the Frontend Developer — read **only the files listed there**
+6. The task file (for the Definition of Done)
 
 ## Responsibilities
 - Verify architecture compliance (folder structure, naming conventions, composable patterns)
@@ -34,8 +35,8 @@ Read in this order:
 
 This agent runs in a loop with the Frontend Developer. Maximum 3 iterations:
 
-- **Iterations 1–2:** request changes normally, wait for the developer to fix and re-run
-- **Iteration 3 (final):** if issues remain after the third review:
+- **Iterations 1-2:** request changes normally, wait for the developer to fix and re-run
+- **Iteration 3 (final):** if issues remain:
   1. Write a **Final Review Report** listing every unresolved issue with severity and exact location
   2. Do NOT request changes again — the loop ends here
   3. Write the handoff with status: `ESCALATED`

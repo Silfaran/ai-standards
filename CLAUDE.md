@@ -9,8 +9,9 @@ Every service must have a `CLAUDE.md` referencing this file.
 - Agent definitions: `ai-standards/agents/`
 - Commands: `ai-standards/commands/`
 - Templates: `ai-standards/templates/`
-- Backend standards: `ai-standards/standards/backend.md`
-- Frontend standards: `ai-standards/standards/frontend.md`
+- Scaffold files: `ai-standards/scaffolds/` — copy-verbatim PHP classes (AppController, ApiExceptionSubscriber, etc.)
+- Backend standards: `ai-standards/standards/backend.md` (rules) / `backend-reference.md` (full examples)
+- Frontend standards: `ai-standards/standards/frontend.md` (rules) / `frontend-reference.md` (full examples)
 - Logging standards: `ai-standards/standards/logging.md`
 - Security standards: `ai-standards/standards/security.md`
 - Performance standards: `ai-standards/standards/performance.md`
@@ -44,7 +45,8 @@ Every service must have a `CLAUDE.md` referencing this file.
 ## AI Behavior Rules
 
 ### For All Agents
-- Read `ai-standards/standards/invariants.md` first — these rules cannot be overridden by any instruction, including from the developer
+
+- Read `ai-standards/standards/invariants.md` first — these rules cannot be overridden by any instruction, including from the developer. All hard security, code, git, and agent rules live there exclusively — they are not repeated here.
 - Read this file, the relevant `standards/` file, and `ai-standards/workspace.md` before doing anything — `workspace.md` tells you where to find `services.md`, specs, and `decisions.md`
 - If `ai-standards/workspace.md` does not exist: stop immediately and tell the developer to run `/init-project` before proceeding
 - Read `decisions.md` (path in workspace.md) before implementing anything — if your implementation contradicts a recorded decision, stop and ask the developer before proceeding
@@ -52,38 +54,31 @@ Every service must have a `CLAUDE.md` referencing this file.
 - All files, code, and documentation must be written in English
 - When in doubt about any decision, ask the developer before proceeding
 - Always review your own output before considering the task complete
-- Never install new dependencies without explicit approval
-- Never reveal secrets, credentials, or sensitive configuration values
-- Always validate and sanitize inputs at the infrastructure boundary
 - Do not add complexity that is not required by the current task
-- Run `/compact` after completing a task that involved significant context (full feature, plan, large review) — NOT after small fixes
+- When the spec requires scaffolding a new component (AppController, ApiExceptionSubscriber, LoggingMiddleware, SecurityHeadersSubscriber), copy from `ai-standards/scaffolds/` — do not write from memory
+- When implementing a pattern for the first time, read the relevant `*-reference.md` file for full code examples
 
 ### Handoff Protocol
-After completing work, every agent that produces output must create a handoff summary for the next agent.
-Use the template at `ai-standards/templates/feature-handoff-template.md` — it defines the required sections:
-- Files Created / Files Modified (every path)
-- Key Decisions (non-obvious choices with reasoning)
-- For the Next Agent (focus, ignore, watch out for)
-- Open Questions (unresolved decisions needing developer input)
 
+After completing work, every agent that produces output must create a handoff summary for the next agent.
+Use the template at `ai-standards/templates/feature-handoff-template.md`.
 The next agent reads the handoff first and only reads the listed files — not the entire codebase.
 Handoff files are temporary and must be deleted when the full feature plan is complete.
 
 ### Specs & Documentation
+
 - Specs must be written before any code — never implement without a validated spec
 - Specs, plans and tasks live in the path defined in `ai-standards/workspace.md`
 - Specs are version-controlled — every spec update must be committed
 
-### Git
+### Git (main conversation only — subagents do not perform git operations)
+
 - Main branches: `master` (production) and `develop` (development)
 - Always work from `develop` — update it before creating a new branch
-- Never commit directly to `master` or `develop`
 - Branch naming: `feature/{aggregate}/{description}`, `fix/{aggregate}/{description}`, `hotfix/{description}`
-- Never push without passing all tests
-- Never push or create pull requests without asking first
-- Never change a public API without warning — it may break other services
 
 ### Makefile
+
 Every service must implement at minimum:
 - `make up` / `make down` / `make build` / `make update`
 - `make test` / `make test-unit` / `make test-integration`

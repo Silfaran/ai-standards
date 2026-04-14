@@ -30,14 +30,14 @@ Read in this order:
 - Review report grouped by severity: critical / major / minor
 - Change requests to the Backend Developer if issues found
 - Approval confirmation once all issues are resolved
-- Handoff summary for the next agent (Frontend Developer or Tester)
+- Handoff summary for the next agent
 
 ## Review loop exit criteria
 
 This agent runs in a loop with the Backend Developer. Maximum 3 iterations:
 
-- **Iterations 1–2:** request changes normally, wait for the developer to fix and re-run
-- **Iteration 3 (final):** if issues remain after the third review:
+- **Iterations 1-2:** request changes normally, wait for the developer to fix and re-run
+- **Iteration 3 (final):** if issues remain:
   1. Write a **Final Review Report** listing every unresolved issue with severity and exact location
   2. Do NOT request changes again — the loop ends here
   3. Write the handoff with status: `ESCALATED`

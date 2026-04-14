@@ -10,9 +10,15 @@ Read in this order:
 2. `ai-standards/CLAUDE.md`
 3. `ai-standards/standards/frontend.md`
 4. `ai-standards/standards/security.md`
-5. `services.md` for the project — to understand which backend APIs are available
-6. The handoff from the previous agent (if any) — read only the files listed there
-7. The spec and task files
+5. `ai-standards/standards/performance.md` — frontend section (lazy loading, tree shaking)
+6. `ai-standards/workspace.md` — to find services.md and decisions.md
+7. `decisions.md` for the project — do not contradict existing decisions
+8. `services.md` for the project — to understand which backend APIs are available
+9. The handoff from the previous agent (if any) — read only the files listed there
+10. The spec and task files
+
+**Conditional reads** (only when the plan's Standards Scope indicates):
+- `ai-standards/standards/frontend-reference.md` — when implementing a composable, store, or page pattern for the first time
 
 ## Responsibilities
 - Implement Vue 3 components, pages, composables, stores and services

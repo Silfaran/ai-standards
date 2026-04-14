@@ -1,7 +1,6 @@
 # {Feature Name} — Task
 
 ## Description
-<!-- Brief description of what needs to be implemented -->
 
 ## Related Spec
 `{project-docs-path}/specs/{Aggregate}/{feature-name}-specs.md`
@@ -9,16 +8,8 @@
 ## Required Tests
 
 ### Phase 1 — Unit Tests (written before implementation)
-<!-- Domain rules to encode as unit tests -->
-<!-- Example: Password validation (min 8 chars, 1 uppercase, 1 number, 1 special char) -->
 
 ### Phase 2 — Integration Tests (written after implementation)
-<!-- Backend: HTTP scenarios to test end-to-end -->
-<!-- Example: POST /api/register with valid data → 201 -->
-<!-- Example: POST /api/register with existing email → 409 -->
-<!-- Frontend: Page tests with Vue Test Utils -->
-<!-- Example: Submit button disabled when form is empty -->
-<!-- Example: Valid form submission calls mutate with correct payload -->
 
 ## Definition of Done
 
