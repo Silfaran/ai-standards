@@ -67,3 +67,6 @@ If no extra reads are needed for an agent, write `none` — the agent will still
 - A plan file: `{project-name}-docs/specs/{Aggregate}/{feature-name}-plan.md`
 - A task file: `{project-name}-docs/specs/{Aggregate}/{feature-name}-task.md`
 
+### Token Usage Report
+After completing, list the files you read and display: `Estimated input tokens: ~{lines_read × 8}`
+

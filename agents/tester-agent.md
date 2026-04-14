@@ -5,6 +5,9 @@ Writes and executes tests. Operates in two phases within every feature plan.
 Does not implement features — only tests them.
 
 ## Before Starting
+
+> **As a build-plan subagent:** the orchestrator prompt specifies which files to read — follow that order instead of this list.
+
 Read in this order:
 1. `ai-standards/standards/invariants.md` — non-negotiable rules
 2. `ai-standards/CLAUDE.md`

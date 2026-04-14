@@ -31,6 +31,9 @@ Example:
 - A business-level spec file: `{project-name}-docs/specs/{Aggregate}/{feature-name}-specs.md`
 - A warning report if incompatibilities with existing features are detected
 
+### Token Usage Report
+After completing, list the files you read and display: `Estimated input tokens: ~{lines_read × 8}`
+
 ## Sections to fill in the spec file
 
 Fill **only** these sections — use the template at `ai-standards/templates/feature-specs-template.md`:

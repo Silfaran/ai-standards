@@ -114,13 +114,13 @@ Read the plan file's `Standards Scope` to determine if `*-reference.md` files ar
 
 | Phase | Agent Definition | Standards Files | Handoff reads | Handoff writes |
 |---|---|---|---|---|
-| Tester P1 | `agents/tester-agent.md` | `backend.md`, `security.md` | — | `tester-p1-handoff.md` |
+| Tester P1 | `agents/tester-agent.md` | `backend.md`, `security.md` (+ `frontend.md` if full-stack) | — | `tester-p1-handoff.md` |
 | DevOps | `agents/devops-agent.md` | — | plan file | `devops-handoff.md` |
 | Backend Dev | `agents/backend-developer-agent.md` | `backend.md`, `logging.md`, `security.md`, `performance.md` | `tester-p1-handoff.md` (+ `devops-handoff.md` if exists) | `backend-dev-handoff.md` |
 | Frontend Dev | `agents/frontend-developer-agent.md` | `frontend.md`, `security.md`, `performance.md` | `tester-p1-handoff.md` (+ `devops-handoff.md` if exists) | `frontend-dev-handoff.md` |
 | Backend Reviewer | `agents/backend-reviewer-agent.md` | `backend.md`, `logging.md`, `security.md`, `performance.md` | `backend-dev-handoff.md` | `backend-reviewer-handoff.md` |
 | Frontend Reviewer | `agents/frontend-reviewer-agent.md` | `frontend.md`, `security.md` | `frontend-dev-handoff.md` | `frontend-reviewer-handoff.md` |
-| Tester P2 | `agents/tester-agent.md` | `backend.md`, `security.md` | `backend-reviewer-handoff.md`, `frontend-reviewer-handoff.md` | `tester-p2-handoff.md` |
+| Tester P2 | `agents/tester-agent.md` | `backend.md`, `security.md` (+ `frontend.md` if full-stack) | `backend-reviewer-handoff.md`, `frontend-reviewer-handoff.md` | `tester-p2-handoff.md` |
 
 **Conditional reference files** — include when the plan's `Standards Scope` indicates:
 
@@ -172,3 +172,19 @@ Do not continue to Tester Phase 2 until both sides are either approved or explic
 - Updated task file with all Definition of Done conditions marked
 - Updated spec file (via update-specs)
 - Final status report to the developer
+- Token usage estimate (see below)
+
+### Token Usage Report
+
+After the final status report, display an estimated token usage summary:
+
+1. List each subagent phase that ran and the standards files it read
+2. Count the approximate lines read per phase (use the line counts from the files you provided in each prompt)
+3. Multiply total lines by 8 to estimate input tokens
+4. Display:
+   ```
+   Estimated token usage:
+   - Phases executed: {N}
+   - Total files read across all phases: {N}
+   - Estimated input tokens: ~{total}
+   ```

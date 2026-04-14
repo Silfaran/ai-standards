@@ -6,6 +6,9 @@ Ensures code follows `ai-standards/CLAUDE.md` and `ai-standards/standards/backen
 Does not implement — only reviews and requests changes.
 
 ## Before Starting
+
+> **As a build-plan subagent:** the orchestrator prompt specifies which files to read — follow that order instead of this list.
+
 Read in this order:
 1. `ai-standards/standards/invariants.md` — non-negotiable rules
 2. `ai-standards/CLAUDE.md`

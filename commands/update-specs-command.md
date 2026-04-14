@@ -33,3 +33,6 @@ Spec Analyzer
 - A diff report highlighting what changed between the original spec and the final implementation
 - Warnings if significant deviations from the original spec were detected
 
+### Token Usage Report
+After completing, list the files you read and display: `Estimated input tokens: ~{lines_read × 8}`
+
