@@ -128,4 +128,5 @@ Standards are split into **rules** (concise, always loaded by agents) and **refe
 | `standards/security.md` | Headers, CORS, JWT, rate limiting |
 | `standards/performance.md` | Database, API, and frontend performance |
 | `standards/new-service-checklist.md` | Pre-commit checklist for new services |
+| `standards/lessons-learned.md` | Agent mistakes from past features — auto-populated, injected as warnings |
 | `scaffolds/` | Copy-verbatim PHP classes (AppController, etc.) |

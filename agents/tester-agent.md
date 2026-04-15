@@ -36,6 +36,11 @@ Runs once, after all developers and reviewers have completed their work:
 - Full test run report
 - Change requests to the corresponding developer when tests fail
 - Confirmation when all tests pass and Definition of Done is met
+- **Lessons learned** — if any test failed due to an agent mistake not covered by existing standards, add a `## Lessons Learned` section to your handoff with one line per lesson in this format:
+  ```
+  - [{agent that caused the failure}] {what went wrong} → {fix or rule to follow}
+  ```
+  Only log mistakes that would recur in future features. Do not log one-off typos or trivial fixes.
 
 ## Tools
 Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion

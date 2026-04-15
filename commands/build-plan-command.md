@@ -11,7 +11,7 @@ For full-stack features, Backend Developer and Frontend Developer run **in paral
 
 ## Step 0 — Spec sign-off (mandatory, before spawning any agent)
 
-1. Read the spec file, plan file, and task file
+1. Read the spec file, plan file, task file, and `ai-standards/standards/lessons-learned.md`
 2. Display a summary to the developer:
    - Feature name and affected services
    - Phases that will run and in what order
@@ -78,10 +78,11 @@ The prompt passed to each subagent must be **self-contained** and include:
    - **Sequential phases**: spawn and wait for the result before proceeding
    - **Parallel phases**: spawn the first with `run_in_background: true`, immediately spawn the second (foreground), then process both results before continuing
 4. Handle feedback loops per side — each loop reruns only the affected side
-5. After both sides are approved and all tests pass, run `update-specs`
-6. Delete the entire `ai-standards/handoffs/{feature-name}/` directory
-7. Verify all Definition of Done conditions are met
-8. Report final status to the developer
+5. After both sides are approved and all tests pass, check the Tester handoff for a `## Lessons Learned` section. If it contains new entries, append them to `ai-standards/standards/lessons-learned.md`. If any lesson duplicates an existing standard, promote it there and do not add it to lessons-learned.
+6. Run `update-specs`
+7. Delete the entire `ai-standards/handoffs/{feature-name}/` directory
+8. Verify all Definition of Done conditions are met
+9. Report final status to the developer
 
 ---
 
@@ -103,6 +104,7 @@ Read these files in order before doing anything else:
 
 {instruction}
 Working directory: {service_path}
+{conditional: Warnings from past features: {relevant_lessons — only entries from lessons-learned.md that match this agent's role}}
 
 When done, write your handoff to: {handoff_path}
 ```

@@ -128,6 +128,7 @@ Standards are split into **rules files** (concise, always loaded) and **referenc
 | [security.md](standards/security.md) | HTTP headers, CORS, JWT lifecycle, rate limiting, input validation |
 | [performance.md](standards/performance.md) | Database indexes, pagination, N+1 prevention, frontend lazy loading |
 | [new-service-checklist.md](standards/new-service-checklist.md) | Bootstrap checklist for new services, CORS setup, Docker env reload |
+| [lessons-learned.md](standards/lessons-learned.md) | Agent mistakes from past features — auto-populated by the Tester, injected as warnings in future builds |
 
 ---
 
