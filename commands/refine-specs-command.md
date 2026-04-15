@@ -22,16 +22,42 @@ The business spec file created by the `create-specs` command:
 1. Read the existing business spec file
 2. Read `{project-name}-docs/services.md` to understand the available services
 3. Read `{project-name}-docs/decisions.md` to understand existing architectural decisions
-4. Read the relevant codebase in depth to understand the technical context
-5. Ask the developer technical or business questions if information is missing or ambiguous
-6. Refine the spec with technical details — architecture decisions, affected aggregates, services involved
-7. If this feature introduces a new architectural decision or changes an existing one, update `decisions.md` accordingly
-8. Generate the execution plan specifying:
-   - Which agents must intervene and in what order
-   - Which service each part of the code belongs to
-   - Dependencies between steps
-   - A **Standards Scope** section (see below) — this controls which files each subagent reads
-9. Create the task file with required tests and Definition of Done
+4. Read `{project-name}-docs/specs/INDEX.md` to identify related specs; deep-read **only** specs with overlapping aggregates or services — do not re-read the full spec list
+5. Read the relevant codebase in depth to understand the technical context
+6. Ask the developer technical or business questions if information is missing or ambiguous
+7. Refine the spec with technical details — architecture decisions, affected aggregates, services involved
+8. If this feature introduces a new architectural decision or changes an existing one, update `decisions.md` accordingly
+9. Classify the feature complexity (see **Complexity Classification** below) and include it in the plan
+10. Generate the execution plan specifying:
+    - The **Complexity** classification
+    - Which agents must intervene and in what order
+    - Which service each part of the code belongs to
+    - Dependencies between steps
+    - A **Standards Scope** section (see below) — this controls which files each subagent reads
+11. Create the task file with required tests and Definition of Done
+12. Update `{project-name}-docs/specs/INDEX.md` if the spec's status or summary changed
+
+## Complexity Classification
+
+The plan file must include a `## Complexity` section. This tells the `build-plan` orchestrator how to execute the plan — specifically, whether to use separate agents or consolidate them.
+
+Evaluate the feature against these criteria:
+
+| Complexity | Criteria | Agent strategy |
+|---|---|---|
+| `simple` | Single service, no API/DB changes, < 5 files, no new dependencies | 1 agent: Developer implements + writes tests. Reviewer optional (run only if the developer's handoff flags uncertainty). |
+| `standard` | Single service with API/DB changes, OR 2 services with straightforward integration | Standard flow: Dev → Reviewer (loop) → Tester |
+| `complex` | Multiple services, async messaging, new infrastructure, or > 3 aggregates | Full flow: DevOps → BE Dev ‖ FE Dev → Reviewers → Tester |
+
+Write it in the plan file as:
+
+```markdown
+## Complexity: simple
+```
+
+When complexity is `simple`, the plan **must consolidate** the Developer and Tester phases into a single phase. The plan should have 1-2 phases total instead of 3-4.
+
+---
 
 ## Standards Scope
 
@@ -52,7 +78,7 @@ Write the section in this format in the plan file:
 ```markdown
 ## Standards Scope
 
-| Agent | Extra reads (beyond standard rules files) |
+| Agent | Extra reads (beyond context bundle) |
 |---|---|
 | Backend Developer | `backend-reference.md` (async messaging) |
 | Frontend Developer | `frontend-reference.md` (composable pattern) |
@@ -60,7 +86,7 @@ Write the section in this format in the plan file:
 | DevOps | `backend-reference.md` (consumer worker), `new-service-checklist.md` |
 ```
 
-If no extra reads are needed for an agent, write `none` — the agent will still read its standard rules files as defined in its agent definition.
+If no extra reads are needed for an agent, write `none` — the agent will still read the context bundle (which contains the distilled standard rules relevant to this feature).
 
 ## Output
 - The refined technical spec file updated in place: `{project-name}-docs/specs/{Aggregate}/{feature-name}-specs.md`

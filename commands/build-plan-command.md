@@ -24,6 +24,25 @@ For full-stack features, Backend Developer and Frontend Developer run **in paral
 
 ---
 
+## Step 0.5 — Generate context bundle (after sign-off, before agents)
+
+Before spawning any subagent, generate a **context bundle** file that distills the standards into only the rules relevant to this feature. This prevents every subagent from re-reading 4-5 full standards files (~1,000 lines each time).
+
+1. Read the plan's `Standards Scope` to determine which standards apply
+2. Read each applicable standards file and extract **only the sections relevant** to this feature type:
+   - For a frontend-only CSS feature: skip backend rules, skip DB rules, skip async messaging rules
+   - For a backend-only feature: skip frontend rules
+   - Always include: invariants (full — non-negotiable), naming conventions, git rules
+3. Include a condensed **spec digest** — the Technical Details section of the spec (the part agents actually need for implementation), not the full business description and user stories
+4. Include relevant entries from `decisions.md` (only ADRs that overlap with this feature's aggregates or services)
+5. Write the bundle to: `ai-standards/handoffs/{feature-name}/context-bundle.md`
+
+The bundle replaces the individual standards file reads in the subagent prompt. Agents still read their own agent definition file (which is short and role-specific).
+
+Target size: **200-400 lines** (vs ~1,000+ lines from reading all standards separately).
+
+---
+
 ## How agent phases work
 
 Each phase is spawned with `Agent(subagent_type: "general-purpose")`.
@@ -31,24 +50,56 @@ The subagent starts with a clean context — it does **not** inherit this conver
 
 The prompt passed to each subagent must be **self-contained** and include:
 - The absolute path to the agent definition file (which tells the agent what other files to read)
-- The absolute paths to the spec, task, and decisions files
+- The absolute path to the **context bundle** (replaces individual standards + decisions + spec digest)
+- The absolute path to the full spec file (for reference if needed)
+- The absolute path to the task file
 - The absolute path to the previous handoff (if any)
 - The working directory for the relevant service
-- Which reference files to read (from the plan's `Standards Scope`)
 - One clear instruction
 
 ---
 
-## Standard Flow (full-stack feature)
+## Execution flows by complexity
+
+The plan file includes a `## Complexity` classification (`simple`, `standard`, or `complex`). Use the matching flow:
+
+### Simple flow (Complexity: simple)
 
 ```
 [Sign-off]
-  → DevOps (only if new infra is needed)           ← sequential: both devs may depend on it
-    → Backend Developer ‖ Frontend Developer       ← PARALLEL: both read the same spec
-      → Backend Reviewer ‖ Frontend Reviewer       ← PARALLEL: independent codebases
-        → Tester [unit + integration + run]        ← sequential: needs both sides complete
-          → update-specs
-            → Done
+  → Generate context bundle
+    → Developer + Tester (single agent)          ← implements, writes tests, runs tests
+      → Reviewer (optional — only if flagged)    ← lightweight review, 1 iteration max
+        → update-specs → Done
+```
+
+- **One agent** does implementation AND testing in a single session. The prompt instructs it to implement the feature, then write and run tests, then run linters.
+- **Reviewer is optional.** Only spawn if the developer handoff includes an `## Open Questions` section with items. If no open questions, skip directly to update-specs.
+- This flow typically uses **1-2 subagents** instead of 3-4.
+
+### Standard flow (Complexity: standard)
+
+```
+[Sign-off]
+  → Generate context bundle
+    → Developer
+      → Reviewer (loop if needed, max 3)
+        → Tester [unit + integration + run]
+          → update-specs → Done
+```
+
+For single-service features. Use the appropriate Developer/Reviewer type (Backend or Frontend) based on the affected service.
+
+### Complex flow (Complexity: complex)
+
+```
+[Sign-off]
+  → Generate context bundle
+    → DevOps (only if new infra is needed)           ← sequential: both devs may depend on it
+      → Backend Developer ‖ Frontend Developer       ← PARALLEL: both read the same spec
+        → Backend Reviewer ‖ Frontend Reviewer       ← PARALLEL: independent codebases
+          → Tester [unit + integration + run]        ← sequential: needs both sides complete
+            → update-specs → Done
 ```
 
 **Feedback loops (per side, independent):**
@@ -57,34 +108,24 @@ The prompt passed to each subagent must be **self-contained** and include:
 
 **If max iterations reached without approval:** stop that side, report the final review report to the developer, and wait for a decision (see Failure Handling).
 
-## Standard Flow (backend-only feature)
-
-```
-[Sign-off]
-  → DevOps (only if new infra is needed)
-    → Backend Developer
-      → Backend Reviewer (loop if needed, max 3)
-        → Tester [unit + integration + run]
-          → update-specs → Done
-```
-
 ---
 
 ## Steps
 
 1. **Sign-off** — show summary, wait for developer confirmation (see Step 0)
-2. Read the plan file and task file
+2. Read the plan file and task file. Read the `## Complexity` line from the plan to determine the execution flow.
 3. **Create feature branch** — from `develop`, create `feature/{aggregate}/{feature-name}` in every affected service repository. If the branch already exists, check it out. Do not proceed until the branch is created in all affected repos.
-4. Execute each phase using the subagent prompt template below:
+4. **Generate context bundle** (see Step 0.5) — write to `ai-standards/handoffs/{feature-name}/context-bundle.md`
+5. Execute each phase using the subagent prompt template below, following the flow matching the plan's complexity:
    - **Sequential phases**: spawn and wait for the result before proceeding
    - **Parallel phases**: spawn the first with `run_in_background: true`, immediately spawn the second (foreground), then process both results before continuing
-5. Handle feedback loops per side — each loop reruns only the affected side
-6. After both sides are approved and all tests pass, check the Tester handoff for a `## Lessons Learned` section. If it contains new entries, append them to `ai-standards/standards/lessons-learned.md`. If any lesson duplicates an existing standard, promote it there and do not add it to lessons-learned.
-7. Run `update-specs`
-8. Delete the entire `ai-standards/handoffs/{feature-name}/` directory
-9. **Commit all changes** — stage and commit in every affected repo with a descriptive message. Do **not** merge into `develop` or `master`. Do **not** push or create a pull request.
-10. Verify all Definition of Done conditions are met
-11. Report final status to the developer, including:
+6. Handle feedback loops per side — each loop reruns only the affected side (skip for `simple` — no review loop)
+7. After all agents are done and tests pass, check the final handoff for a `## Lessons Learned` section. If it contains new entries, append them to `ai-standards/standards/lessons-learned.md`. If any lesson duplicates an existing standard, promote it there and do not add it to lessons-learned.
+8. Run `update-specs`
+9. Delete the entire `ai-standards/handoffs/{feature-name}/` directory
+10. **Commit all changes** — stage and commit in every affected repo with a descriptive message. Do **not** merge into `develop` or `master`. Do **not** push or create a pull request.
+11. Verify all Definition of Done conditions are met
+12. Report final status to the developer, including:
     - Branch name per repo
     - Reminder: "Branches are ready. Merge into `develop` when satisfied."
 
@@ -99,12 +140,11 @@ You are the {Agent Role} agent for the {Project Name} project.
 
 Read these files in order before doing anything else:
 1. {agent_definition_path}
-2. {standards_files — as listed in the table below for this phase}
-3. {decisions_path}
-4. {previous_handoff_path — if any}
-5. {spec_path}
-6. {task_path}
-{conditional: 7. {reference_files — only if Standards Scope says so}}
+2. {context_bundle_path}
+3. {previous_handoff_path — if any}
+4. {spec_path}
+5. {task_path}
+{conditional: 6. {reference_files — only if Standards Scope says so}}
 
 {instruction}
 Working directory: {service_path}
@@ -113,18 +153,19 @@ Working directory: {service_path}
 When done, write your handoff to: {handoff_path}
 ```
 
+> **Note:** The context bundle (generated in Step 0.5) replaces the individual reads of `invariants.md`, `CLAUDE.md`, `backend.md`, `frontend.md`, `security.md`, `performance.md`, `logging.md`, and `decisions.md`. The agent definition file still tells the agent its role and responsibilities. If the agent needs the full text of a standards file for a specific reason, it can read it — but the bundle should cover 95% of cases.
+
 ### Files per phase
 
-Read the plan file's `Standards Scope` to determine if `*-reference.md` files are needed (e.g., for async messaging, new scaffolds). Always include `invariants.md` and `CLAUDE.md` via the agent definition.
-
-| Phase | Agent Definition | Standards Files | Handoff reads | Handoff writes |
+| Phase | Agent Definition | Context bundle | Handoff reads | Handoff writes |
 |---|---|---|---|---|
-| DevOps | `agents/devops-agent.md` | — | plan file | `devops-handoff.md` |
-| Backend Dev | `agents/backend-developer-agent.md` | `backend.md`, `logging.md`, `security.md`, `performance.md` | `devops-handoff.md` (if exists) | `backend-dev-handoff.md` |
-| Frontend Dev | `agents/frontend-developer-agent.md` | `frontend.md`, `security.md`, `performance.md` | `devops-handoff.md` (if exists) | `frontend-dev-handoff.md` |
-| Backend Reviewer | `agents/backend-reviewer-agent.md` | `backend.md`, `logging.md`, `security.md`, `performance.md` | `backend-dev-handoff.md` | `backend-reviewer-handoff.md` |
-| Frontend Reviewer | `agents/frontend-reviewer-agent.md` | `frontend.md`, `security.md` | `frontend-dev-handoff.md` | `frontend-reviewer-handoff.md` |
-| Tester | `agents/tester-agent.md` | `backend.md`, `security.md` (+ `frontend.md` if full-stack) | `backend-reviewer-handoff.md`, `frontend-reviewer-handoff.md` | `tester-handoff.md` |
+| DevOps | `agents/devops-agent.md` | Yes | plan file | `devops-handoff.md` |
+| Backend Dev | `agents/backend-developer-agent.md` | Yes | `devops-handoff.md` (if exists) | `backend-dev-handoff.md` |
+| Frontend Dev | `agents/frontend-developer-agent.md` | Yes | `devops-handoff.md` (if exists) | `frontend-dev-handoff.md` |
+| Backend Reviewer | `agents/backend-reviewer-agent.md` | Yes | `backend-dev-handoff.md` | `backend-reviewer-handoff.md` |
+| Frontend Reviewer | `agents/frontend-reviewer-agent.md` | Yes | `frontend-dev-handoff.md` | `frontend-reviewer-handoff.md` |
+| Tester | `agents/tester-agent.md` | Yes | `backend-reviewer-handoff.md`, `frontend-reviewer-handoff.md` | `tester-handoff.md` |
+| Dev+Tester (simple) | `agents/{role}-developer-agent.md` | Yes | `devops-handoff.md` (if exists) | `dev-tester-handoff.md` |
 
 **Conditional reference files** — include when the plan's `Standards Scope` indicates:
 
@@ -134,8 +175,6 @@ Read the plan file's `Standards Scope` to determine if `*-reference.md` files ar
 | Feature scaffolds a new service | `backend-reference.md` + `new-service-checklist.md` |
 | First controller/subscriber in a service | `backend-reference.md` (AppController, ApiExceptionSubscriber sections) |
 | First composable/store/page pattern | `frontend-reference.md` |
-
-**All prompts must include `decisions.md`** (path from workspace.md) — the agent definition already requires reading `invariants.md` and `CLAUDE.md`.
 
 ### Instruction per phase
 
@@ -147,6 +186,7 @@ Read the plan file's `Standards Scope` to determine if `*-reference.md` files ar
 | Backend Reviewer | Review the backend code listed in the handoff. This is review iteration {N} of max 3. |
 | Frontend Reviewer | Review the frontend code listed in the handoff. This is review iteration {N} of max 3. |
 | Tester | Write unit tests and integration tests, then run all tests. If any fail, identify which developer needs to fix them. |
+| Dev+Tester (simple) | Implement the {feature} feature as described in the spec. After implementation, write unit tests as specified in the task file, run the full test suite (`npm run test` or `make test`), and run linters (ESLint/Prettier or PHPStan/PHP-CS-Fixer). All must pass before writing the handoff. |
 
 ---
 

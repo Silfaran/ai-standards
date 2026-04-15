@@ -69,7 +69,9 @@ Handoff files are temporary and must be deleted when the full feature plan is co
 
 - Specs must be written before any code — never implement without a validated spec
 - Specs, plans and tasks live in the path defined in `ai-standards/workspace.md`
+- `{project-name}-docs/specs/INDEX.md` is the quick-reference index — always read this before deep-reading full specs
 - Specs are version-controlled — every spec update must be committed
+- When running as a `build-plan` subagent, read the **context bundle** (`handoffs/{feature}/context-bundle.md`) instead of individual standards files — it contains the distilled rules relevant to the current feature
 
 ### Git (main conversation only — subagents do not perform git operations)
 

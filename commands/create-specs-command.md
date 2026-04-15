@@ -21,11 +21,14 @@ Example:
 
 ## Steps
 1. Receive the business description from the developer
-2. Read existing specs in `{project-name}-docs/specs/` to understand the current context
-3. Read relevant code if needed to better understand the existing implementation
-4. Detect and warn the developer about any incompatibilities with existing features
-5. Ask clarifying questions if business information is missing or ambiguous
-6. Create the spec file once all information is clear
+2. Read `{project-name}-docs/specs/INDEX.md` to understand all existing features at a glance
+3. Identify which existing specs might have incompatibilities based on the index (same aggregate, same service, or overlapping UI area)
+4. Deep-read **only** the identified specs — do not read specs that clearly have no overlap
+5. Read relevant code if needed to better understand the existing implementation
+6. Detect and warn the developer about any incompatibilities with existing features
+7. Ask clarifying questions if business information is missing or ambiguous
+8. Create the spec file once all information is clear
+9. Update `{project-name}-docs/specs/INDEX.md` — add a row for the new spec
 
 ## Output
 - A business-level spec file: `{project-name}-docs/specs/{Aggregate}/{feature-name}-specs.md`
