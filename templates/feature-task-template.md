@@ -7,9 +7,9 @@
 
 ## Required Tests
 
-### Phase 1 — Unit Tests (written before implementation)
+### Unit Tests
 
-### Phase 2 — Integration Tests (written after implementation)
+### Integration Tests
 
 ## Definition of Done
 
@@ -30,8 +30,8 @@
 - [ ] Page integration tests written (form submit, validation, loading/error states)
 
 ### Shared
-- [ ] All Phase 1 unit tests pass
-- [ ] All Phase 2 integration/page tests pass
+- [ ] All unit tests pass
+- [ ] All integration tests pass
 - [ ] Code reviewed and approved by the corresponding Reviewer agent
 - [ ] No security vulnerabilities detected (`composer audit`, `npm audit`)
 - [ ] Spec updated via `update-specs` after implementation

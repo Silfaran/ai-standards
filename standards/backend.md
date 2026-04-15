@@ -119,6 +119,10 @@ The single validation rule: `docker build .` must succeed with exit code 0.
 
 ## Docker
 
+Each service has its own `docker-compose.yml` inside its directory. The root `docker-compose.yml` at the workspace root contains only shared infrastructure (PostgreSQL, RabbitMQ, Mailpit). All compose files share a `workspace-network` external network. See `devops-agent.md` for the full architecture.
+
+Every service that uses a database must have its **own database** — services must never share a database. The `DATABASE_URL` must point to a service-specific database (e.g. `login`, `task`), not a shared one.
+
 The service `Dockerfile` must run migrations on container start:
 
 ```dockerfile

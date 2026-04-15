@@ -140,7 +140,14 @@ docker build --no-cache .
 
 If it fails, fix the error before committing. A scaffold that does not build is broken by definition.
 
-After validating locally, `make build` from the `ai-standards/` directory builds all services together —
+Also verify the service's own `docker-compose.yml` starts correctly:
+
+```bash
+# From the service directory (infrastructure must be running)
+docker compose up -d
+```
+
+After validating locally, `make build` from the `ai-standards/` directory builds all services —
 use this to confirm no cross-service issues.
 
 ---
@@ -192,7 +199,7 @@ To diagnose: open DevTools → Network, filter XHR/Fetch, look for a failed pref
 | `docker restart <service>` | No |
 | `docker compose up -d <service>` | Yes (recreates the container) |
 
-**Always use `docker compose up -d <service>`** after changing any `.env` file or environment variable referenced in `docker-compose.yml`.
+**Always use `docker compose up -d`** from the service directory after changing any `.env` file or environment variable referenced in its `docker-compose.yml`.
 
 Verify the change was applied:
 

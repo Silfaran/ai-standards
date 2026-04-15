@@ -278,16 +278,30 @@ CMD ["sh", "-c", "php bin/console cache:clear --no-warmup && php bin/console mes
 
 **Why `--time-limit=3600`:** prevents memory leaks. Container `restart: unless-stopped` restarts automatically.
 
-**`docker-compose.yml`:**
+**`docker-compose.yml`** (inside the service directory, e.g. `notification-service/docker-compose.yml`):
 
 ```yaml
-notification-service:
-    restart: unless-stopped   # REQUIRED
-    depends_on:
-        - rabbitmq
+services:
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: notification-service
+    restart: unless-stopped   # REQUIRED — auto-restart after --time-limit
+    volumes:
+      - .:/var/www/html
+    env_file:
+      - .env
+    networks:
+      - workspace-network
+
+networks:
+  workspace-network:
+    external: true
 ```
 
 No Nginx companion container — worker services have no HTTP interface.
+The service connects to RabbitMQ and Mailpit via `workspace-network` (started by the root infrastructure compose).
 
 ---
 

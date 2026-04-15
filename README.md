@@ -7,6 +7,8 @@ using isolated, role-specific AI agents that communicate via structured handoff 
 Designed for professional projects following enterprise-grade architecture patterns:
 Hexagonal Architecture, DDD, CQRS, and Event-Driven design.
 
+> **Want to start using it?** See **[USAGE.md](USAGE.md)** for the setup guide and step-by-step workflow.
+
 ---
 
 ## The problem this solves
@@ -36,17 +38,15 @@ Developer describes the feature
         ▼
    build-plan
         │
-        ├─ [Phase 1] Tester writes unit tests (from spec domain rules, before any code)
+        ├─ [Phase 1] DevOps configures infrastructure (only if new service or new infra)
         │
-        ├─ [Phase 2] DevOps configures infrastructure (only if new service or new infra)
-        │
-        ├─ [Phase 3] Backend Developer ──────────────┐  (parallel, independent codebases)
+        ├─ [Phase 2] Backend Developer ──────────────┐  (parallel, independent codebases)
         │            Frontend Developer ─────────────┘
         │
-        ├─ [Phase 4] Backend Reviewer ───────────────┐  (parallel, loops up to 3× if changes needed)
+        ├─ [Phase 3] Backend Reviewer ───────────────┐  (parallel, loops up to 3× if changes needed)
         │            Frontend Reviewer ──────────────┘
         │
-        └─ [Phase 5] Tester writes integration tests + runs all tests (loops up to 3× if failures)
+        └─ [Phase 4] Tester writes unit + integration tests and runs all (loops up to 3× if failures)
         │
         ▼
   update-specs ──── Spec Analyzer syncs spec with the final implementation
@@ -54,7 +54,7 @@ Developer describes the feature
 
 Backend and Frontend run in parallel because their codebases are independent.
 Reviewers run in parallel for the same reason.
-The Tester runs in two phases: domain rules encoded before code exists, integration verified after.
+The Tester runs once at the end — writing and executing all tests against the final implementation.
 
 ---
 
@@ -93,8 +93,8 @@ ai-standards/
 | [Frontend Developer](agents/frontend-developer-agent.md) | Implements frontend features: pages, composables, stores, services, components |
 | [Backend Reviewer](agents/backend-reviewer-agent.md) | Reviews backend code: architecture compliance, PHPStan level 9, PHP CS Fixer, security, API contracts |
 | [Frontend Reviewer](agents/frontend-reviewer-agent.md) | Reviews frontend code: TypeScript strict mode, ESLint/Prettier, store usage, loading/error states |
-| [Tester](agents/tester-agent.md) | Two-phase testing: unit tests before implementation (domain rules), integration tests after, executes both |
-| [DevOps](agents/devops-agent.md) | Configures Docker, docker-compose, Makefiles, environment variables, migrations on startup |
+| [Tester](agents/tester-agent.md) | Writes and runs all tests (unit + integration) after implementation and review are complete |
+| [DevOps](agents/devops-agent.md) | Configures per-service Docker and docker-compose, shared infrastructure compose, Makefiles, environment variables, migrations on startup |
 
 Each agent runs as an isolated subagent with a clean context window.
 Agents communicate only via handoff files — never via shared context.
@@ -174,17 +174,3 @@ However, the author does not endorse and explicitly discourages use of this work
 
 This notice is not a legal restriction — it is a statement of values.
 
----
-
-## How to use in a project
-
-Every service in the workspace must have a `CLAUDE.md` that references this repository:
-
-```markdown
-## Standards
-Read `ai-standards/CLAUDE.md` and the relevant `ai-standards/standards/*.md` before doing anything.
-```
-
-Run `init-project` to create the documentation structure for a new project.
-This creates `{project-name}-docs/services.md` at the workspace root — outside of `ai-standards/`.
-Specs, plans, and task files live in `{project-name}-docs/specs/{Aggregate}/`.

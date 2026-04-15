@@ -43,13 +43,12 @@ The prompt passed to each subagent must be **self-contained** and include:
 
 ```
 [Sign-off]
-  → Tester [Phase 1: unit tests]                    ← sequential: defines contracts
-    → DevOps (only if new infra is needed)           ← sequential: both devs may depend on it
-      → Backend Developer ‖ Frontend Developer       ← PARALLEL: both read the same spec
-        → Backend Reviewer ‖ Frontend Reviewer       ← PARALLEL: independent codebases
-          → Tester [Phase 2: integration + run]      ← sequential: needs both sides complete
-            → update-specs
-              → Done
+  → DevOps (only if new infra is needed)           ← sequential: both devs may depend on it
+    → Backend Developer ‖ Frontend Developer       ← PARALLEL: both read the same spec
+      → Backend Reviewer ‖ Frontend Reviewer       ← PARALLEL: independent codebases
+        → Tester [unit + integration + run]        ← sequential: needs both sides complete
+          → update-specs
+            → Done
 ```
 
 **Feedback loops (per side, independent):**
@@ -62,10 +61,10 @@ The prompt passed to each subagent must be **self-contained** and include:
 
 ```
 [Sign-off]
-  → Tester [Phase 1: unit tests]
+  → DevOps (only if new infra is needed)
     → Backend Developer
       → Backend Reviewer (loop if needed, max 3)
-        → Tester [Phase 2: integration + run]
+        → Tester [unit + integration + run]
           → update-specs → Done
 ```
 
@@ -114,13 +113,12 @@ Read the plan file's `Standards Scope` to determine if `*-reference.md` files ar
 
 | Phase | Agent Definition | Standards Files | Handoff reads | Handoff writes |
 |---|---|---|---|---|
-| Tester P1 | `agents/tester-agent.md` | `backend.md`, `security.md` (+ `frontend.md` if full-stack) | — | `tester-p1-handoff.md` |
 | DevOps | `agents/devops-agent.md` | — | plan file | `devops-handoff.md` |
-| Backend Dev | `agents/backend-developer-agent.md` | `backend.md`, `logging.md`, `security.md`, `performance.md` | `tester-p1-handoff.md` (+ `devops-handoff.md` if exists) | `backend-dev-handoff.md` |
-| Frontend Dev | `agents/frontend-developer-agent.md` | `frontend.md`, `security.md`, `performance.md` | `tester-p1-handoff.md` (+ `devops-handoff.md` if exists) | `frontend-dev-handoff.md` |
+| Backend Dev | `agents/backend-developer-agent.md` | `backend.md`, `logging.md`, `security.md`, `performance.md` | `devops-handoff.md` (if exists) | `backend-dev-handoff.md` |
+| Frontend Dev | `agents/frontend-developer-agent.md` | `frontend.md`, `security.md`, `performance.md` | `devops-handoff.md` (if exists) | `frontend-dev-handoff.md` |
 | Backend Reviewer | `agents/backend-reviewer-agent.md` | `backend.md`, `logging.md`, `security.md`, `performance.md` | `backend-dev-handoff.md` | `backend-reviewer-handoff.md` |
 | Frontend Reviewer | `agents/frontend-reviewer-agent.md` | `frontend.md`, `security.md` | `frontend-dev-handoff.md` | `frontend-reviewer-handoff.md` |
-| Tester P2 | `agents/tester-agent.md` | `backend.md`, `security.md` (+ `frontend.md` if full-stack) | `backend-reviewer-handoff.md`, `frontend-reviewer-handoff.md` | `tester-p2-handoff.md` |
+| Tester | `agents/tester-agent.md` | `backend.md`, `security.md` (+ `frontend.md` if full-stack) | `backend-reviewer-handoff.md`, `frontend-reviewer-handoff.md` | `tester-handoff.md` |
 
 **Conditional reference files** — include when the plan's `Standards Scope` indicates:
 
@@ -137,13 +135,12 @@ Read the plan file's `Standards Scope` to determine if `*-reference.md` files ar
 
 | Phase | Instruction |
 |---|---|
-| Tester P1 | Write Phase 1 unit tests for the backend domain rules described in the spec. Do NOT execute them yet — write files only. |
 | DevOps | Configure infrastructure as described in the plan. Verify `docker build .` succeeds. |
 | Backend Dev | Implement the backend for the {feature} feature as described in the spec. |
 | Frontend Dev | Implement the frontend for the {feature} feature as described in the spec. |
 | Backend Reviewer | Review the backend code listed in the handoff. This is review iteration {N} of max 3. |
 | Frontend Reviewer | Review the frontend code listed in the handoff. This is review iteration {N} of max 3. |
-| Tester P2 | Write Phase 2 integration tests and run all tests (unit + integration). If any fail, identify which developer needs to fix them. |
+| Tester | Write unit tests and integration tests, then run all tests. If any fail, identify which developer needs to fix them. |
 
 ---
 
@@ -162,7 +159,7 @@ Read the plan file's `Standards Scope` to determine if `*-reference.md` files ar
   - **(b) Fix manually** — developer fixes, then re-run the reviewer once more
   - **(c) Abort** — stop the entire feature
 
-Do not continue to Tester Phase 2 until both sides are either approved or explicitly accepted.
+Do not continue to the Tester until both sides are either approved or explicitly accepted.
 
 ---
 

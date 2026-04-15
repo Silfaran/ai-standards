@@ -82,3 +82,8 @@ Handoff files are temporary and must be deleted when the full feature plan is co
 Every service must implement at minimum:
 - `make up` / `make down` / `make build` / `make update`
 - `make test` / `make test-unit` / `make test-integration`
+
+The root Makefile in `ai-standards/` orchestrates all services and adds:
+- `make infra-up` / `make infra-down` — start/stop shared infrastructure only (PostgreSQL, RabbitMQ, Mailpit)
+- `make up` — starts infrastructure first, then all services
+- `make ps` — shows status of infrastructure + all services

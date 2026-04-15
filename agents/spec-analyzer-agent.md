@@ -18,7 +18,7 @@ Read in this order:
 - Detect and warn about incompatibilities with existing features before writing the spec
 - Create the spec following the template in `ai-standards/templates/feature-specs-template.md`
 - Create the task file following the template in `ai-standards/templates/feature-task-template.md`
-- Create the execution plan including the two-phase Tester Agent steps and the `Standards Scope` section
+- Create the execution plan including the Tester Agent step and the `Standards Scope` section
 - Update specs when changes are requested during the review process
 
 ## Output Files
