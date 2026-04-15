@@ -1,60 +1,84 @@
 # AI Standards
 
-A multi-agent orchestration framework for AI-assisted software development.
-Covers the full feature lifecycle — from business description to deployed, reviewed, and tested code —
-using isolated, role-specific AI agents that communicate via structured handoff files.
+An orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that builds full-stack web applications — PHP/Symfony backend and Vue 3 frontend — using isolated AI agents that spec, implement, review, and test each feature.
 
-Designed for professional projects following enterprise-grade architecture patterns:
-Hexagonal Architecture, DDD, CQRS, and Event-Driven design.
+You describe a feature in plain language. The framework splits the work across seven specialized agents, each with its own context window, strict standards, and a single role. The result is implemented, reviewed, and tested code following Hexagonal Architecture, DDD, CQRS, and Event-Driven design.
 
 > **Want to start using it?** See **[USAGE.md](USAGE.md)** for the setup guide and step-by-step workflow.
 
 ---
 
-## The problem this solves
+## Tech stack
 
-Using an AI assistant without structure produces inconsistent results: agents accumulate context across tasks, make contradictory decisions, skip reviews, and implement features without specs. This framework solves that by defining:
+This framework is opinionated. It enforces a specific stack and architecture:
 
-- **Roles** — each agent has a single responsibility and cannot exceed it
-- **Order** — phases execute in a defined sequence, with parallel phases where safe
-- **Handoffs** — every agent documents what it did before the next one starts
-- **Specs first** — no code is written without a validated technical specification
+| Layer | Technology |
+|---|---|
+| Backend | PHP 8.4+ / Symfony 8.0+ |
+| Frontend | Vue 3 + TypeScript + Vite + shadcn/ui |
+| Database | PostgreSQL (one database per service) |
+| Messaging | RabbitMQ (Symfony Messenger) |
+| Infrastructure | Docker (per-service containers + shared infra) |
+
+Architecture patterns — Hexagonal, DDD, CQRS, Event-Driven — are enforced by standards, not suggested. Every agent validates against them.
 
 ---
 
-## Workflow
+## How it works
 
-A typical feature goes through the following phases:
+Four commands, each backed by specialized agents:
 
 ```
-Developer describes the feature
-        │
-        ▼
-  create-specs ──── Spec Analyzer writes business spec, flags incompatibilities
-        │
-        ▼
-  refine-specs ──── Spec Analyzer produces technical spec + execution plan + task checklist
-        │
-        ▼
-   build-plan
-        │
-        ├─ [Phase 1] DevOps configures infrastructure (only if new service or new infra)
-        │
-        ├─ [Phase 2] Backend Developer ──────────────┐  (parallel, independent codebases)
-        │            Frontend Developer ─────────────┘
-        │
-        ├─ [Phase 3] Backend Reviewer ───────────────┐  (parallel, loops up to 3× if changes needed)
-        │            Frontend Reviewer ──────────────┘
-        │
-        └─ [Phase 4] Tester writes unit + integration tests and runs all (loops up to 3× if failures)
-        │
-        ▼
-  update-specs ──── Spec Analyzer syncs spec with the final implementation
+/create-specs     You describe a feature → Spec Analyzer writes a business spec
+       │
+       ▼
+/refine-specs     Spec Analyzer reads the codebase → technical spec + execution plan + task checklist
+       │
+       ▼
+/build-plan       Orchestrator spawns agents in sequence:
+       │
+       │   [Phase 1]  DevOps sets up infrastructure (only if needed)
+       │   [Phase 2]  Backend Developer + Frontend Developer  (parallel)
+       │   [Phase 3]  Backend Reviewer + Frontend Reviewer    (parallel, up to 3 rounds each)
+       │   [Phase 4]  Tester writes and runs all tests
+       │
+       ▼
+/update-specs     Spec Analyzer syncs the spec with the final implementation
 ```
 
-Backend and Frontend run in parallel because their codebases are independent.
-Reviewers run in parallel for the same reason.
-The Tester runs once at the end — writing and executing all tests against the final implementation.
+Backend and Frontend run in parallel — independent codebases, independent review loops. The Tester runs once against the final, reviewed code. The framework adapts the execution flow to feature complexity: simple features use fewer agents; complex multi-service features use the full pipeline with parallel phases.
+
+---
+
+## Agents
+
+Seven agents, each with a single responsibility and an isolated context window:
+
+| Agent | Does | Doesn't |
+|---|---|---|
+| [Spec Analyzer](agents/spec-analyzer-agent.md) | Translates business descriptions into technical specs, flags cross-service incompatibilities | Write code |
+| [Backend Developer](agents/backend-developer-agent.md) | Implements commands, queries, handlers, repositories, migrations, controllers with OpenAPI | Touch frontend code |
+| [Frontend Developer](agents/frontend-developer-agent.md) | Implements pages, composables, stores, services, components | Touch backend code |
+| [Backend Reviewer](agents/backend-reviewer-agent.md) | Reviews architecture, PHPStan level 9, PHP-CS-Fixer, security, API contracts | Modify code — only requests changes |
+| [Frontend Reviewer](agents/frontend-reviewer-agent.md) | Reviews TypeScript strict mode, ESLint/Prettier, state management, error handling | Modify code — only requests changes |
+| [Tester](agents/tester-agent.md) | Writes and runs unit + integration tests after review is complete | Skip tests for "simple" changes |
+| [DevOps](agents/devops-agent.md) | Configures Docker, docker-compose, Makefiles, env vars, migrations on startup | Run unless new infrastructure is needed |
+
+Agents never share a context window. They communicate via **handoff files** — structured summaries listing files created, files modified, key decisions, and exactly which files the next agent should read. Handoffs are deleted when the feature is complete.
+
+---
+
+## What makes this work
+
+**Spec before code.** No agent writes a line of code without a validated spec. The spec is the contract — the developer, every agent, and every reviewer read the same document.
+
+**Isolated contexts.** Each agent starts with a clean context and reads only the files it needs. A decision made during backend implementation can't leak into the frontend review. Token costs stay predictable.
+
+**Token-conscious architecture.** Standards are split into concise rules files (always loaded, ~150 lines) and detailed reference files (loaded only when needed, ~500 lines each). Before agents run, a **context bundle** distills all relevant standards into a single 200–400 line file tailored to the current feature. This avoids agents reading ~1,000+ lines of standards they don't need.
+
+**Standards from real failures.** Every rule exists because it prevented a real problem. The bootstrap checklist includes the exact error each item avoids. Agent mistakes are logged by the Tester and recycled as warnings in future builds — patterns that recur get promoted to permanent standards.
+
+**Definition of Done is a checklist.** Every feature generates a task file with explicit checkboxes: architecture compliance, static analysis, formatting, tests passing, security checks, spec updated. A feature is done when every box is checked.
 
 ---
 
@@ -62,100 +86,37 @@ The Tester runs once at the end — writing and executing all tests against the 
 
 ```
 ai-standards/
-├── CLAUDE.md                       ← Global AI rules, naming conventions, git workflow
+├── CLAUDE.md                       ← Entry point for agents — global rules, naming, git workflow
+├── USAGE.md                        ← Setup guide and step-by-step workflow for developers
 ├── agents/                         ← 7 agent definitions (role, responsibilities, tools, limits)
-├── commands/                       ← 5 developer-invoked orchestration commands
+├── commands/                       ← 5 slash commands (/init-project, /create-specs, /refine-specs, /build-plan, /update-specs)
 ├── templates/                      ← Spec, task, and handoff file templates
-├── scaffolds/                      ← Copy-verbatim PHP classes (AppController, etc.)
-├── standards/
-│   ├── invariants.md               ← Non-negotiable rules — read first, cannot be overridden
-│   ├── backend.md                  ← PHP/Symfony: architecture rules (concise)
-│   ├── backend-reference.md        ← Full code examples, configs, scaffold usage
-│   ├── frontend.md                 ← Vue 3/TS: rules (concise)
-│   ├── frontend-reference.md       ← Full code examples, test patterns
-│   ├── logging.md                  ← Structured JSON logs, redaction, Monolog config
-│   ├── security.md                 ← Headers, CORS, JWT, rate limiting, input validation
-│   ├── performance.md              ← Database, API, and frontend performance rules
-│   └── new-service-checklist.md    ← Pre-commit checklist derived from real bootstrap failures
-└── commands/init-project-command.md
+├── scaffolds/                      ← Production-ready PHP classes — copy verbatim, never rewrite
+│   ├── AppController.php           ← Base controller with command/query dispatch helpers
+│   ├── ApiExceptionSubscriber.php  ← Maps domain exceptions to HTTP status codes
+│   ├── LoggingMiddleware.php       ← Structured JSON logging with sensitive field redaction
+│   └── SecurityHeadersSubscriber.php
+└── standards/
+    ├── invariants.md               ← Non-negotiable rules — security, code, git, agent behavior
+    ├── backend.md                  ← PHP/Symfony architecture rules (concise, always loaded)
+    ├── backend-reference.md        ← Full code examples, configs, test patterns (loaded on demand)
+    ├── frontend.md                 ← Vue 3/TypeScript rules (concise, always loaded)
+    ├── frontend-reference.md       ← Full code examples, interceptor setup, test patterns (loaded on demand)
+    ├── logging.md                  ← Structured JSON logs, Monolog config, sensitive field redaction
+    ├── security.md                 ← HTTP headers, CORS, JWT lifecycle, rate limiting, input validation
+    ├── performance.md              ← Database indexes, pagination, N+1 prevention, lazy loading
+    ├── new-service-checklist.md    ← Bootstrap checklist — each item includes the error it prevents
+    └── lessons-learned.md          ← Agent mistakes from past builds — auto-populated, injected as warnings
 ```
 
-**Token optimization architecture:** Standards are split into rules files (always loaded) and reference files (loaded conditionally). The `refine-specs` command generates a `Standards Scope` in the plan file that tells `build-plan` which reference files each agent needs. This prevents agents from reading ~600 lines of code examples they don't need for the current feature.
-
 ---
 
-## Agents
+## Honest limitations
 
-| Agent | Responsibility |
-|---|---|
-| [Spec Analyzer](agents/spec-analyzer-agent.md) | Translates business descriptions into technical specs, asks clarifying questions, detects incompatibilities between services |
-| [Backend Developer](agents/backend-developer-agent.md) | Implements backend features: commands, queries, handlers, repositories, migrations, controllers with OpenAPI annotations |
-| [Frontend Developer](agents/frontend-developer-agent.md) | Implements frontend features: pages, composables, stores, services, components |
-| [Backend Reviewer](agents/backend-reviewer-agent.md) | Reviews backend code: architecture compliance, PHPStan level 9, PHP CS Fixer, security, API contracts |
-| [Frontend Reviewer](agents/frontend-reviewer-agent.md) | Reviews frontend code: TypeScript strict mode, ESLint/Prettier, store usage, loading/error states |
-| [Tester](agents/tester-agent.md) | Writes and runs all tests (unit + integration) after implementation and review are complete |
-| [DevOps](agents/devops-agent.md) | Configures per-service Docker and docker-compose, shared infrastructure compose, Makefiles, environment variables, migrations on startup |
-
-Each agent runs as an isolated subagent with a clean context window.
-Agents communicate only via handoff files — never via shared context.
-
----
-
-## Commands
-
-| Command | What it does |
-|---|---|
-| [init-project](commands/init-project-command.md) | Creates `{project-name}-docs/services.md` at the workspace root — run once per project |
-| [create-specs](commands/create-specs-command.md) | Spec Analyzer converts a feature description into a structured business spec |
-| [refine-specs](commands/refine-specs-command.md) | Spec Analyzer produces the technical spec, execution plan, and task checklist |
-| [build-plan](commands/build-plan-command.md) | Executes the full plan: spawns agents in order, handles parallel phases, loops on failures |
-| [update-specs](commands/update-specs-command.md) | Spec Analyzer compares spec against final implementation and updates it to match |
-
----
-
-## Standards
-
-Standards are split into **rules files** (concise, always loaded) and **reference files** (detailed, loaded conditionally by the `Standards Scope` in the plan file).
-
-| Standard | Covers |
-|---|---|
-| [invariants.md](standards/invariants.md) | Non-negotiable rules — security, code, git, agent behavior |
-| [backend.md](standards/backend.md) | Architecture rules, folder structure, naming, testing rules (concise) |
-| [backend-reference.md](standards/backend-reference.md) | Full code examples, scaffold usage, YAML configs, test examples |
-| [frontend.md](standards/frontend.md) | Vue 3/TS rules, composable patterns, store rules, testing rules (concise) |
-| [frontend-reference.md](standards/frontend-reference.md) | Full code examples, interceptor setup, test examples |
-| [logging.md](standards/logging.md) | Structured JSON logs, sensitive field redaction, Monolog config |
-| [security.md](standards/security.md) | HTTP headers, CORS, JWT lifecycle, rate limiting, input validation |
-| [performance.md](standards/performance.md) | Database indexes, pagination, N+1 prevention, frontend lazy loading |
-| [new-service-checklist.md](standards/new-service-checklist.md) | Bootstrap checklist for new services, CORS setup, Docker env reload |
-| [lessons-learned.md](standards/lessons-learned.md) | Agent mistakes from past features — auto-populated by the Tester, injected as warnings in future builds |
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Backend | PHP 8.4+ + Symfony 8.0+ |
-| Frontend | Vue 3 + TypeScript + Vite |
-| UI Components | shadcn/ui (Vue) |
-| Database | PostgreSQL |
-| Messaging | RabbitMQ (Symfony Messenger) |
-| Infrastructure | Docker |
-
----
-
-## Design principles
-
-**Isolated context per agent.** Each agent starts with a clean context and reads only the files it needs. This prevents decisions made in one phase from contaminating another, and keeps token costs predictable.
-
-**Spec before code.** No agent writes code without a validated spec. The spec is the contract — developers, agents, and reviewers all read the same document.
-
-**Standards derived from real failures.** Rules in this repository were added after encountering the specific problem they prevent. Each rule in `new-service-checklist.md` includes the exact error it avoids.
-
-**Handoff files as the communication layer.** Agents do not share context windows. Each agent produces a structured handoff file (Files Created, Files Modified, Key Decisions, Open Questions) before the next agent starts. The file is deleted after the feature is complete.
-
-**Definition of Done is a checklist, not a feeling.** Every feature has a task file with explicit checkboxes. A feature is done when every box is checked — not when it "looks done."
+- **Single stack.** This builds PHP/Symfony + Vue 3 applications. A different stack requires rewriting the standards, scaffolds, and reference files. The orchestration patterns (agents, handoffs, spec-first) are portable; the implementation details are not.
+- **Claude Code only.** Agent orchestration relies on Claude Code's subagent system. It won't work with other AI tools without significant adaptation.
+- **Developer in the loop.** This does not replace the developer. You describe features, approve specs, confirm git operations, and make decisions the AI can't make alone. The framework structures the AI's work — it doesn't eliminate yours.
+- **Opinionated architecture.** Hexagonal + DDD + CQRS is enforced, not suggested. If your project doesn't follow these patterns, the standards will fight your codebase.
 
 ---
 
