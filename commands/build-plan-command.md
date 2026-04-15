@@ -74,15 +74,19 @@ The prompt passed to each subagent must be **self-contained** and include:
 
 1. **Sign-off** — show summary, wait for developer confirmation (see Step 0)
 2. Read the plan file and task file
-3. Execute each phase using the subagent prompt template below:
+3. **Create feature branch** — from `develop`, create `feature/{aggregate}/{feature-name}` in every affected service repository. If the branch already exists, check it out. Do not proceed until the branch is created in all affected repos.
+4. Execute each phase using the subagent prompt template below:
    - **Sequential phases**: spawn and wait for the result before proceeding
    - **Parallel phases**: spawn the first with `run_in_background: true`, immediately spawn the second (foreground), then process both results before continuing
-4. Handle feedback loops per side — each loop reruns only the affected side
-5. After both sides are approved and all tests pass, check the Tester handoff for a `## Lessons Learned` section. If it contains new entries, append them to `ai-standards/standards/lessons-learned.md`. If any lesson duplicates an existing standard, promote it there and do not add it to lessons-learned.
-6. Run `update-specs`
-7. Delete the entire `ai-standards/handoffs/{feature-name}/` directory
-8. Verify all Definition of Done conditions are met
-9. Report final status to the developer
+5. Handle feedback loops per side — each loop reruns only the affected side
+6. After both sides are approved and all tests pass, check the Tester handoff for a `## Lessons Learned` section. If it contains new entries, append them to `ai-standards/standards/lessons-learned.md`. If any lesson duplicates an existing standard, promote it there and do not add it to lessons-learned.
+7. Run `update-specs`
+8. Delete the entire `ai-standards/handoffs/{feature-name}/` directory
+9. **Commit all changes** — stage and commit in every affected repo with a descriptive message. Do **not** merge into `develop` or `master`. Do **not** push or create a pull request.
+10. Verify all Definition of Done conditions are met
+11. Report final status to the developer, including:
+    - Branch name per repo
+    - Reminder: "Branches are ready. Merge into `develop` when satisfied."
 
 ---
 

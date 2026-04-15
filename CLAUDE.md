@@ -76,6 +76,8 @@ Handoff files are temporary and must be deleted when the full feature plan is co
 - Main branches: `master` (production) and `develop` (development)
 - Always work from `develop` — update it before creating a new branch
 - Branch naming: `feature/{aggregate}/{description}`, `fix/{aggregate}/{description}`, `hotfix/{description}`
+- `build-plan` creates the feature branch before the first agent and commits after the last — see `build-plan-command.md`
+- Never merge, push, or create pull requests without explicit developer confirmation (see `invariants.md`)
 
 ### Makefile
 
