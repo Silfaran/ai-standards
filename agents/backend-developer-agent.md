@@ -24,6 +24,20 @@ Read in this order:
 - `ai-standards/standards/backend-reference.md` — when scaffolding new components, configuring async messaging, or implementing a pattern for the first time
 - `ai-standards/standards/new-service-checklist.md` — when creating a new service
 
+## Running Tests (Docker)
+
+Backend tests run inside Docker containers. Before executing tests, **always** ensure the service container is running:
+
+```bash
+cd {service_directory}
+docker compose up -d {service_name}          # start if not running
+docker compose exec {service_name} php vendor/bin/phpunit   # run tests
+```
+
+If `docker compose exec` fails with "service is not running", start the container first with `docker compose up -d`. **Never skip test execution** — if tests cannot run, report the failure in your handoff instead of marking tests as untested.
+
+When running as a parallel subagent, **never stop or restart containers from other services** — only manage your own service's containers.
+
 ## Responsibilities
 - Implement commands, queries, handlers, application services and domain models
 - Implement repository interfaces (Domain) and DBAL implementations (Infrastructure)

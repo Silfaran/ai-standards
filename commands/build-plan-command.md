@@ -195,12 +195,24 @@ When done, write your handoff to: {handoff_path}
 | Phase | Instruction |
 |---|---|
 | DevOps | Configure infrastructure as described in the plan. Verify `docker build .` succeeds. |
-| Backend Dev | Implement the backend for the {feature} feature as described in the spec. |
-| Frontend Dev | Implement the frontend for the {feature} feature as described in the spec. |
+| Backend Dev | Implement the backend for the {feature} feature as described in the spec. After implementation, ensure the Docker container is running (`docker compose up -d {service}` in the service directory), then run `docker compose exec {service} php vendor/bin/phpunit` and verify all tests pass. Also run PHPStan and PHP-CS-Fixer inside the container. All must pass before writing the handoff. |
+| Frontend Dev | Implement the frontend for the {feature} feature as described in the spec. After implementation, run `npm run test` and `npx vue-tsc --noEmit`. All must pass before writing the handoff. |
 | Backend Reviewer | Review the backend code listed in the handoff. This is review iteration {N} of max 3. |
 | Frontend Reviewer | Review the frontend code listed in the handoff. This is review iteration {N} of max 3. |
-| Tester | Write unit tests and integration tests, then run all tests. If any fail, identify which developer needs to fix them. |
-| Dev+Tester (simple) | Implement the {feature} feature as described in the spec. After implementation, write unit tests as specified in the task file, run the full test suite (`npm run test` or `make test`), and run linters (ESLint/Prettier or PHPStan/PHP-CS-Fixer). All must pass before writing the handoff. |
+| Tester | Ensure all Docker containers are running for each backend service. Run all test suites and linters. If any fail, identify which developer needs to fix them. |
+| Dev+Tester (simple) | Implement the {feature} feature as described in the spec. After implementation, write unit tests as specified in the task file. For backend: ensure Docker is running (`docker compose up -d`), then run tests via `docker compose exec`. For frontend: run `npm run test`. Run linters. All must pass before writing the handoff. |
+
+### Docker pre-flight for subagent prompts
+
+When spawning a backend subagent, the orchestrator must include this in the prompt:
+
+```
+DOCKER: Before running tests, ensure your service container is running:
+  cd {service_path} && docker compose up -d {service_name}
+Then run tests with: docker compose exec {service_name} php vendor/bin/phpunit
+If the container is not running, start it. Never skip test execution.
+When running in parallel with other agents, never stop or restart other services' containers.
+```
 
 ---
 

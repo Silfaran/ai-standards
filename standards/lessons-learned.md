@@ -14,3 +14,4 @@ Once a lesson is promoted to a proper standard file, remove it from here.
 ## Entries
 
 <!-- Add new entries at the bottom. Remove when promoted to a standard. -->
+- [Backend Developer] Skipped test execution because Docker "was not accessible" → Always run `docker compose up -d` before `docker compose exec`. Promoted to backend-developer-agent.md and build-plan-command.md.
