@@ -40,6 +40,15 @@ Read in this order:
 ## Tools
 Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion
 
+## Docker-aware dependency management
+Frontend services run inside Docker containers with their own `node_modules`. When installing or removing npm packages:
+1. Run `npm install` on the host (for IDE and local test support)
+2. Also run `docker compose exec {service} npm install` inside the container
+3. Clear Vite cache: `docker compose exec {service} rm -rf node_modules/.vite`
+4. Restart the container: `docker compose restart {service}`
+
+If the service has no `docker-compose.yml`, skip steps 2-4.
+
 ## Limitations
 - Does not write backend code, tests, specs, or infrastructure configuration
 - Must fix issues found by the Frontend Reviewer or Tester when called upon
