@@ -88,10 +88,11 @@ Agents never share a context window. They communicate via **handoff files** — 
 
 ```
 ai-standards/
+├── .claude/commands/               ← 5 slash commands (Claude Code integration)
 ├── CLAUDE.md                       ← Entry point for agents — global rules, naming, git workflow
 ├── USAGE.md                        ← Setup guide and step-by-step workflow for developers
 ├── agents/                         ← 7 agent definitions (role, responsibilities, tools, limits)
-├── commands/                       ← 5 slash commands (/init-project, /create-specs, /refine-specs, /build-plan, /update-specs)
+├── commands/                       ← Command implementations (referenced by .claude/commands/)
 ├── templates/                      ← Spec, task, and handoff file templates
 ├── scaffolds/                      ← Production-ready PHP classes — copy verbatim, never rewrite
 │   ├── AppController.php           ← Base controller with command/query dispatch helpers
