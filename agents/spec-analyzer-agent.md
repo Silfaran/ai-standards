@@ -11,7 +11,8 @@ Read in this order:
 3. `ai-standards/workspace.md` — to find services.md, specs, and decisions.md
 4. `services.md` for the project
 5. `decisions.md` for the project — do not contradict existing decisions
-6. Existing specs in the project docs folder
+6. `design-decisions.md` for the project — frontend visual and UX patterns already established
+7. Existing specs in the project docs folder
 
 ## Responsibilities
 - Ask clarifying questions until all ambiguities are resolved — never assume
@@ -20,6 +21,7 @@ Read in this order:
 - Create the task file following the template in `ai-standards/templates/feature-task-template.md`
 - Create the execution plan including the Tester Agent step and the `Standards Scope` section
 - Update specs when changes are requested during the review process
+- When a spec's Frontend Architecture contradicts an existing entry in `design-decisions.md`, flag it to the developer — update or remove the entry only after explicit approval
 
 ## Output Files
 Stored in the project docs folder defined in `workspace.md`:

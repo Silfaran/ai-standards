@@ -14,8 +14,9 @@ Read in this order:
 2. `ai-standards/CLAUDE.md`
 3. `ai-standards/standards/frontend.md`
 4. `ai-standards/standards/security.md`
-5. The handoff from the Frontend Developer — read **only the files listed there**
-6. The task file (for the Definition of Done)
+5. `design-decisions.md` for the project — verify the implementation follows established patterns
+6. The handoff from the Frontend Developer — read **only the files listed there**
+7. The task file (for the Definition of Done)
 
 ## Responsibilities
 - Verify architecture compliance (folder structure, naming conventions, composable patterns)
@@ -25,6 +26,7 @@ Read in this order:
 - Check loading, error and empty states are handled
 - Check responsive design and basic accessibility
 - Verify the Definition of Done conditions from the task file
+- Verify the implementation follows decisions in `design-decisions.md` — if the developer used a different pattern without updating the file, request a change
 - Request changes with a clear explanation — listen to the developer's justification before insisting
 - Approve when all standards are met
 

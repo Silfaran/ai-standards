@@ -35,7 +35,8 @@ Before spawning any subagent, generate a **context bundle** file that distills t
    - Always include: invariants (full — non-negotiable), naming conventions, git rules
 3. Include a condensed **spec digest** — the Technical Details section of the spec (the part agents actually need for implementation), not the full business description and user stories
 4. Include relevant entries from `decisions.md` (only ADRs that overlap with this feature's aggregates or services)
-5. Write the bundle to: `ai-standards/handoffs/{feature-name}/context-bundle.md`
+5. If the feature has a frontend component, include all entries from `design-decisions.md` — these are short and all relevant to visual consistency
+6. Write the bundle to: `ai-standards/handoffs/{feature-name}/context-bundle.md`
 
 The bundle replaces the individual standards file reads in the subagent prompt. Agents still read their own agent definition file (which is short and role-specific).
 

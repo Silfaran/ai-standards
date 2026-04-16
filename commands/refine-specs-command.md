@@ -24,18 +24,19 @@ The business spec file created by the `create-specs` command:
 3. Read `{project-name}-docs/decisions.md` to understand existing architectural decisions
 4. Read `{project-name}-docs/specs/INDEX.md` to identify related specs; deep-read **only** specs with overlapping aggregates or services — do not re-read the full spec list
 5. Read the relevant codebase in depth to understand the technical context
-6. Ask the developer technical or business questions if information is missing or ambiguous
-7. Refine the spec with technical details — architecture decisions, affected aggregates, services involved
-8. If this feature introduces a new architectural decision or changes an existing one, update `decisions.md` accordingly
-9. Classify the feature complexity (see **Complexity Classification** below) and include it in the plan
-10. Generate the execution plan specifying:
+6. If the feature has a frontend component, read `design-decisions.md` — ensure the Frontend Architecture section is consistent with established patterns. If a contradiction is needed, flag it to the developer before writing the spec
+7. Ask the developer technical or business questions if information is missing or ambiguous
+8. Refine the spec with technical details — architecture decisions, affected aggregates, services involved
+9. If this feature introduces a new architectural decision or changes an existing one, update `decisions.md` accordingly
+10. Classify the feature complexity (see **Complexity Classification** below) and include it in the plan
+11. Generate the execution plan specifying:
     - The **Complexity** classification
     - Which agents must intervene and in what order
     - Which service each part of the code belongs to
     - Dependencies between steps
     - A **Standards Scope** section (see below) — this controls which files each subagent reads
-11. Create the task file with required tests and Definition of Done
-12. Update `{project-name}-docs/specs/INDEX.md` if the spec's status or summary changed
+12. Create the task file with required tests and Definition of Done
+13. Update `{project-name}-docs/specs/INDEX.md` if the spec's status or summary changed
 
 ## Complexity Classification
 

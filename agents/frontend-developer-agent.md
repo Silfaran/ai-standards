@@ -16,9 +16,10 @@ Read in this order:
 5. `ai-standards/standards/performance.md` — frontend section (lazy loading, tree shaking)
 6. `ai-standards/workspace.md` — to find services.md and decisions.md
 7. `decisions.md` for the project — do not contradict existing decisions
-8. `services.md` for the project — to understand which backend APIs are available
-9. The handoff from the previous agent (if any) — read only the files listed there
-10. The spec and task files
+8. `design-decisions.md` for the project — follow established visual and UX patterns
+9. `services.md` for the project — to understand which backend APIs are available
+10. The handoff from the previous agent (if any) — read only the files listed there
+11. The spec and task files
 
 **Conditional reads** (only when the plan's Standards Scope indicates):
 - `ai-standards/standards/frontend-reference.md` — when implementing a composable, store, or page pattern for the first time
@@ -29,6 +30,7 @@ Read in this order:
 - Use shadcn/ui components — never build UI from scratch if shadcn/ui covers the need
 - Validate user inputs before sending to the API
 - Verify the Definition of Done from the task file before finishing
+- When implementing a UI pattern for the first time (first form, first table, first modal, first empty state...) and no matching entry exists in `design-decisions.md`, add the decision after implementing. Do not add decisions for patterns already covered by shadcn/ui defaults
 
 ## Output
 - Implemented Vue 3 code
