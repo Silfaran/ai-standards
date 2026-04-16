@@ -124,9 +124,22 @@ For single-service features. Use the appropriate Developer/Reviewer type (Backen
 7. After all agents are done and tests pass, check the final handoff for a `## Lessons Learned` section. If it contains new entries, append them to `ai-standards/standards/lessons-learned.md`. If any lesson duplicates an existing standard, promote it there and do not add it to lessons-learned.
 8. Run `update-specs`
 9. Delete the entire `ai-standards/handoffs/{feature-name}/` directory
-10. **Commit all changes** — stage and commit in every affected repo with a descriptive message. Do **not** merge into `develop` or `master`. Do **not** push or create a pull request.
-11. Verify all Definition of Done conditions are met
-12. Report final status to the developer, including:
+10. **Verify Docker services** — check if the feature introduced changes that require a Docker rebuild or restart in affected services. Apply the appropriate action:
+
+    | Change detected | Action |
+    |---|---|
+    | New or modified Phinx migration | `docker compose down && docker compose up -d` (restart runs migrations on boot) |
+    | `composer.json` or `package.json` modified | `docker compose down && docker compose build && docker compose up -d` |
+    | `Dockerfile` modified | `docker compose down && docker compose build && docker compose up -d` |
+    | New service added | Full build: `docker compose build && docker compose up -d` |
+    | Only PHP/Vue source files changed (mounted by volume) | `docker compose restart` (PHP-FPM reloads classes) |
+    | No infrastructure-related changes | No action needed |
+
+    After the action, verify each affected service responds correctly (e.g. `curl -s -o /dev/null -w "%{http_code}" http://localhost:{port}/api/...` returns a non-502 status). If a service fails to start, investigate logs (`docker compose logs`) and fix before committing.
+
+11. **Commit all changes** — stage and commit in every affected repo with a descriptive message. Do **not** merge into `develop` or `master`. Do **not** push or create a pull request.
+12. Verify all Definition of Done conditions are met
+13. Report final status to the developer, including:
     - Branch name per repo
     - Reminder: "Branches are ready. Merge into `develop` when satisfied."
 
