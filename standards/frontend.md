@@ -16,6 +16,24 @@
 - ESLint + Prettier for code formatting
 - Vitest + Vue Test Utils for testing
 
+## TypeScript Configuration
+
+- **Never use `baseUrl`** in `tsconfig.app.json` — deprecated in TypeScript 6.0, removed in 7.0
+- Use `paths` without `baseUrl` for module aliases — paths resolve relative to the `tsconfig.json` location:
+
+```json
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+```
+
+- Vite `resolve.alias` and tsconfig `paths` must stay in sync — tsconfig handles type resolution, Vite handles runtime resolution
+- Base config `@vue/tsconfig/tsconfig.dom.json` provides TS 7.0-compatible defaults (module: ESNext, moduleResolution: Bundler, target: ESNext) — do not override with deprecated values
+
 ## Folder Structure
 
 ```
