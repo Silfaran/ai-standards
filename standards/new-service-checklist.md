@@ -188,6 +188,42 @@ For each backend this frontend calls:
 
 To diagnose: open DevTools → Network, filter XHR/Fetch, look for a failed preflight (`OPTIONS`) request or a response missing the `Access-Control-Allow-Origin` header.
 
+**Use `workspace.md` as the source of truth for frontend ports** — never assume default framework ports (e.g. Vite's 5173). The actual dev server port is configured per project and listed there.
+
+---
+
+### 12. NelmioCorsBundle `paths` must duplicate full config — not just `allow_origin`
+
+NelmioCorsBundle's `paths` section **overrides** `defaults` entirely when a path matches — it does NOT merge with defaults. If the `paths` block only specifies `allow_origin`, the matched request will have no `allow_methods`, no `allow_headers`, and the `Access-Control-Allow-Origin` header will be missing.
+
+```yaml
+# WRONG — paths overrides defaults, so allow_methods/allow_headers are empty
+nelmio_cors:
+    defaults:
+        allow_origin: ['%env(CORS_ALLOW_ORIGIN)%']
+        allow_methods: ['GET', 'OPTIONS']
+        allow_headers: ['Content-Type', 'Authorization']
+    paths:
+        '^/':
+            allow_origin: ['%env(CORS_ALLOW_ORIGIN)%']
+
+# CORRECT — paths duplicates all config
+nelmio_cors:
+    defaults:
+        allow_origin: ['%env(CORS_ALLOW_ORIGIN)%']
+        allow_methods: ['GET', 'OPTIONS']
+        allow_headers: ['Content-Type', 'Authorization']
+        allow_credentials: true
+        max_age: 3600
+    paths:
+        '^/':
+            allow_origin: ['%env(CORS_ALLOW_ORIGIN)%']
+            allow_methods: ['GET', 'OPTIONS']
+            allow_headers: ['Content-Type', 'Authorization']
+            allow_credentials: true
+            max_age: 3600
+```
+
 ---
 
 ### 11. Docker env var changes require container recreation, not restart

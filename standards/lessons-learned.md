@@ -15,3 +15,5 @@ Once a lesson is promoted to a proper standard file, remove it from here.
 
 <!-- Add new entries at the bottom. Remove when promoted to a standard. -->
 - [Backend Developer] Skipped test execution because Docker "was not accessible" → Always run `docker compose up -d` before `docker compose exec`. Promoted to backend-developer-agent.md and build-plan-command.md.
+- [DevOps] Used Vite default port (5173) for CORS instead of actual frontend port (3002) → Read `workspace.md` Service Ports table for correct port. Promoted to workspace.md and new-service-checklist.md.
+- [DevOps] NelmioCorsBundle `paths` section only had `allow_origin`, missing other fields → `paths` overrides `defaults` entirely; must duplicate all fields. Promoted to new-service-checklist.md item 12.
