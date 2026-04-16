@@ -58,3 +58,12 @@ Fill **only** these sections — use the template at `ai-standards/templates/fea
 > by `refine-specs`. Writing technical content in `create-specs` skips a required step and produces
 > specs that have not been validated against the actual codebase.
 
+## Context Checkpoint
+
+After completing this command, evaluate whether the conversation context is getting heavy (many files read, long conversation history, multiple features discussed). If so, suggest to the developer:
+
+> "The spec is ready. To keep context fresh and avoid token waste, I recommend opening a **new session** and running:
+> `/refine-specs` for `{spec-file-path}`"
+
+If context is still light (e.g. this was a short conversation with a single feature), it's fine to continue in the same session.
+

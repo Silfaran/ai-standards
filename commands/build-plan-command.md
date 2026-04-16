@@ -257,3 +257,16 @@ After the final status report, display an estimated token usage summary:
    - Total files read across all phases: {N}
    - Estimated input tokens: ~{total}
    ```
+
+## Context Checkpoint
+
+After completing this command, evaluate whether there are more features to build (e.g. the developer asked to build multiple plans, or there are other refined specs pending). If so, suggest to the developer:
+
+> "Feature `{name}` is complete. The conversation context is heavy after {N} subagent phases.
+> To keep the orchestrator context fresh for the next feature, I recommend opening a **new session** and running:
+> `/build-plan` for `{next-plan-file-path}`"
+
+This matters because the orchestrator accumulates context from each subagent's handoff, spec reads, and test results. A fresh session for the next build-plan means:
+- Smaller orchestrator context → faster responses, lower cost
+- Subagents are always isolated (they don't inherit context), so they are unaffected
+- The handoff files and specs on disk carry all state — nothing is lost by starting a new session

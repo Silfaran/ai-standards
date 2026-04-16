@@ -97,3 +97,14 @@ If no extra reads are needed for an agent, write `none` — the agent will still
 ### Token Usage Report
 After completing, list the files you read and display: `Estimated input tokens: ~{lines_read × 8}`
 
+## Context Checkpoint
+
+After completing this command, evaluate whether the conversation context is getting heavy (many specs refined, large codebase exploration, multiple features in one session). If so, suggest to the developer:
+
+> "The spec is refined and ready to build. To keep context fresh and avoid token waste, I recommend opening a **new session** and running:
+> `/build-plan` for `{plan-file-path}`"
+
+If context is still light (e.g. single feature refined in a short conversation), it's fine to continue in the same session.
+
+If the developer asked to refine multiple specs in one session, suggest a new session before starting the `/build-plan` for ANY of them — the build-plan subagents benefit most from a clean orchestrator context.
+
