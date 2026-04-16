@@ -34,6 +34,16 @@ If `docker compose exec` fails with "service is not running", start the containe
 
 Frontend tests run locally via `npm run test` (no Docker needed).
 
+### Frontend smoke check (Docker)
+
+After running `npm test` locally, **also verify the app loads in its Docker container**. Check `workspace.md` for the service port, then:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" http://localhost:{port}
+```
+
+If it returns a non-200 status or an error page, the container may be missing dependencies installed only on the host. Fix by running `docker compose exec {service} npm install` and restarting.
+
 ## Testing Process
 
 Runs once, after all developers and reviewers have completed their work:
