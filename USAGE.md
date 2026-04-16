@@ -30,9 +30,11 @@ The agent will ask for your project name and list of services, then create:
 ```
 workspace/
 ├── ai-standards/
-│   └── workspace.md     ← local config (gitignored) — all agents read this
+│   └── workspace.md          ← local config (gitignored) — all agents read this
 ├── {project-name}-docs/
-│   └── services.md      ← your project catalog
+│   ├── services.md           ← your project catalog
+│   ├── decisions.md          ← architecture decisions (populated by Spec Analyzer)
+│   └── design-decisions.md   ← frontend design decisions (populated by Frontend Developer)
 └── (your services...)
 ```
 
@@ -100,7 +102,9 @@ workspace/
 │   └── commands/          ← slash commands (copied from ai-standards/.claude/commands/)
 ├── ai-standards/          ← this repo (standards, agents, commands)
 ├── {project-name}-docs/
-│   ├── services.md        ← project service catalog
+│   ├── services.md           ← project service catalog
+│   ├── decisions.md          ← architecture decisions (Spec Analyzer)
+│   ├── design-decisions.md   ← frontend design decisions (Frontend Developer)
 │   └── specs/
 │       └── {Aggregate}/
 │           ├── {feature}-specs.md

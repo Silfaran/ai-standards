@@ -29,17 +29,20 @@ Example input:
    ```
    {project-name}-docs/
    ├── services.md
-   └── decisions.md
+   ├── decisions.md
+   └── design-decisions.md
    ```
 4. Generate `services.md` using the information provided — follow the template below
 5. Generate `decisions.md` as an empty ADR log — the Spec Analyzer will populate it as features are built
-6. Create `ai-standards/workspace.md` with the project paths — gitignored, read by all agents
-7. Create `ai-standards/workspace.mk` with the service lists — gitignored, included by the Makefile for dynamic test targets
-8. Report what was created and instruct the developer to run `/create-specs` for the first feature
+6. Generate `design-decisions.md` as an empty frontend design log — the Frontend Developer will populate it as UI patterns are implemented
+7. Create `ai-standards/workspace.md` with the project paths — gitignored, read by all agents
+8. Create `ai-standards/workspace.mk` with the service lists — gitignored, included by the Makefile for dynamic test targets
+9. Report what was created and instruct the developer to run `/create-specs` for the first feature
 
 ## Output
 - `{project-name}-docs/services.md` — project service catalog
 - `{project-name}-docs/decisions.md` — architecture decision records (starts empty)
+- `{project-name}-docs/design-decisions.md` — frontend design decisions (starts empty, populated by Frontend Developer)
 - `ai-standards/workspace.md` — local workspace config (gitignored), content:
 
 ```markdown
@@ -49,6 +52,7 @@ project: {project-name}
 services: {project-name}-docs/services.md
 specs: {project-name}-docs/specs/
 decisions: {project-name}-docs/decisions.md
+design-decisions: {project-name}-docs/design-decisions.md
 ```
 
 - `ai-standards/workspace.mk` — Makefile variables (gitignored), content:

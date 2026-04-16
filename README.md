@@ -78,6 +78,8 @@ Agents never share a context window. They communicate via **handoff files** — 
 
 **Standards from real failures.** Every rule exists because it prevented a real problem. The bootstrap checklist includes the exact error each item avoids. Agent mistakes are logged by the Tester and recycled as warnings in future builds — patterns that recur get promoted to permanent standards.
 
+**Visual consistency across features.** The Frontend Developer documents UI patterns (first form, first table, first modal...) in a project-level `design-decisions.md` file as they are implemented. The Spec Analyzer reads it when writing specs to avoid contradictions. The Frontend Reviewer verifies compliance. The result: the second feature looks like it was built by the same team as the first.
+
 **Definition of Done is a checklist.** Every feature generates a task file with explicit checkboxes: architecture compliance, static analysis, formatting, tests passing, security checks, spec updated. A feature is done when every box is checked.
 
 ---
