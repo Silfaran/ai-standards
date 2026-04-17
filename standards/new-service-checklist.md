@@ -154,7 +154,25 @@ use this to confirm no cross-service issues.
 
 ---
 
-## 9. `make up` does NOT rebuild images
+## 9. Quality gates installed — before the first commit
+
+Every service must ship with its quality gates wired from day one. See [quality-gates.md](quality-gates.md) for the authoritative rules and the `quality-gates-setup` skill for the install steps. Minimum:
+
+- CI workflow at `.github/workflows/ci.yml` — copied from the matching template in `ai-standards/templates/ci/` with placeholders replaced.
+- Pre-commit hook at `.git/hooks/pre-commit`, executable (`chmod +x`).
+- Makefile quality targets appended from `ai-standards/templates/makefile/`.
+- For frontend services: the `package.json` scripts required by the hook and CI (`lint`, `format:check`, `format`, `type-check`, `test`, `build`).
+
+Verify:
+```bash
+make quality   # from the service directory — all checks pass locally
+```
+
+Do not commit a service that fails `make quality` or whose CI has not been installed.
+
+---
+
+## 10. `make up` does NOT rebuild images
 
 `make up` = `docker compose up -d` — it starts **existing** containers.
 If source files changed (e.g., a new `Kernel.php`), the running container still uses the old image.
@@ -174,7 +192,7 @@ that affects the Docker image build context.
 
 When adding a new frontend application that calls existing backend services, verify these before testing.
 
-### 10. CORS — add the new origin to every backend this frontend calls
+### 11. CORS — add the new origin to every backend this frontend calls
 
 Every backend using NelmioCorsBundle has an allowlist of permitted origins. A new frontend at a new port or domain will receive silent CORS rejections — the app gets no useful error, only a generic network failure.
 
@@ -186,7 +204,7 @@ For each backend this frontend calls:
    CORS_ALLOW_ORIGIN=^http://localhost:(3001|3002)$
    ```
 3. Ensure `origin_regex: true` is set in `nelmio_cors.yaml` (both `defaults` and `paths` blocks)
-4. Recreate the backend container to apply the change (see item 11)
+4. Recreate the backend container to apply the change (see item 13)
 
 To diagnose: open DevTools → Network, filter XHR/Fetch, look for a failed preflight (`OPTIONS`) request or a response missing the `Access-Control-Allow-Origin` header.
 
@@ -195,6 +213,7 @@ To diagnose: open DevTools → Network, filter XHR/Fetch, look for a failed pref
 ---
 
 ### 12. NelmioCorsBundle `paths` must duplicate full config — not just `allow_origin`
+
 
 NelmioCorsBundle's `paths` section **overrides** `defaults` entirely when a path matches — it does NOT merge with defaults. If the `paths` block only specifies `allow_origin`, the matched request will have no `allow_methods`, no `allow_headers`, and the `Access-Control-Allow-Origin` header will be missing.
 
@@ -228,7 +247,7 @@ nelmio_cors:
 
 ---
 
-### 11. Docker env var changes require container recreation, not restart
+### 13. Docker env var changes require container recreation, not restart
 
 `docker restart <service>` restarts the existing container with its **original** environment. It does NOT re-read `.env` files or `env_file` entries from `docker-compose.yml`.
 

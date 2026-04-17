@@ -94,4 +94,4 @@ Use `workspace.md` as the source of truth for frontend ports. Never assume Vite'
 ## See also
 
 - [standards/security.md](../../../standards/security.md) — full CORS section and security headers.
-- [standards/new-service-checklist.md](../../../standards/new-service-checklist.md) items 10–12 — the same rules in checklist form.
+- [standards/new-service-checklist.md](../../../standards/new-service-checklist.md) items 11–12 — the same rules in checklist form.

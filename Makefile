@@ -4,7 +4,7 @@ INFRA_COMPOSE = docker compose -f ../docker-compose.yml
 
 ALL_SERVICES = $(BACKEND_SERVICES) $(FRONTEND_SERVICES)
 
-.PHONY: up down build update infra-up infra-down test test-unit test-integration logs ps
+.PHONY: up down build update infra-up infra-down test test-unit test-integration lint static quality logs ps
 
 # --- Infrastructure (shared: PostgreSQL, RabbitMQ, Mailpit) ---
 
@@ -78,6 +78,38 @@ test-integration:
 		echo "Integration testing $$s..."; \
 		docker compose -f ../$$s/docker-compose.yml exec $$s php vendor/bin/phpunit --testsuite=integration || exit 1; \
 	done
+
+# --- Quality gates (across services) ---
+
+lint:
+	@if [ -z "$(BACKEND_SERVICES)$(FRONTEND_SERVICES)" ]; then \
+		echo "workspace.mk not found — run /init-project first"; exit 1; \
+	fi
+	@for s in $(BACKEND_SERVICES); do \
+		echo "Linting $$s (php-cs-fixer)..."; \
+		docker compose -f ../$$s/docker-compose.yml exec $$s vendor/bin/php-cs-fixer fix --dry-run --diff || exit 1; \
+	done
+	@for s in $(FRONTEND_SERVICES); do \
+		echo "Linting $$s (eslint + prettier)..."; \
+		docker compose -f ../$$s/docker-compose.yml exec $$s npm run lint || exit 1; \
+		docker compose -f ../$$s/docker-compose.yml exec $$s npm run format:check || exit 1; \
+	done
+
+static:
+	@if [ -z "$(BACKEND_SERVICES)$(FRONTEND_SERVICES)" ]; then \
+		echo "workspace.mk not found — run /init-project first"; exit 1; \
+	fi
+	@for s in $(BACKEND_SERVICES); do \
+		echo "Static analysis $$s (phpstan level 9)..."; \
+		docker compose -f ../$$s/docker-compose.yml exec $$s vendor/bin/phpstan analyse --memory-limit=1G --no-progress || exit 1; \
+	done
+	@for s in $(FRONTEND_SERVICES); do \
+		echo "Type-checking $$s (vue-tsc)..."; \
+		docker compose -f ../$$s/docker-compose.yml exec $$s npm run type-check || exit 1; \
+	done
+
+quality: lint static test
+	@echo "=== Quality gates: PASS ==="
 
 # --- Utilities ---
 

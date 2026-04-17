@@ -1,0 +1,56 @@
+# GitHub Actions — Frontend CI (Vue 3 / Vite / TypeScript service)
+#
+# Install to: .github/workflows/ci.yml in the service repo.
+# Authoritative rules: ai-standards/standards/quality-gates.md
+#
+# Placeholders to replace before use:
+#   {service-name}    — human-readable service name (used only in top-level `name:`)
+#   {node-version}    — keep aligned with ai-standards/standards/tech-stack.md
+#
+# The job fails the pipeline on any violation. Strict mode is non-negotiable.
+
+name: {service-name} CI
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+
+jobs:
+  quality:
+    name: quality gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '{node-version}'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Prettier (check)
+        run: npm run format:check
+
+      - name: Type check (vue-tsc)
+        run: npm run type-check
+
+      - name: Vitest
+        run: npm run test
+
+      - name: Build (smoke check)
+        run: npm run build
+
+      - name: npm audit
+        run: npm audit --omit=dev --audit-level=high
+        continue-on-error: false

@@ -41,16 +41,20 @@ Each agent adds only the files below to the Mode B list. Reference files (`*-ref
 | Agent | Always | On demand |
 |---|---|---|
 | Spec Analyzer | `design-decisions.md`, existing specs in the project docs folder | — |
-| Backend Developer | [`backend.md`](backend.md), [`logging.md`](logging.md), [`security.md`](security.md), [`performance.md`](performance.md) | [`backend-reference.md`](backend-reference.md), [`new-service-checklist.md`](new-service-checklist.md) |
-| Frontend Developer | [`frontend.md`](frontend.md), [`security.md`](security.md), [`performance.md`](performance.md), `design-decisions.md` | [`frontend-reference.md`](frontend-reference.md) |
+| Backend Developer | [`backend.md`](backend.md), [`security.md`](security.md), [`performance.md`](performance.md) | [`logging.md`](logging.md) (covered by `messenger-logging-middleware` skill), [`backend-reference.md`](backend-reference.md), [`new-service-checklist.md`](new-service-checklist.md), [`quality-gates.md`](quality-gates.md) |
+| Frontend Developer | [`frontend.md`](frontend.md), [`security.md`](security.md), [`performance.md`](performance.md), `design-decisions.md` | [`frontend-reference.md`](frontend-reference.md), [`quality-gates.md`](quality-gates.md) |
 | Backend Reviewer | [`backend-review-checklist.md`](backend-review-checklist.md) **only** — see rule below | — |
 | Frontend Reviewer | [`frontend-review-checklist.md`](frontend-review-checklist.md) **only** — see rule below | `design-decisions.md` when diff touches UI |
-| Tester | [`backend.md`](backend.md) or [`frontend.md`](frontend.md) (pick by test surface), [`security.md`](security.md) | [`backend-reference.md`](backend-reference.md) or [`frontend-reference.md`](frontend-reference.md) for first-time test patterns |
-| DevOps | [`tech-stack.md`](tech-stack.md) (already in common core), root `docker-compose.yml`, service compose files | [`backend-reference.md`](backend-reference.md) for consumer-worker patterns, [`new-service-checklist.md`](new-service-checklist.md) when scaffolding a new service |
+| Tester | [`backend.md`](backend.md) or [`frontend.md`](frontend.md) (pick by test surface), [`security.md`](security.md) | [`logging.md`](logging.md) (covered by `messenger-logging-middleware` skill), [`backend-reference.md`](backend-reference.md) or [`frontend-reference.md`](frontend-reference.md) for first-time test patterns |
+| DevOps | [`tech-stack.md`](tech-stack.md) (already in common core), [`quality-gates.md`](quality-gates.md), root `docker-compose.yml`, service compose files | [`backend-reference.md`](backend-reference.md) for consumer-worker patterns, [`new-service-checklist.md`](new-service-checklist.md) when scaffolding a new service |
 
 ### Reviewer exception
 
 Both reviewer agents read **only** their checklist in both modes — never the full standards. The checklists are the authoritative review surface, extracted from the standards and updated alongside them. If a reviewer sees a violation not covered by the checklist, it is reported as `minor` with a recommendation for which checklist section should cover it.
+
+### Skills complement this protocol
+
+Claude Code auto-loads the matching skill from [`../.claude/skills/`](../.claude/skills/) whenever the active task or file paths match its description. When a skill has already supplied guidance on a topic (CORS setup, safe migrations, JWT lifecycle, Vitest patterns, …), the equivalent section of the corresponding standard can be skipped — do not double-load the same content. Standards remain the source of truth for architecture and topics not covered by any skill.
 
 ## Handoff Protocol
 

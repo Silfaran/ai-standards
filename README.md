@@ -78,18 +78,29 @@ Agents never share a context window. They communicate via **handoff files** — 
 
 **Definition of Done is a checklist.** Every feature generates a task file with explicit checkboxes: architecture compliance, static analysis, formatting, tests passing, security checks, spec updated. A feature is done when every box is checked.
 
+**On-demand skills.** Narrow playbooks (CORS gotchas, safe migrations, JWT lifecycle, Vitest patterns, quality-gate setup...) live in `.claude/skills/`. Claude Code auto-loads a skill only when the active task or file paths match — description-only otherwise, so they cost nothing until needed. See [USAGE.md](USAGE.md#skills-reference) for the full catalog (~13 skills).
+
+**Deterministic quality gates.** Three layers — pre-commit hook, per-service `make quality`, and GitHub Actions CI — enforce PHPStan level 9, `vue-tsc --noEmit` strict, PHP-CS-Fixer, ESLint + Prettier, full test suite, and `composer audit` / `npm audit`. Reviewer agents keep doing what humans do best; the mechanical bar is enforced by machines. Install per service from [`templates/`](templates/); authoritative rules in [`standards/quality-gates.md`](standards/quality-gates.md).
+
 ---
 
 ## What's inside
 
 ```
 ai-standards/
-├── .claude/commands/               ← 5 slash commands (Claude Code integration)
+├── .claude/
+│   ├── commands/                   ← 5 slash commands (Claude Code integration)
+│   └── skills/                     ← ~13 on-demand playbooks auto-loaded by Claude Code
 ├── CLAUDE.md                       ← Entry point for agents — global rules, naming, git workflow
-├── USAGE.md                        ← Setup guide and step-by-step workflow for developers
+├── USAGE.md                        ← Setup guide, make-command reference, skills catalog
+├── Makefile                        ← Workspace-level orchestration: up/down/build/test/quality
 ├── agents/                         ← 7 agent definitions (role, responsibilities, tools, limits)
 ├── commands/                       ← Command implementations (referenced by .claude/commands/)
-├── templates/                      ← Spec, task, and handoff file templates
+├── templates/
+│   ├── ci/                         ← GitHub Actions workflow templates (backend + frontend)
+│   ├── hooks/                      ← Git pre-commit hooks (backend + frontend)
+│   ├── makefile/                   ← Makefile quality snippets for per-service Makefiles
+│   └── feature-*.md                ← Spec, task, and handoff file templates
 ├── scaffolds/                      ← Production-ready PHP classes — copy verbatim, never rewrite
 │   ├── AppController.php           ← Base controller with command/query dispatch helpers
 │   ├── ApiExceptionSubscriber.php  ← Maps domain exceptions to HTTP status codes
@@ -99,6 +110,7 @@ ai-standards/
     ├── invariants.md               ← Non-negotiable rules — security, code, git, agent behavior
     ├── agent-reading-protocol.md   ← Canonical reading order for every agent (build-plan + standalone)
     ├── tech-stack.md               ← Authoritative versions (minimums, open to update) + upgrade procedure
+    ├── quality-gates.md            ← CI + pre-commit + Makefile quality rules (PHPStan L9, vue-tsc, tests)
     ├── backend.md                  ← PHP/Symfony architecture rules (concise, always loaded)
     ├── backend-reference.md        ← Full code examples, configs, test patterns (loaded on demand)
     ├── frontend.md                 ← Vue 3/TypeScript rules (concise, always loaded)

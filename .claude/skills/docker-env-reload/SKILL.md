@@ -48,5 +48,5 @@ If any of these appear after you "restarted", run `docker compose up -d` instead
 
 ## See also
 
-- [standards/new-service-checklist.md](../../../standards/new-service-checklist.md) item 11 — same rule with command cheat-sheet.
+- [standards/new-service-checklist.md](../../../standards/new-service-checklist.md) item 13 — same rule with command cheat-sheet.
 - `cors-nelmio-configuration` skill — common scenario where this trap bites.

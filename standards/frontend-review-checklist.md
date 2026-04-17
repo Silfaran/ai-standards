@@ -4,12 +4,15 @@ Closed list of verifiable rules for the Frontend Reviewer agent. Each rule maps 
 
 The reviewer must NOT re-read the full standards — this checklist is the authoritative review surface. If a rule seems missing for the current diff, request it as a `minor` and flag it for inclusion in a future checklist update.
 
+> **Quality gates pre-requisite.** Mechanical checks (ESLint with `--max-warnings=0`, Prettier `--check`, `vue-tsc --noEmit`, Vitest, `vite build`, `npm audit`) are enforced by the pre-commit hook and GitHub Actions CI before the reviewer sees the diff. See [`quality-gates.md`](quality-gates.md). If CI is red, reject immediately with status `QUALITY-GATE-FAILED` and point the developer to the failing job — do not start the full review.
+
 ---
 
 ## Hard blockers (auto-reject, regardless of iteration)
 
-- [ ] `npm run lint` passes (ESLint + Prettier, zero warnings)
-- [ ] `npx vue-tsc --noEmit` passes (zero type errors)
+- [ ] Quality gates CI is green for the current commit (ESLint, Prettier, vue-tsc, Vitest, `vite build`, `npm audit`)
+- [ ] `npm run lint` passes (ESLint + Prettier, zero warnings, `--max-warnings=0`) — confirm via CI
+- [ ] `npx vue-tsc --noEmit` passes (zero type errors) — confirm via CI
 - [ ] No `any` anywhere — use `unknown` + type guards
 - [ ] No `v-html` with user-provided content (XSS) — only with developer-authored, sanitized HTML
 - [ ] No secrets in `VITE_*` env vars (API keys, tokens, private URLs)

@@ -4,12 +4,15 @@ Closed list of verifiable rules for the Backend Reviewer agent. Each rule maps t
 
 The reviewer must NOT re-read the full standards — this checklist is the authoritative review surface. If a rule seems missing for the current diff, request it as a `minor` and flag it for inclusion in a future checklist update.
 
+> **Quality gates pre-requisite.** Mechanical checks (PHPStan level 9, PHP-CS-Fixer, `composer validate`, `composer audit`, migrations on clean Postgres, PHPUnit) are enforced by the pre-commit hook and GitHub Actions CI before the reviewer sees the diff. See [`quality-gates.md`](quality-gates.md). If CI is red, reject immediately with status `QUALITY-GATE-FAILED` and point the developer to the failing job — do not start the full review.
+
 ---
 
 ## Hard blockers (auto-reject, regardless of iteration)
 
-- [ ] PHPStan level 9 passes (zero errors)
-- [ ] PHP-CS-Fixer passes (zero violations)
+- [ ] Quality gates CI is green for the current commit (PHPStan L9, PHP-CS-Fixer, composer audit, migrations, PHPUnit)
+- [ ] PHPStan level 9 passes (zero errors) — confirm via CI, no baseline entries added to hide violations
+- [ ] PHP-CS-Fixer passes (zero violations) — confirm via CI
 - [ ] No string concatenation/interpolation in SQL — DBAL parameterized queries only
 - [ ] No CORS `*` in `nelmio_cors.yaml` — explicit origin allowlist via env
 - [ ] No secrets committed (`.env`, keys, tokens, fixtures with real credentials)

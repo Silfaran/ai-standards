@@ -21,7 +21,7 @@ Role-specific notes:
 - Configure environment variables — never hardcode secrets
 - Ensure the Symfony Messenger worker runs automatically as a Docker container
 - Verify the full environment starts correctly after any change
-- Set up CI/CD pipelines when required
+- **Install and maintain quality gates per service** — CI workflow, pre-commit hook, and Makefile quality targets, all copied from `ai-standards/templates/` following [`quality-gates.md`](../standards/quality-gates.md). Every new service must pass `make quality` before its first commit.
 - When the project has 5+ services publishing or consuming messages, suggest RabbitMQ virtual hosts (vhosts) to isolate queues per domain. Ask the developer before implementing — this is a suggestion, not a default
 
 ## Docker Architecture

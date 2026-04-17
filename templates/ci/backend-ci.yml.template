@@ -1,0 +1,96 @@
+# GitHub Actions — Backend CI (PHP/Symfony service)
+#
+# Install to: .github/workflows/ci.yml in the service repo.
+# Authoritative rules: ai-standards/standards/quality-gates.md
+#
+# Placeholders to replace before use:
+#   {service-name}         — human-readable service name (used only in the top-level `name:`)
+#   {php-version}          — keep aligned with ai-standards/standards/tech-stack.md
+#   {postgres-image}       — e.g. postgres:17
+#   {rabbitmq-image}       — e.g. rabbitmq:4-management
+#
+# The job fails the pipeline on any violation. Do NOT mark individual steps as
+# continue-on-error — reviewers already catch warnings; CI only gates hard failures.
+
+name: {service-name} CI
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+
+jobs:
+  quality:
+    name: quality gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: {postgres-image}
+        env:
+          POSTGRES_USER: workspace
+          POSTGRES_PASSWORD: workspace
+          POSTGRES_DB: workspace
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+      rabbitmq:
+        image: {rabbitmq-image}
+        ports:
+          - 5672:5672
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql://workspace:workspace@localhost:5432/workspace?serverVersion=17
+      RABBITMQ_URL: amqp://guest:guest@localhost:5672/%2f
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '{php-version}'
+          extensions: pdo_pgsql, amqp, intl, mbstring
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Validate composer.json + composer.lock sync
+        run: composer validate --strict
+
+      - name: PHP-CS-Fixer (dry-run)
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff --verbose
+
+      - name: PHPStan (level 9)
+        run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+
+      - name: Run migrations
+        run: php vendor/bin/phinx migrate --environment=default
+
+      - name: PHPUnit — unit + integration
+        run: vendor/bin/phpunit
+
+      - name: composer audit
+        run: composer audit --no-dev
