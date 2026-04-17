@@ -76,11 +76,15 @@ Handoff files are temporary and must be deleted when the full feature plan is co
 
 ### Git (main conversation only — subagents do not perform git operations)
 
-- Main branches: `master` (production) and `develop` (development)
-- Always work from `develop` — update it before creating a new branch
+- Main branch: `master`
+- Always work from `master` — every new branch is created from an up-to-date `master`
 - Branch naming: `feature/{aggregate}/{description}`, `fix/{aggregate}/{description}`, `hotfix/{description}`
-- `build-plan` creates the feature branch before the first agent and commits after the last — see `build-plan-command.md`
-- Never merge, push, or create pull requests without explicit developer confirmation (see `invariants.md`)
+- `build-plan` workflow:
+  1. **Pre-flight check**: before creating a feature branch in any affected repo, verify HEAD is on `master`. If not, ask the developer to merge the current branch into `master` first, continue on the existing branch, or abort — never silently branch from a non-master HEAD.
+  2. Creates the feature branch from `master` and commits after the last agent.
+  3. **Post-feature merge prompt**: after committing, asks the developer if the feature should be merged into `master`. If yes, merges + pushes in every affected repo and leaves all repos checked out on `master`.
+- Any other command that creates branches must apply the same pre-flight master check.
+- Never push or create pull requests without explicit developer confirmation (see `invariants.md`)
 
 ### Makefile
 

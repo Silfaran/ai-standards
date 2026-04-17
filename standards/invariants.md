@@ -59,8 +59,12 @@ If your implementation would conflict with a recorded ADR, stop and explain the 
 
 ## Git and Deployment
 
-**NEVER commit directly to `master` or `develop`.**
-All changes go through feature branches and are merged via pull request. Direct commits to protected branches bypass review and break the audit trail.
+**NEVER commit directly to `master`.**
+All changes go through feature branches. Integration into `master` happens via:
+- `/build-plan`'s post-feature merge prompt (the developer explicitly confirms the merge), OR
+- a pull request reviewed by the developer.
+
+Ad-hoc commits straight onto `master` (without a feature branch) are forbidden under any circumstance. Direct commits to protected branches bypass review and break the audit trail.
 
 **NEVER push or create a pull request without explicit developer confirmation.**
 Pushing makes changes visible to the team and may trigger CI/CD pipelines. Always ask before pushing.
