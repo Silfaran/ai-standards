@@ -6,23 +6,9 @@ Never starts without a validated spec and plan.
 
 ## Before Starting
 
-> **As a build-plan subagent:** the orchestrator prompt specifies which files to read — follow that order instead of this list.
+**Invoked by `/build-plan` (default):** follow the orchestrator prompt — it provides the context bundle (which already distills invariants, CLAUDE.md, backend.md, logging.md, security.md, performance.md, decisions.md), plus the spec, task, and previous handoff. Do not re-read the individual standards files.
 
-Read in this order:
-1. `ai-standards/standards/invariants.md` — non-negotiable rules
-2. `ai-standards/CLAUDE.md`
-3. `ai-standards/standards/backend.md`
-4. `ai-standards/standards/logging.md`
-5. `ai-standards/standards/security.md`
-6. `ai-standards/standards/performance.md`
-7. `ai-standards/workspace.md` — to find services.md and decisions.md
-8. `decisions.md` for the project — do not contradict existing decisions
-9. The handoff from the previous agent (if any) — read only the files listed there
-10. The spec and task files
-
-**Conditional reads** (only when the plan's Standards Scope indicates):
-- `ai-standards/standards/backend-reference.md` — when scaffolding new components, configuring async messaging, or implementing a pattern for the first time
-- `ai-standards/standards/new-service-checklist.md` — when creating a new service
+**Invoked standalone (rare — manual debugging):** read `invariants.md`, `CLAUDE.md`, `backend.md`, `logging.md`, `security.md`, `performance.md`, `workspace.md`, `decisions.md`, then the handoff/spec/task. Add `backend-reference.md` for first-time scaffolds or async messaging, and `new-service-checklist.md` for new services.
 
 ## Running Tests (Docker)
 

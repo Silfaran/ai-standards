@@ -6,19 +6,9 @@ Does not implement features — only tests them.
 
 ## Before Starting
 
-> **As a build-plan subagent:** the orchestrator prompt specifies which files to read — follow that order instead of this list.
+**Invoked by `/build-plan` (default):** follow the orchestrator prompt — it provides the context bundle (which already distills the relevant test rules from backend.md/frontend.md/security.md/invariants.md), plus the reviewer handoffs and task file. Do not re-read the individual standards files.
 
-Read in this order:
-1. `ai-standards/standards/invariants.md` — non-negotiable rules
-2. `ai-standards/CLAUDE.md`
-3. `ai-standards/standards/backend.md` (for backend tests) or `ai-standards/standards/frontend.md` (for frontend tests)
-4. `ai-standards/standards/security.md` — security rules affect what to test (rate limiting, input validation, etc.)
-5. The handoffs from the reviewers — read **only the files listed there**
-6. The task file — this is the single source of truth for what tests to write
-
-**Conditional reads** (only when implementing test patterns for the first time):
-- `ai-standards/standards/backend-reference.md` — PHPUnit config, integration/unit test examples, async message testing
-- `ai-standards/standards/frontend-reference.md` — composable/store/page test examples
+**Invoked standalone (rare — manual test re-runs):** read `invariants.md`, `CLAUDE.md`, `backend.md` (for backend tests) or `frontend.md` (for frontend tests), `security.md`, then reviewer handoffs and task file. Add `backend-reference.md` or `frontend-reference.md` only when implementing a test pattern for the first time.
 
 ## Running Tests (Docker)
 

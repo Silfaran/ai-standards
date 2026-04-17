@@ -38,7 +38,9 @@ Before spawning any subagent, generate a **context bundle** file that distills t
 5. If the feature has a frontend component, include all entries from `design-decisions.md` — these are short and all relevant to visual consistency
 6. Write the bundle to: `ai-standards/handoffs/{feature-name}/context-bundle.md`
 
-The bundle replaces the individual standards file reads in the subagent prompt. Agents still read their own agent definition file (which is short and role-specific).
+The bundle replaces the individual standards file reads in **Developer / Tester / DevOps** subagent prompts. Agents still read their own agent definition file (which is short and role-specific).
+
+> **Reviewer agents do NOT receive the context bundle.** They receive the static review checklist (`backend-review-checklist.md` or `frontend-review-checklist.md`) plus the previous handoff's file list. Checklists are derived from the standards and contain only verifiable rules — see "Reviewer prompt template" below.
 
 Target size: **200-400 lines** (vs ~1,000+ lines from reading all standards separately).
 
@@ -147,7 +149,9 @@ For single-service features. Use the appropriate Developer/Reviewer type (Backen
 
 ## Subagent prompt template
 
-Every subagent prompt follows this structure. Replace placeholders with absolute paths.
+There are two prompt templates: one for **Developer / Tester / DevOps** (full context bundle) and one for **Reviewer** (static checklist, no bundle). Replace placeholders with absolute paths.
+
+### Developer / Tester / DevOps prompt template
 
 ```
 You are the {Agent Role} agent for the {Project Name} project.
@@ -167,7 +171,28 @@ Working directory: {service_path}
 When done, write your handoff to: {handoff_path}
 ```
 
-> **Note:** The context bundle (generated in Step 0.5) replaces the individual reads of `invariants.md`, `CLAUDE.md`, `backend.md`, `frontend.md`, `security.md`, `performance.md`, `logging.md`, and `decisions.md`. The agent definition file still tells the agent its role and responsibilities. If the agent needs the full text of a standards file for a specific reason, it can read it — but the bundle should cover 95% of cases.
+### Reviewer prompt template (Backend Reviewer / Frontend Reviewer)
+
+```
+You are the {Backend|Frontend} Reviewer agent for the {Project Name} project.
+
+Read these files in order before doing anything else:
+1. {agent_definition_path}
+2. {checklist_path}                       ← review-checklist.md (authoritative review surface)
+3. {previous_developer_handoff_path}      ← read ONLY the files listed in this handoff
+4. {task_path}                            ← for Definition of Done
+{conditional: 5. design-decisions.md      ← only for Frontend Reviewer when the diff touches UI}
+
+Do NOT read the context bundle, individual standards files, the spec, or any source file outside the developer's handoff list. The checklist is your authoritative review surface — it contains every verifiable rule extracted from the standards.
+
+Run the checklist against the diff. For each violation, report severity (critical/major/minor), file:line, and the checklist rule that was violated. If you find a violation NOT covered by the checklist, report it as `minor` and flag it for inclusion in a future checklist update.
+
+This is review iteration {N} of max 3.
+
+When done, write your handoff to: {handoff_path}
+```
+
+> **Why reviewers do not get the context bundle:** the bundle is for implementation (rules + examples + design context). Review is verification — a closed list of checks against a diff. The checklist is shorter, denser, and unambiguous. Re-deriving rules from prose every iteration wastes tokens and produces inconsistent reviews.
 
 ### Files per phase
 
@@ -176,8 +201,8 @@ When done, write your handoff to: {handoff_path}
 | DevOps | `agents/devops-agent.md` | Yes | plan file | `devops-handoff.md` |
 | Backend Dev | `agents/backend-developer-agent.md` | Yes | `devops-handoff.md` (if exists) | `backend-dev-handoff.md` |
 | Frontend Dev | `agents/frontend-developer-agent.md` | Yes | `devops-handoff.md` (if exists) | `frontend-dev-handoff.md` |
-| Backend Reviewer | `agents/backend-reviewer-agent.md` | Yes | `backend-dev-handoff.md` | `backend-reviewer-handoff.md` |
-| Frontend Reviewer | `agents/frontend-reviewer-agent.md` | Yes | `frontend-dev-handoff.md` | `frontend-reviewer-handoff.md` |
+| Backend Reviewer | `agents/backend-reviewer-agent.md` | **No** — uses `standards/backend-review-checklist.md` | `backend-dev-handoff.md` | `backend-reviewer-handoff.md` |
+| Frontend Reviewer | `agents/frontend-reviewer-agent.md` | **No** — uses `standards/frontend-review-checklist.md` (+ `design-decisions.md` if UI diff) | `frontend-dev-handoff.md` | `frontend-reviewer-handoff.md` |
 | Tester | `agents/tester-agent.md` | Yes | `backend-reviewer-handoff.md`, `frontend-reviewer-handoff.md` | `tester-handoff.md` |
 | Dev+Tester (simple) | `agents/{role}-developer-agent.md` | Yes | `devops-handoff.md` (if exists) | `dev-tester-handoff.md` |
 

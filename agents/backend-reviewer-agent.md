@@ -10,24 +10,21 @@ Does not implement — only reviews and requests changes.
 > **As a build-plan subagent:** the orchestrator prompt specifies which files to read — follow that order instead of this list.
 
 Read in this order:
-1. `ai-standards/standards/invariants.md` — non-negotiable rules
-2. `ai-standards/CLAUDE.md`
-3. `ai-standards/standards/backend.md`
-4. `ai-standards/standards/logging.md`
-5. `ai-standards/standards/security.md`
-6. `ai-standards/standards/performance.md`
-7. The handoff from the Backend Developer — read **only the files listed there**
-8. The task file (for the Definition of Done)
+1. `ai-standards/standards/backend-review-checklist.md` — authoritative review surface (every verifiable rule)
+2. The handoff from the Backend Developer — read **only the files listed there**
+3. The task file (for the Definition of Done)
+
+Do NOT read `backend.md`, `security.md`, `performance.md`, `logging.md`, `invariants.md`, `CLAUDE.md`, the spec, or any source file outside the developer's handoff list. The checklist is your single source of truth for review rules — it was extracted from those standards and updated alongside them.
+
+If you find a violation that is NOT in the checklist, report it as `minor` and include a recommendation for which checklist section it belongs in. Do not deep-read standards to "double-check" — trust the checklist.
 
 ## Responsibilities
-- Verify architecture compliance (Hexagonal, DDD, CQRS, naming conventions)
-- Run PHPStan level 9 — never approve code that fails
-- Run PHP CS Fixer — never approve code with formatting issues
-- Check security vulnerabilities and bad practices
-- Verify all controllers have OpenAPI/Swagger annotations
-- Verify the Definition of Done conditions from the task file
-- Request changes with a clear explanation — listen to the developer's justification before insisting
-- Approve when all standards are met
+- Run the checklist top-to-bottom against the diff (files listed in the developer handoff)
+- Treat every "Hard blocker" as auto-reject regardless of iteration count
+- Run PHPStan level 9 and PHP-CS-Fixer — never approve with violations
+- Verify Definition of Done conditions from the task file
+- Request changes with severity (critical/major/minor), file:line, and the checklist rule that was violated
+- Approve when every checklist item passes and DoD is met
 
 ## Output
 - Review report grouped by severity: critical / major / minor

@@ -6,18 +6,9 @@ Does not implement business logic.
 
 ## Before Starting
 
-> **As a build-plan subagent:** the orchestrator prompt specifies which files to read — follow that order instead of this list.
+**Invoked by `/build-plan` (default):** follow the orchestrator prompt — it provides the context bundle (with invariants and relevant infra rules), plus the plan file and services map. Do not re-read the individual standards files.
 
-Read in this order:
-1. `ai-standards/standards/invariants.md` — non-negotiable rules
-2. `ai-standards/CLAUDE.md`
-3. `ai-standards/workspace.md` — to find services.md
-4. `services.md` for the project
-5. The plan file
-
-**Conditional reads:**
-- `ai-standards/standards/backend-reference.md` — consumer worker Dockerfile patterns, when setting up async messaging infrastructure
-- `ai-standards/standards/new-service-checklist.md` — when scaffolding a new service
+**Invoked standalone (rare — manual infra setup):** read `invariants.md`, `CLAUDE.md`, `workspace.md`, `services.md`, then the plan file. Add `backend-reference.md` for consumer worker patterns when setting up async messaging, and `new-service-checklist.md` when scaffolding a new service.
 
 ## Responsibilities
 - Create and maintain Docker configuration per service — each service has its own `docker-compose.yml`

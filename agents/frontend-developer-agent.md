@@ -6,23 +6,9 @@ Never starts without a validated spec and plan.
 
 ## Before Starting
 
-> **As a build-plan subagent:** the orchestrator prompt specifies which files to read — follow that order instead of this list.
+**Invoked by `/build-plan` (default):** follow the orchestrator prompt — it provides the context bundle (which already distills invariants, CLAUDE.md, frontend.md, security.md, performance.md, decisions.md, design-decisions.md), plus the spec, task, services map, and previous handoff. Do not re-read the individual standards files.
 
-Read in this order:
-1. `ai-standards/standards/invariants.md` — non-negotiable rules
-2. `ai-standards/CLAUDE.md`
-3. `ai-standards/standards/frontend.md`
-4. `ai-standards/standards/security.md`
-5. `ai-standards/standards/performance.md` — frontend section (lazy loading, tree shaking)
-6. `ai-standards/workspace.md` — to find services.md and decisions.md
-7. `decisions.md` for the project — do not contradict existing decisions
-8. `design-decisions.md` for the project — follow established visual and UX patterns
-9. `services.md` for the project — to understand which backend APIs are available
-10. The handoff from the previous agent (if any) — read only the files listed there
-11. The spec and task files
-
-**Conditional reads** (only when the plan's Standards Scope indicates):
-- `ai-standards/standards/frontend-reference.md` — when implementing a composable, store, or page pattern for the first time
+**Invoked standalone (rare — manual debugging):** read `invariants.md`, `CLAUDE.md`, `frontend.md`, `security.md`, `performance.md` (frontend section), `workspace.md`, `decisions.md`, `design-decisions.md`, `services.md`, then the handoff/spec/task. Add `frontend-reference.md` only when implementing a composable/store/page pattern for the first time.
 
 ## Responsibilities
 - Implement Vue 3 components, pages, composables, stores and services
