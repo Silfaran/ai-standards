@@ -117,16 +117,22 @@ For single-service features. Use the appropriate Developer/Reviewer type (Backen
 
 1. **Sign-off** — show summary, wait for developer confirmation (see Step 0)
 2. Read the plan file and task file. Read the `## Complexity` line from the plan to determine the execution flow.
-3. **Create feature branch** — from `develop`, create `feature/{aggregate}/{feature-name}` in every affected service repository. If the branch already exists, check it out. Do not proceed until the branch is created in all affected repos.
-4. **Generate context bundle** (see Step 0.5) — write to `ai-standards/handoffs/{feature-name}/context-bundle.md`
-5. Execute each phase using the subagent prompt template below, following the flow matching the plan's complexity:
+3. **Pre-flight branch check** — for every affected service repository, verify HEAD is on `master`. For each repo NOT on master:
+   - Show the developer: repo name, current branch, commits ahead of master.
+   - Ask:
+     > "Repo `{repo}` is on `{branch}` (not master). Choose: **(a)** merge `{branch}` into master here and continue from a clean master, **(b)** keep working on `{branch}` for this feature (no new branch will be created), **(c)** abort `/build-plan`."
+   - Do not proceed until every affected repo has been resolved. Never silently branch from a non-master HEAD.
+
+4. **Create feature branch** — from `master`, create `feature/{aggregate}/{feature-name}` in every affected service repository. If the branch already exists, check it out. Do not proceed until the branch is created in all affected repos.
+5. **Generate context bundle** (see Step 0.5) — write to `ai-standards/handoffs/{feature-name}/context-bundle.md`
+6. Execute each phase using the subagent prompt template below, following the flow matching the plan's complexity:
    - **Sequential phases**: spawn and wait for the result before proceeding
    - **Parallel phases**: spawn the first with `run_in_background: true`, immediately spawn the second (foreground), then process both results before continuing
-6. Handle feedback loops per side — each loop reruns only the affected side (skip for `simple` — no review loop)
-7. After all agents are done and tests pass, check the final handoff for a `## Lessons Learned` section. If it contains new entries, append them to `ai-standards/standards/lessons-learned.md`. If any lesson duplicates an existing standard, promote it there and do not add it to lessons-learned.
-8. Run `update-specs`
-9. Delete the entire `ai-standards/handoffs/{feature-name}/` directory
-10. **Verify Docker services** — check if the feature introduced changes that require a Docker rebuild or restart in affected services. Apply the appropriate action:
+7. Handle feedback loops per side — each loop reruns only the affected side (skip for `simple` — no review loop)
+8. After all agents are done and tests pass, check the final handoff for a `## Lessons Learned` section. If it contains new entries, append them to `ai-standards/standards/lessons-learned.md`. If any lesson duplicates an existing standard, promote it there and do not add it to lessons-learned.
+9. Run `update-specs`
+10. Delete the entire `ai-standards/handoffs/{feature-name}/` directory
+11. **Verify Docker services** — check if the feature introduced changes that require a Docker rebuild or restart in affected services. Apply the appropriate action:
 
     | Change detected | Action |
     |---|---|
@@ -139,11 +145,15 @@ For single-service features. Use the appropriate Developer/Reviewer type (Backen
 
     After the action, verify each affected service responds correctly (e.g. `curl -s -o /dev/null -w "%{http_code}" http://localhost:{port}/api/...` returns a non-502 status). If a service fails to start, investigate logs (`docker compose logs`) and fix before committing.
 
-11. **Commit all changes** — stage and commit in every affected repo with a descriptive message. Do **not** merge into `develop` or `master`. Do **not** push or create a pull request.
-12. Verify all Definition of Done conditions are met
-13. Report final status to the developer, including:
-    - Branch name per repo
-    - Reminder: "Branches are ready. Merge into `develop` when satisfied."
+12. **Commit all changes** — stage and commit in every affected repo with a descriptive message. Do not push yet. The merge prompt in Step 14 handles push and master integration.
+13. Verify all Definition of Done conditions are met
+14. **Post-feature merge prompt** — once the feature is committed and DoD is met, ask the developer:
+    > "Feature `{feature-name}` is committed on `feature/{aggregate}/{feature-name}` in: {repo list}. Merge into `master` now? Choose: **(a)** yes — for each affected repo: `git checkout master`, `git merge --no-ff feature/...`, `git push origin master`, `git checkout master` (stay on master), and delete the local feature branch; **(b)** no — leave branches as-is for manual review."
+    - If **(a)**: execute the merge in every affected repo. After every repo is merged and pushed, verify HEAD is on `master` in all of them. Report any merge conflicts immediately and stop — do not auto-resolve.
+    - If **(b)**: skip to Step 15 with a reminder of the unmerged branches.
+15. Report final status to the developer, including:
+    - Per repo: final branch (`master` if merged, `feature/...` if not), last commit hash
+    - If unmerged: reminder of which branches need attention
 
 ---
 
