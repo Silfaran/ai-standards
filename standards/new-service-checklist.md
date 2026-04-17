@@ -3,6 +3,8 @@
 Every new PHP/Symfony service must pass this checklist **before the first commit**.
 The single validation rule: `docker build .` (or `make build`) must succeed with exit code 0.
 
+Use [`tech-stack.md`](tech-stack.md) for the authoritative minimum versions — do not pin to a minor here unless there is a specific reason.
+
 These items were derived from real failures encountered when bootstrapping `task-service`.
 
 ---
@@ -122,10 +124,10 @@ package must be in `composer.json` and `composer.lock`. Without it, `cache:clear
 The service "messenger.transport.symfony_serializer" has a dependency on a non-existent service "serializer".
 ```
 
-Required dependencies for async messaging (see `backend.md` — RabbitMQ & Messaging):
+Required dependencies for async messaging (see `backend.md` — RabbitMQ & Messaging). Use caret (`^`) constraints as defined in [`tech-stack.md`](tech-stack.md) — never lock to a specific minor:
 ```json
-"symfony/serializer": "8.0.*",
-"symfony/property-access": "8.0.*"
+"symfony/serializer": "^8.0",
+"symfony/property-access": "^8.0"
 ```
 
 ---

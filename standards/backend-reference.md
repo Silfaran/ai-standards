@@ -3,6 +3,7 @@
 > This file contains detailed code examples, scaffold implementations, and full configurations.
 > Read this file only when you need to scaffold a new component or configure a feature for the first time.
 > For rules and conventions, read `backend.md`.
+> Version numbers embedded in examples below (PHP, PostgreSQL, Symfony) are the current minimums declared in [`tech-stack.md`](tech-stack.md). When that file is updated, update the matching examples here.
 
 ---
 

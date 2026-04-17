@@ -10,15 +10,11 @@ You describe a feature in plain language. The framework splits the work across s
 
 ## Tech stack
 
-This framework is opinionated. It enforces a specific stack and architecture:
+This framework is opinionated. It enforces a specific stack and architecture.
 
-| Layer | Technology |
-|---|---|
-| Backend | PHP 8.4+ / Symfony 8.0+ |
-| Frontend | Vue 3 + TypeScript + Vite + shadcn/ui |
-| Database | PostgreSQL (one database per service) |
-| Messaging | RabbitMQ (Symfony Messenger) |
-| Infrastructure | Docker (per-service containers + shared infra) |
+The authoritative list of technologies, minimum versions and upgrade policy lives in [`standards/tech-stack.md`](standards/tech-stack.md) — all versions are minimums, open to newer compatible releases.
+
+At a glance: PHP + Symfony on the backend, Vue 3 + TypeScript + Vite (with shadcn/ui) on the frontend, PostgreSQL as the database (one per service), RabbitMQ via Symfony Messenger for messaging, Docker for per-service containers and shared infrastructure.
 
 Architecture patterns — Hexagonal, DDD, CQRS, Event-Driven — are enforced by standards, not suggested. Every agent validates against them.
 
@@ -101,6 +97,8 @@ ai-standards/
 │   └── SecurityHeadersSubscriber.php
 └── standards/
     ├── invariants.md               ← Non-negotiable rules — security, code, git, agent behavior
+    ├── agent-reading-protocol.md   ← Canonical reading order for every agent (build-plan + standalone)
+    ├── tech-stack.md               ← Authoritative versions (minimums, open to update) + upgrade procedure
     ├── backend.md                  ← PHP/Symfony architecture rules (concise, always loaded)
     ├── backend-reference.md        ← Full code examples, configs, test patterns (loaded on demand)
     ├── frontend.md                 ← Vue 3/TypeScript rules (concise, always loaded)

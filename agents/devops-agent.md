@@ -6,9 +6,11 @@ Does not implement business logic.
 
 ## Before Starting
 
-**Invoked by `/build-plan` (default):** follow the orchestrator prompt — it provides the context bundle (with invariants and relevant infra rules), plus the plan file and services map. Do not re-read the individual standards files.
+Follow the canonical reading order in [`../standards/agent-reading-protocol.md`](../standards/agent-reading-protocol.md) — it defines both modes (build-plan subagent and standalone) and the role-specific files for DevOps.
 
-**Invoked standalone (rare — manual infra setup):** read `invariants.md`, `CLAUDE.md`, `workspace.md`, `services.md`, then the plan file. Add `backend-reference.md` for consumer worker patterns when setting up async messaging, and `new-service-checklist.md` when scaffolding a new service.
+Role-specific notes:
+- On demand, load [`../standards/backend-reference.md`](../standards/backend-reference.md) for consumer-worker patterns when setting up async messaging, and [`../standards/new-service-checklist.md`](../standards/new-service-checklist.md) when scaffolding a new service.
+- [`../standards/tech-stack.md`](../standards/tech-stack.md) is your source of truth for infrastructure image versions (PostgreSQL, RabbitMQ, Node, PHP).
 
 ## Responsibilities
 - Create and maintain Docker configuration per service — each service has its own `docker-compose.yml`

@@ -6,9 +6,11 @@ Does not implement features — only tests them.
 
 ## Before Starting
 
-**Invoked by `/build-plan` (default):** follow the orchestrator prompt — it provides the context bundle (which already distills the relevant test rules from backend.md/frontend.md/security.md/invariants.md), plus the reviewer handoffs and task file. Do not re-read the individual standards files.
+Follow the canonical reading order in [`../standards/agent-reading-protocol.md`](../standards/agent-reading-protocol.md) — it defines both modes (build-plan subagent and standalone) and the role-specific files for the Tester.
 
-**Invoked standalone (rare — manual test re-runs):** read `invariants.md`, `CLAUDE.md`, `backend.md` (for backend tests) or `frontend.md` (for frontend tests), `security.md`, then reviewer handoffs and task file. Add `backend-reference.md` or `frontend-reference.md` only when implementing a test pattern for the first time.
+Role-specific notes:
+- Pick `backend.md` or `frontend.md` based on the test surface — do not load both unless the feature spans both.
+- On demand, load [`../standards/backend-reference.md`](../standards/backend-reference.md) or [`../standards/frontend-reference.md`](../standards/frontend-reference.md) only when implementing a test pattern for the first time.
 
 ## Running Tests (Docker)
 

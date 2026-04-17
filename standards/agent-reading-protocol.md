@@ -1,0 +1,69 @@
+# Agent Reading Protocol
+
+Canonical reading order every agent must follow before doing any work.
+Each agent definition references this file instead of repeating the list.
+
+When you extend an agent, add only the **role-specific** files it needs — do not redefine the common core.
+
+## Two Invocation Modes
+
+Every agent runs in one of two modes. Know which one you are in.
+
+### Mode A — `build-plan` subagent (default)
+
+The orchestrator has already prepared a **context bundle** (`handoffs/{feature}/context-bundle.md`) that distills every rule relevant to the feature from `invariants.md`, `CLAUDE.md`, and the role-specific standards.
+
+Read, in order:
+
+1. **The context bundle** — it replaces `invariants.md`, `CLAUDE.md`, and the standards files.
+2. **The role-specific handoffs** the orchestrator names in your prompt.
+3. **The spec, task and plan** files the orchestrator names in your prompt.
+
+Do **not** re-read individual standards files in this mode. The bundle is the contract.
+
+### Mode B — Standalone (manual invocation, rare)
+
+No context bundle exists. Read the full file set:
+
+1. [`invariants.md`](invariants.md) — non-negotiable rules. Always first.
+2. [`../CLAUDE.md`](../CLAUDE.md) — workspace-wide rules and conventions.
+3. [`tech-stack.md`](tech-stack.md) — authoritative versions and pinning policy.
+4. [`../workspace.md`](../workspace.md) — project config. If missing, stop and tell the developer to run `/init-project`.
+5. **`services.md`** — path listed inside `workspace.md`.
+6. **`decisions.md`** — path listed inside `workspace.md`. Never contradict a recorded decision without explicit developer approval.
+7. **Role-specific standards** (see table below).
+8. **The spec, task, and any handoff** for the feature you are working on.
+
+## Role-specific Additions
+
+Each agent adds only the files below to the Mode B list. Reference files (`*-reference.md`) are **on demand** — load them the first time a pattern appears, not by default.
+
+| Agent | Always | On demand |
+|---|---|---|
+| Spec Analyzer | `design-decisions.md`, existing specs in the project docs folder | — |
+| Backend Developer | [`backend.md`](backend.md), [`logging.md`](logging.md), [`security.md`](security.md), [`performance.md`](performance.md) | [`backend-reference.md`](backend-reference.md), [`new-service-checklist.md`](new-service-checklist.md) |
+| Frontend Developer | [`frontend.md`](frontend.md), [`security.md`](security.md), [`performance.md`](performance.md), `design-decisions.md` | [`frontend-reference.md`](frontend-reference.md) |
+| Backend Reviewer | [`backend-review-checklist.md`](backend-review-checklist.md) **only** — see rule below | — |
+| Frontend Reviewer | [`frontend-review-checklist.md`](frontend-review-checklist.md) **only** — see rule below | `design-decisions.md` when diff touches UI |
+| Tester | [`backend.md`](backend.md) or [`frontend.md`](frontend.md) (pick by test surface), [`security.md`](security.md) | [`backend-reference.md`](backend-reference.md) or [`frontend-reference.md`](frontend-reference.md) for first-time test patterns |
+| DevOps | [`tech-stack.md`](tech-stack.md) (already in common core), root `docker-compose.yml`, service compose files | [`backend-reference.md`](backend-reference.md) for consumer-worker patterns, [`new-service-checklist.md`](new-service-checklist.md) when scaffolding a new service |
+
+### Reviewer exception
+
+Both reviewer agents read **only** their checklist in both modes — never the full standards. The checklists are the authoritative review surface, extracted from the standards and updated alongside them. If a reviewer sees a violation not covered by the checklist, it is reported as `minor` with a recommendation for which checklist section should cover it.
+
+## Handoff Protocol
+
+Every agent that produces output writes a handoff summary for the next agent, using [`../templates/feature-handoff-template.md`](../templates/feature-handoff-template.md).
+
+The next agent reads the handoff first and then **only the files listed in it** — not the entire codebase.
+
+Handoff files are temporary. The `build-plan` orchestrator deletes them once the full feature plan is complete.
+
+## Writing Rules — always in effect
+
+- All files, code, and documentation written in English.
+- When in doubt about any decision, ask the developer before proceeding.
+- Do not add complexity that is not required by the current task.
+- Review your own output before considering the task complete.
+- When scaffolding a component that exists in [`../scaffolds/`](../scaffolds/) (AppController, ApiExceptionSubscriber, LoggingMiddleware, SecurityHeadersSubscriber), copy it verbatim — do not rewrite from memory.

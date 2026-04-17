@@ -6,9 +6,10 @@ Never starts without a validated spec and plan.
 
 ## Before Starting
 
-**Invoked by `/build-plan` (default):** follow the orchestrator prompt — it provides the context bundle (which already distills invariants, CLAUDE.md, backend.md, logging.md, security.md, performance.md, decisions.md), plus the spec, task, and previous handoff. Do not re-read the individual standards files.
+Follow the canonical reading order in [`../standards/agent-reading-protocol.md`](../standards/agent-reading-protocol.md) — it defines both modes (build-plan subagent and standalone) and the role-specific files for Backend Developer.
 
-**Invoked standalone (rare — manual debugging):** read `invariants.md`, `CLAUDE.md`, `backend.md`, `logging.md`, `security.md`, `performance.md`, `workspace.md`, `decisions.md`, then the handoff/spec/task. Add `backend-reference.md` for first-time scaffolds or async messaging, and `new-service-checklist.md` for new services.
+Role-specific notes:
+- On demand, load [`../standards/backend-reference.md`](../standards/backend-reference.md) the first time you implement a scaffold pattern or async messaging, and [`../standards/new-service-checklist.md`](../standards/new-service-checklist.md) when bootstrapping a new service.
 
 ## Running Tests (Docker)
 

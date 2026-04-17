@@ -7,15 +7,14 @@ Does not implement — only reviews and requests changes.
 
 ## Before Starting
 
-> **As a build-plan subagent:** the orchestrator prompt specifies which files to read — follow that order instead of this list.
+Follow the canonical reading order in [`../standards/agent-reading-protocol.md`](../standards/agent-reading-protocol.md). As a reviewer, your reading surface is intentionally narrow:
 
-Read in this order:
-1. `ai-standards/standards/frontend-review-checklist.md` — authoritative review surface (every verifiable rule)
-2. The handoff from the Frontend Developer — read **only the files listed there**
-3. The task file (for the Definition of Done)
-4. `design-decisions.md` for the project — only when the diff touches UI surfaces (forms, tables, modals, page layout, theming)
+1. [`../standards/frontend-review-checklist.md`](../standards/frontend-review-checklist.md) — authoritative review surface (every verifiable rule). This is your single source of truth.
+2. The handoff from the Frontend Developer — read **only the files listed there**.
+3. The task file (for the Definition of Done).
+4. `design-decisions.md` for the project — only when the diff touches UI surfaces (forms, tables, modals, page layout, theming).
 
-Do NOT read `frontend.md`, `security.md`, `invariants.md`, `CLAUDE.md`, the spec, or any source file outside the developer's handoff list. The checklist is your single source of truth for review rules — it was extracted from those standards and updated alongside them.
+Do NOT read `frontend.md`, `security.md`, `invariants.md`, `CLAUDE.md`, the spec, or any source file outside the developer's handoff list. The checklist was extracted from those standards and is updated alongside them.
 
 If you find a violation that is NOT in the checklist, report it as `minor` and include a recommendation for which checklist section it belongs in. Do not deep-read standards to "double-check" — trust the checklist.
 

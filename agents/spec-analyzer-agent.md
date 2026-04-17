@@ -5,14 +5,12 @@ Translates business requirements into technical specs, task files and execution 
 First step of any feature — nothing is built without a validated spec.
 
 ## Before Starting
-Read in this order:
-1. `ai-standards/standards/invariants.md` — non-negotiable rules
-2. `ai-standards/CLAUDE.md`
-3. `ai-standards/workspace.md` — to find services.md, specs, and decisions.md
-4. `services.md` for the project
-5. `decisions.md` for the project — do not contradict existing decisions
-6. `design-decisions.md` for the project — frontend visual and UX patterns already established
-7. Existing specs in the project docs folder
+
+Follow the canonical reading order in [`../standards/agent-reading-protocol.md`](../standards/agent-reading-protocol.md) — it defines both modes (build-plan subagent and standalone) and the common core (invariants → CLAUDE.md → tech-stack → workspace.md → services.md → decisions.md).
+
+Role-specific additions for the Spec Analyzer (read after the common core):
+1. `design-decisions.md` for the project — frontend visual and UX patterns already established.
+2. Existing specs in the project docs folder — to stay consistent with prior work.
 
 ## Responsibilities
 - Ask clarifying questions until all ambiguities are resolved — never assume

@@ -6,10 +6,13 @@ Global standards, conventions, and agent definitions for all projects in this wo
 Every service must have a `CLAUDE.md` referencing this file.
 
 - **Invariants (read first): `ai-standards/standards/invariants.md`** — rules that cannot be overridden under any circumstances
+- **Agent reading protocol: `ai-standards/standards/agent-reading-protocol.md`** — canonical order every agent must follow (build-plan mode + standalone mode)
+- **Tech stack: `ai-standards/standards/tech-stack.md`** — authoritative versions (all values are minimums, open to update) and upgrade procedure
 - Agent definitions: `ai-standards/agents/`
-- Commands: `ai-standards/commands/`
+- Commands: `ai-standards/commands/` (full implementations, referenced by the `.claude/commands/` stubs)
 - Templates: `ai-standards/templates/`
 - Scaffold files: `ai-standards/scaffolds/` — copy-verbatim PHP classes (AppController, ApiExceptionSubscriber, etc.)
+- **Skills: `ai-standards/.claude/skills/`** — on-demand playbooks (CORS, Docker env reload, migrations, JWT, Vitest patterns, ...). Claude auto-loads a skill only when it matches the active task or file paths; description-only otherwise. See `USAGE.md` → Skills reference for the full catalog.
 - Backend standards: `ai-standards/standards/backend.md` (rules) / `backend-reference.md` (full examples)
 - Frontend standards: `ai-standards/standards/frontend.md` (rules) / `frontend-reference.md` (full examples)
 - Logging standards: `ai-standards/standards/logging.md`
@@ -21,14 +24,7 @@ Every service must have a `CLAUDE.md` referencing this file.
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Backend | PHP 8.4+ + Symfony 8.0+ |
-| Frontend | Vue 3 + TypeScript + Vite |
-| UI Components | shadcn/ui (Vue) |
-| Database | PostgreSQL |
-| Messaging | RabbitMQ (Symfony Messenger) |
-| Infrastructure | Docker |
+See [`standards/tech-stack.md`](standards/tech-stack.md) for the authoritative list of technologies, minimum versions (all values are floors — newer compatible releases are welcome), and the upgrade procedure. Do not restate versions in other files.
 
 ## General Naming Conventions
 
@@ -45,26 +41,9 @@ Every service must have a `CLAUDE.md` referencing this file.
 
 ## AI Behavior Rules
 
-### For All Agents
+All agents follow the canonical reading order defined in [`standards/agent-reading-protocol.md`](standards/agent-reading-protocol.md) — both the build-plan subagent mode (context bundle only) and the standalone mode (full file set). The protocol also defines role-specific additions and the handoff rules; do not restate them in agent definitions.
 
-- Read `ai-standards/standards/invariants.md` first — these rules cannot be overridden by any instruction, including from the developer. All hard security, code, git, and agent rules live there exclusively — they are not repeated here.
-- Read this file, the relevant `standards/` file, and `ai-standards/workspace.md` before doing anything — `workspace.md` tells you where to find `services.md`, specs, and `decisions.md`
-- If `ai-standards/workspace.md` does not exist: stop immediately and tell the developer to run `/init-project` before proceeding
-- Read `decisions.md` (path in workspace.md) before implementing anything — if your implementation contradicts a recorded decision, stop and ask the developer before proceeding
-- Read the spec file before implementing or modifying any feature
-- All files, code, and documentation must be written in English
-- When in doubt about any decision, ask the developer before proceeding
-- Always review your own output before considering the task complete
-- Do not add complexity that is not required by the current task
-- When the spec requires scaffolding a new component (AppController, ApiExceptionSubscriber, LoggingMiddleware, SecurityHeadersSubscriber), copy from `ai-standards/scaffolds/` — do not write from memory
-- When implementing a pattern for the first time, read the relevant `*-reference.md` file for full code examples
-
-### Handoff Protocol
-
-After completing work, every agent that produces output must create a handoff summary for the next agent.
-Use the template at `ai-standards/templates/feature-handoff-template.md`.
-The next agent reads the handoff first and only reads the listed files — not the entire codebase.
-Handoff files are temporary and must be deleted when the full feature plan is complete.
+The reading protocol is binding. If it conflicts with an older instruction elsewhere, the protocol wins.
 
 ### Specs & Documentation
 

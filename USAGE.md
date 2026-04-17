@@ -15,12 +15,16 @@ workspace/
 └── ai-standards/    ← clone here
 ```
 
-**2. Copy the commands folder to your workspace root:**
+**2. Copy the commands and skills folders to your workspace root:**
 ```bash
 cp -r ai-standards/.claude/commands .claude/commands
+cp -r ai-standards/.claude/skills   .claude/skills
 ```
 
-This makes all commands available as slash commands in Claude Code (e.g. `/init-project`, `/create-specs`).
+- `commands/` makes all slash commands available in Claude Code (e.g. `/init-project`, `/create-specs`).
+- `skills/` gives agents on-demand access to narrow playbooks (CORS setup, safe migrations, JWT lifecycle, Vitest patterns, etc.). Claude auto-loads each skill only when it matches the file or task at hand — zero cost when not needed. See [skills reference](#skills-reference) below.
+
+Re-run the `cp` commands when ai-standards updates its skills or commands. For a live link (edits in ai-standards instantly reflected), replace `cp -r` with a symlink: `ln -s ../ai-standards/.claude/skills .claude/skills`.
 
 **3. Initialize your project:**
 ```
@@ -99,8 +103,9 @@ Point to the spec file. The agent compares spec vs actual implementation and upd
 ```
 workspace/
 ├── .claude/
-│   └── commands/          ← slash commands (copied from ai-standards/.claude/commands/)
-├── ai-standards/          ← this repo (standards, agents, commands)
+│   ├── commands/          ← slash commands (copied from ai-standards/.claude/commands/)
+│   └── skills/            ← on-demand playbooks (copied from ai-standards/.claude/skills/)
+├── ai-standards/          ← this repo (standards, agents, commands, skills)
 ├── {project-name}-docs/
 │   ├── services.md           ← project service catalog
 │   ├── decisions.md          ← architecture decisions (Spec Analyzer)
@@ -133,4 +138,30 @@ Standards are split into **rules** (concise, always loaded by agents) and **refe
 | `standards/performance.md` | Database, API, and frontend performance |
 | `standards/new-service-checklist.md` | Pre-commit checklist for new services |
 | `standards/lessons-learned.md` | Agent mistakes from past features — auto-populated, injected as warnings |
+| `standards/tech-stack.md` | Authoritative versions (minimums, open to update) + upgrade procedure |
+| `standards/agent-reading-protocol.md` | Canonical reading order for every agent (build-plan + standalone modes) |
 | `scaffolds/` | Copy-verbatim PHP classes (AppController, etc.) |
+| `.claude/skills/` | On-demand playbooks (see below) |
+
+---
+
+## Skills reference
+
+Skills are narrow, auto-loading playbooks. Claude reads only each skill's `description` at session start (cheap) and loads the full body only when the active task matches. This replaces reading big reference files end-to-end.
+
+| Skill | Activates when |
+|---|---|
+| `cors-nelmio-configuration` | Configuring NelmioCorsBundle, adding a new frontend origin, debugging CORS preflight failures |
+| `docker-env-reload` | Editing `.env` / `env_file`; when env-var changes aren't taking effect in a running container |
+| `docker-frontend-deps-sync` | Running `npm install`, adding/removing packages in a Dockerized Vue/Vite frontend |
+| `shadcn-vue-component-add` | Before/after `npx shadcn-vue add <component>` — to catch silent overwrites of unrelated files |
+| `new-service-bootstrap` | Scaffolding a new PHP/Symfony service (Kernel, bundles, routes, Flex cleanup, composer.lock sync) |
+| `doctrine-migration-safe` | Writing a Phinx migration — tables, columns, indexes, safe ALTER patterns |
+| `symfony-messenger-async` | Configuring buses, RabbitMQ transports, cross-service message contracts, consumer workers |
+| `messenger-logging-middleware` | Wiring LoggingMiddleware, configuring Monolog JSON-to-stdout, sensitive field redaction |
+| `jwt-security` | Implementing JWT auth, refresh-token rotation, httpOnly cookie storage, Lexik config |
+| `rate-limiting-auth` | Adding Symfony RateLimiter to login/register/password-reset/token-refresh endpoints |
+| `vue-composable-mutation` | Writing a Vue 3 composable with TanStack Query `useMutation` for write operations |
+| `vitest-composable-test` | Writing Vitest tests for composables, stores, pages (mocks, captured callbacks, jsdom shims) |
+
+All skills can also be invoked manually with `/skill-name`. See each skill's `SKILL.md` for the full content.

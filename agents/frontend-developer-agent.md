@@ -6,9 +6,10 @@ Never starts without a validated spec and plan.
 
 ## Before Starting
 
-**Invoked by `/build-plan` (default):** follow the orchestrator prompt — it provides the context bundle (which already distills invariants, CLAUDE.md, frontend.md, security.md, performance.md, decisions.md, design-decisions.md), plus the spec, task, services map, and previous handoff. Do not re-read the individual standards files.
+Follow the canonical reading order in [`../standards/agent-reading-protocol.md`](../standards/agent-reading-protocol.md) — it defines both modes (build-plan subagent and standalone) and the role-specific files for Frontend Developer.
 
-**Invoked standalone (rare — manual debugging):** read `invariants.md`, `CLAUDE.md`, `frontend.md`, `security.md`, `performance.md` (frontend section), `workspace.md`, `decisions.md`, `design-decisions.md`, `services.md`, then the handoff/spec/task. Add `frontend-reference.md` only when implementing a composable/store/page pattern for the first time.
+Role-specific notes:
+- On demand, load [`../standards/frontend-reference.md`](../standards/frontend-reference.md) only when implementing a composable/store/page pattern for the first time.
 
 ## Responsibilities
 - Implement Vue 3 components, pages, composables, stores and services
