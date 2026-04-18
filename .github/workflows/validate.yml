@@ -98,18 +98,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Config and globs live in `.markdownlint-cli2.jsonc` at repo root;
+      # the action auto-discovers it.
       - uses: DavidAnson/markdownlint-cli2-action@v18
-        with:
-          globs: |
-            **/*.md
-            !node_modules
-          config: |
-            {
-              "default": true,
-              "MD013": false,
-              "MD033": false,
-              "MD041": false,
-              "MD024": { "siblings_only": true },
-              "MD036": false,
-              "MD046": false
-            }

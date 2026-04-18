@@ -1,0 +1,27 @@
+// Configuration for markdownlint-cli2.
+// See https://github.com/DavidAnson/markdownlint/blob/main/schema/.markdownlint.jsonc
+{
+  "config": {
+    "default": true,
+    // Long lines are fine in our prose-heavy standards files.
+    "MD013": false,
+    // HTML is allowed (we use <!-- --> comments in lessons-learned.md).
+    "MD033": false,
+    // Not every file needs a top-level H1 (e.g. included fragments).
+    "MD041": false,
+    // Duplicate section headings are fine across different parents
+    // (every standard has its own "## Rules", "## Examples", etc.).
+    "MD024": { "siblings_only": true },
+    // Emphasis used as a heading is a stylistic choice we use widely.
+    "MD036": false,
+    // Mixed fenced and indented code blocks are fine for inline examples.
+    "MD046": false
+  },
+  "globs": [
+    "**/*.md"
+  ],
+  "ignores": [
+    "node_modules",
+    ".git"
+  ]
+}
