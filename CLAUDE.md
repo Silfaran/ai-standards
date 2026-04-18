@@ -51,7 +51,7 @@ The reading protocol is binding. If it conflicts with an older instruction elsew
 - Specs, plans and tasks live in the path defined in `ai-standards/workspace.md`
 - `{project-name}-docs/specs/INDEX.md` is the quick-reference index — always read this before deep-reading full specs
 - Specs are version-controlled — every spec update must be committed
-- When running as a `build-plan` subagent, read the **context bundle** (`handoffs/{feature}/context-bundle.md`) instead of individual standards files — it contains the distilled rules relevant to the current feature
+- When running as a `build-plan` subagent, read the **context bundle** (`{workspace_root}/handoffs/{feature}/context-bundle.md`, path defined in `workspace.md` under the `handoffs:` key) instead of individual standards files — it contains the distilled rules relevant to the current feature
 
 ### Git (main conversation only — subagents do not perform git operations)
 

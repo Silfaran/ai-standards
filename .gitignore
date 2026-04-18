@@ -7,5 +7,3 @@
 workspace.md
 workspace.mk
 
-# Handoff files are temporary — never commit them
-handoffs/**/*.md

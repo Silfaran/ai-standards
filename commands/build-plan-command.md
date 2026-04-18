@@ -36,7 +36,7 @@ Before spawning any subagent, generate a **context bundle** file that distills t
 3. Include a condensed **spec digest** — the Technical Details section of the spec (the part agents actually need for implementation), not the full business description and user stories
 4. Include relevant entries from `decisions.md` (only ADRs that overlap with this feature's aggregates or services)
 5. If the feature has a frontend component, include all entries from `design-decisions.md` — these are short and all relevant to visual consistency
-6. Write the bundle to: `ai-standards/handoffs/{feature-name}/context-bundle.md`
+6. Write the bundle to: `{workspace_root}/handoffs/{feature-name}/context-bundle.md` (workspace-root `handoffs/` directory declared in `workspace.md` under the `handoffs:` key — ephemeral, never committed, lives outside any service repo)
 
 The bundle replaces the individual standards file reads in **Developer / Tester / DevOps** subagent prompts. Agents still read their own agent definition file (which is short and role-specific).
 
@@ -124,14 +124,14 @@ For single-service features. Use the appropriate Developer/Reviewer type (Backen
    - Do not proceed until every affected repo has been resolved. Never silently branch from a non-master HEAD.
 
 4. **Create feature branch** — from `master`, create `feature/{aggregate}/{feature-name}` in every affected service repository. If the branch already exists, check it out. Do not proceed until the branch is created in all affected repos.
-5. **Generate context bundle** (see Step 0.5) — write to `ai-standards/handoffs/{feature-name}/context-bundle.md`
+5. **Generate context bundle** (see Step 0.5) — write to `{workspace_root}/handoffs/{feature-name}/context-bundle.md`
 6. Execute each phase using the subagent prompt template below, following the flow matching the plan's complexity:
    - **Sequential phases**: spawn and wait for the result before proceeding
    - **Parallel phases**: spawn the first with `run_in_background: true`, immediately spawn the second (foreground), then process both results before continuing
 7. Handle feedback loops per side — each loop reruns only the affected side (skip for `simple` — no review loop)
 8. After all agents are done and tests pass, check the final handoff for a `## Lessons Learned` section. If it contains new entries, append them to `ai-standards/standards/lessons-learned.md`. If any lesson duplicates an existing standard, promote it there and do not add it to lessons-learned.
 9. Run `update-specs`
-10. Delete the entire `ai-standards/handoffs/{feature-name}/` directory
+10. Delete the entire `{workspace_root}/handoffs/{feature-name}/` directory
 11. **Verify Docker services** — check if the feature introduced changes that require a Docker rebuild or restart in affected services. Apply the appropriate action:
 
     | Change detected | Action |
@@ -234,7 +234,7 @@ When done, write your handoff to: {handoff_path}
 | Frontend Dev | Implement the frontend for the {feature} feature as described in the spec. After implementation, run `npm run test` and `npx vue-tsc --noEmit`. All must pass before writing the handoff. |
 | Backend Reviewer | Review the backend code listed in the handoff. This is review iteration {N} of max 3. |
 | Frontend Reviewer | Review the frontend code listed in the handoff. This is review iteration {N} of max 3. |
-| Tester | Ensure all Docker containers are running for each backend service. Run all test suites and linters. For visual / interactive DoD items (gradients, rendered error copy, light/dark parity, viewport-size checks), use Playwright MCP tools to produce real evidence — resize to every target viewport, toggle dark mode, drive forms, and save screenshots to `ai-standards/handoffs/{feature}/screenshots/`. Fall back to "requires human verification" ONLY if the Playwright MCP is unavailable in-session, and state the reason explicitly. If any test fails, identify which developer needs to fix it. |
+| Tester | Ensure all Docker containers are running for each backend service. Run all test suites and linters. For visual / interactive DoD items (gradients, rendered error copy, light/dark parity, viewport-size checks), use Playwright MCP tools to produce real evidence — resize to every target viewport, toggle dark mode, drive forms, and save screenshots to `{workspace_root}/handoffs/{feature}/screenshots/`. Fall back to "requires human verification" ONLY if the Playwright MCP is unavailable in-session, and state the reason explicitly. If any test fails, identify which developer needs to fix it. |
 | Dev+Tester (simple) | Implement the {feature} feature as described in the spec. After implementation, write unit tests as specified in the task file. For backend: ensure Docker is running (`docker compose up -d`), then run tests via `docker compose exec`. For frontend: run `npm run test`. Run linters. All must pass before writing the handoff. |
 
 ### Docker pre-flight for subagent prompts

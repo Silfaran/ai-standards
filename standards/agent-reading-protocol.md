@@ -11,7 +11,7 @@ Every agent runs in one of two modes. Know which one you are in.
 
 ### Mode A — `build-plan` subagent (default)
 
-The orchestrator has already prepared a **context bundle** (`handoffs/{feature}/context-bundle.md`) that distills every rule relevant to the feature from `invariants.md`, `CLAUDE.md`, and the role-specific standards.
+The orchestrator has already prepared a **context bundle** (`{workspace_root}/handoffs/{feature}/context-bundle.md`, workspace-root `handoffs/` directory declared in `workspace.md` under the `handoffs:` key) that distills every rule relevant to the feature from `invariants.md`, `CLAUDE.md`, and the role-specific standards.
 
 Read, in order:
 

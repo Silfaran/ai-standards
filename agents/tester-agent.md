@@ -46,7 +46,7 @@ Mandatory when applicable:
 - **Form + error flows:** `browser_fill_form` + `browser_click` on submit, then `browser_snapshot` to read the accessibility tree and confirm the exact error-message text renders in the DOM (not just that the composable's `serverError.value` is right).
 - **Network outage flows:** stop the target backend container via Bash, drive the form, snapshot/screenshot the error state, then restart the container before moving on.
 
-Save screenshots under the handoff folder (`ai-standards/handoffs/{feature}/screenshots/`) and reference each file in the Tester handoff with the viewport + theme combination it proves. If Playwright MCP is unavailable in the current session, only then fall back to "requires human verification" — and say so explicitly, including the reason.
+Save screenshots under the handoff folder (`{workspace_root}/handoffs/{feature}/screenshots/`, where `{workspace_root}` is declared in `workspace.md` under the `handoffs:` key) and reference each file in the Tester handoff with the viewport + theme combination it proves. If Playwright MCP is unavailable in the current session, only then fall back to "requires human verification" — and say so explicitly, including the reason.
 
 ## Testing Process
 

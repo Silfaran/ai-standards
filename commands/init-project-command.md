@@ -57,7 +57,10 @@ services: {project-name}-docs/services.md
 specs: {project-name}-docs/specs/
 decisions: {project-name}-docs/decisions.md
 design-decisions: {project-name}-docs/design-decisions.md
+handoffs: handoffs/
 ```
+
+The `handoffs:` path is workspace-root-relative. The directory is used by `/build-plan` for ephemeral per-feature handoff files (context bundle, developer/reviewer/tester handoffs, screenshots). It lives at the workspace root — outside any service repo — and is deleted after each feature completes. Do not commit it anywhere.
 
 - `ai-standards/workspace.mk` — Makefile variables (gitignored), content:
 

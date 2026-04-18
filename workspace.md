@@ -5,6 +5,7 @@ services: task-manager-docs/services.md
 specs: task-manager-docs/specs/
 decisions: task-manager-docs/decisions.md
 design-decisions: task-manager-docs/design-decisions.md
+handoffs: handoffs/
 
 ## Service Ports
 
