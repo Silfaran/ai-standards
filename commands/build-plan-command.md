@@ -11,7 +11,7 @@ For full-stack features, Backend Developer and Frontend Developer run **in paral
 
 ## Step 0 — Spec sign-off (mandatory, before spawning any agent)
 
-1. Read the spec file, plan file, task file, and `ai-standards/standards/lessons-learned.md`
+1. Read the spec file, plan file, task file, and every `*.md` file under the project's lessons-learned directory (path defined in `ai-standards/workspace.md` under the `lessons-learned:` key — typically `{project-name}-docs/lessons-learned/`). Also read `ai-standards/standards/lessons-learned.md` for framework-level mistakes that may apply regardless of project.
 2. Display a summary to the developer:
    - Feature name and affected services
    - Phases that will run and in what order
@@ -129,7 +129,16 @@ For single-service features. Use the appropriate Developer/Reviewer type (Backen
    - **Sequential phases**: spawn and wait for the result before proceeding
    - **Parallel phases**: spawn the first with `run_in_background: true`, immediately spawn the second (foreground), then process both results before continuing
 7. Handle feedback loops per side — each loop reruns only the affected side (skip for `simple` — no review loop)
-8. After all agents are done and tests pass, check the final handoff for a `## Lessons Learned` section. If it contains new entries, append them to `ai-standards/standards/lessons-learned.md`. If any lesson duplicates an existing standard, promote it there and do not add it to lessons-learned.
+8. After all agents are done and tests pass, check the final handoff for a `## Lessons Learned` section. If it contains new entries, append each one to the appropriate per-category file under the project's lessons-learned directory (path from `workspace.md` `lessons-learned:` key). Use this mapping to pick the file:
+
+    | Agent role of the entry | Default file |
+    |---|---|
+    | Backend Developer / Backend Reviewer | `back.md` |
+    | Frontend Developer / Frontend Reviewer | `front.md` |
+    | DevOps | `infra.md` |
+    | Tester | `general.md` — or the file that matches the subsystem that failed (e.g. a Tester entry about a Docker desync goes to `infra.md`) |
+
+    Reclassify when the content clearly belongs in a different file — e.g. a DevOps entry about Symfony CORS config goes to `back.md`, not `infra.md`. If a lesson is about the **framework itself** (agent prompts, checklist design, command flow) instead of this project, append it to `ai-standards/standards/lessons-learned.md` instead. If any lesson duplicates an existing standard, promote it there and do not add it to lessons-learned.
 9. Run `update-specs`
 10. Delete the entire `{workspace_root}/handoffs/{feature-name}/` directory
 11. **Verify Docker services** — check if the feature introduced changes that require a Docker rebuild or restart in affected services. Apply the appropriate action:
@@ -176,7 +185,7 @@ Read these files in order before doing anything else:
 
 {instruction}
 Working directory: {service_path}
-{conditional: Warnings from past features: {relevant_lessons — only entries from lessons-learned.md that match this agent's role}}
+{conditional: Warnings from past features: {relevant_lessons — entries from the project's lessons-learned file matching this agent's role (back.md / front.md / infra.md / general.md), plus any framework-level entries from ai-standards/standards/lessons-learned.md that apply}}
 
 When done, write your handoff to: {handoff_path}
 ```

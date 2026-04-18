@@ -56,5 +56,5 @@ If `src/assets/main.css` got rewritten:
 
 ## See also
 
-- [standards/lessons-learned.md](../../../standards/lessons-learned.md) — Frontend Developer entry on this trap.
+- Your project's per-project lessons-learned directory (path in `ai-standards/workspace.md` under the `lessons-learned:` key — typically `{project-name}-docs/lessons-learned/front.md`), Frontend Developer entry on this trap.
 - [standards/frontend.md](../../../standards/frontend.md) — shadcn-vue is the standard UI library; use it, but verify every install.
