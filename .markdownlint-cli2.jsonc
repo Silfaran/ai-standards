@@ -1,13 +1,21 @@
 // Configuration for markdownlint-cli2.
 // See https://github.com/DavidAnson/markdownlint/blob/main/schema/.markdownlint.jsonc
+//
+// Philosophy: markdownlint here is a safety net against structural mistakes
+// (broken reference links, empty links, duplicate H1, unclosed emphasis),
+// NOT a style enforcer. The standards files are prose-heavy and intentionally
+// compact — whitespace-around-X rules produce noise without catching bugs.
 {
   "config": {
     "default": true,
+
+    // -- Rules relaxed because they are pure style preferences -----------
+
     // Long lines are fine in our prose-heavy standards files.
     "MD013": false,
     // HTML is allowed (we use <!-- --> comments in lessons-learned.md).
     "MD033": false,
-    // Not every file needs a top-level H1 (e.g. included fragments).
+    // Not every file needs a top-level H1 (partials, templates, etc.).
     "MD041": false,
     // Duplicate section headings are fine across different parents
     // (every standard has its own "## Rules", "## Examples", etc.).
@@ -15,7 +23,31 @@
     // Emphasis used as a heading is a stylistic choice we use widely.
     "MD036": false,
     // Mixed fenced and indented code blocks are fine for inline examples.
-    "MD046": false
+    "MD046": false,
+    // Multiple consecutive blank lines — harmless, common after section breaks.
+    "MD012": false,
+    // Blank lines around headings — renders fine either way; the rule
+    // produces ~60 false positives in this codebase with zero value.
+    "MD022": false,
+    // Blank lines around fenced code blocks — same rationale as MD022.
+    "MD031": false,
+    // Blank lines around lists — same rationale as MD022.
+    "MD032": false,
+    // Fenced code language — many of our blocks are tree diagrams, shell
+    // transcripts or pseudo-code where no highlighter makes sense.
+    "MD040": false
+
+    // Rules kept enabled (default: true) that catch actual problems:
+    //   MD001 — heading levels increment by one
+    //   MD025 — multiple top-level H1s in one file
+    //   MD029 — wrong ordered-list numbering
+    //   MD034 — bare URLs (forces [text](url) syntax)
+    //   MD037/38/39 — spaces inside emphasis/code/link
+    //   MD042 — empty links
+    //   MD045 — images without alt text
+    //   MD047 — file ends with newline
+    //   MD051 — broken link fragments (#anchor not found)
+    //   MD052/53 — broken reference-style links
   },
   "globs": [
     "**/*.md"
