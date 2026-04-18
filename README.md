@@ -157,3 +157,11 @@ However, the author does not endorse and explicitly discourages use of this work
 
 This notice is not a legal restriction — it is a statement of values.
 
+---
+
+## Author
+
+Built and maintained by **Mario Marco Esteve** — [@Silfaran](https://github.com/Silfaran) on GitHub.
+
+Issues, questions and pull requests are welcome in [the repository tracker](https://github.com/Silfaran/ai-standards/issues).
+
