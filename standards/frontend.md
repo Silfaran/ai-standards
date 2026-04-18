@@ -98,7 +98,7 @@ Stores hold **global state only** — auth tokens, user profile, app-wide settin
 - State as `ref()`, derived state as `computed()`, actions as plain functions
 - Stores can call service classes directly (e.g. `logout` calls `UserApiService.logout()`)
 - Never store server-fetched lists or entities in Pinia — use TanStack Query
-- Auth pattern: token in memory (`ref`) + `localStorage` for persistence across reloads
+- Auth pattern: access token in memory only (`ref<string|null>`). Persistence across reloads is done via silent refresh (`POST /api/token/refresh`) using the HttpOnly cookie — `localStorage` is never used for the access token. Applies to every frontend (auth and consumer). See ADR-001 and `security.md` → Authentication Token Storage.
 - **Never destructure reactive state from a store** — access through the store proxy: `authStore.isLoading`
 - **Only actions (functions) are safe to destructure** — `const { logout } = authStore` is fine
 - **When mocking a store in tests, use `reactive()`** — a plain object with `ref()` values won't auto-unwrap

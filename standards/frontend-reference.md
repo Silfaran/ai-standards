@@ -131,44 +131,53 @@ export function useTaskList() {
 ```ts
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { UserApiService, api } from '@/services/User/UserApiService'
+import { AuthApiService, api } from '@/services/Auth/AuthApiService'
 import { useRouter } from 'vue-router'
 
 export const useAuthStore = defineStore('auth', () => {
-  const accessToken = ref<string | null>(localStorage.getItem('access_token'))
+  const accessToken = ref<string | null>(null)
+  const isLoading = ref(true)
   const router = useRouter()
 
   const isAuthenticated = computed(() => accessToken.value !== null)
 
   function setAccessToken(token: string): void {
     accessToken.value = token
-    localStorage.setItem('access_token', token)
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`
   }
 
   function clearAccessToken(): void {
     accessToken.value = null
-    localStorage.removeItem('access_token')
     delete api.defaults.headers.common['Authorization']
+  }
+
+  // Silent refresh on boot — the HttpOnly cookie bootstraps the session.
+  async function initialize(): Promise<void> {
+    isLoading.value = true
+    try {
+      const token = await AuthApiService.refresh()
+      setAccessToken(token)
+    } catch {
+      clearAccessToken()
+    } finally {
+      isLoading.value = false
+    }
   }
 
   async function logout(): Promise<void> {
     try {
-      await UserApiService.logout()
+      await AuthApiService.logout()
     } finally {
       clearAccessToken()
       router.push({ name: 'login' })
     }
   }
 
-  // Restore header on page reload
-  if (accessToken.value) {
-    api.defaults.headers.common['Authorization'] = `Bearer ${accessToken.value}`
-  }
-
-  return { accessToken, isAuthenticated, setAccessToken, clearAccessToken, logout }
+  return { accessToken, isAuthenticated, isLoading, setAccessToken, clearAccessToken, initialize, logout }
 })
 ```
+
+**Never read or write `localStorage` for the access token in any frontend.** Persistence across reloads is achieved via `initialize()` calling the refresh endpoint — the cookie is the persistence layer, not `localStorage`.
 
 ---
 
@@ -404,8 +413,11 @@ describe('useLogin', () => {
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
-vi.mock('@/services/User/UserApiService', () => ({
-  UserApiService: { logout: vi.fn().mockResolvedValue(undefined) },
+vi.mock('@/services/Auth/AuthApiService', () => ({
+  AuthApiService: {
+    refresh: vi.fn(),
+    logout: vi.fn().mockResolvedValue(undefined),
+  },
   api: {
     defaults: { headers: { common: {} } },
   },
@@ -418,30 +430,44 @@ vi.mock('vue-router', () => ({
 describe('useAuthStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    localStorage.clear()
+    vi.clearAllMocks()
   })
 
-  it('setAccessToken updates state and localStorage', async () => {
-    const { useAuthStore } = await import('../UserStore')
+  it('setAccessToken updates state and Axios header, never touches localStorage', async () => {
+    const { useAuthStore } = await import('../AuthStore')
     const store = useAuthStore()
 
     store.setAccessToken('my-token')
 
     expect(store.accessToken).toBe('my-token')
     expect(store.isAuthenticated).toBe(true)
-    expect(localStorage.getItem('access_token')).toBe('my-token')
+    expect(localStorage.getItem('access_token')).toBeNull()
   })
 
-  it('clearAccessToken removes state and localStorage', async () => {
-    const { useAuthStore } = await import('../UserStore')
-    const store = useAuthStore()
+  it('initialize loads token from silent refresh on boot', async () => {
+    const { AuthApiService } = await import('@/services/Auth/AuthApiService')
+    vi.mocked(AuthApiService.refresh).mockResolvedValue('fresh-token')
 
-    store.setAccessToken('my-token')
-    store.clearAccessToken()
+    const { useAuthStore } = await import('../AuthStore')
+    const store = useAuthStore()
+    await store.initialize()
+
+    expect(store.accessToken).toBe('fresh-token')
+    expect(store.isAuthenticated).toBe(true)
+    expect(store.isLoading).toBe(false)
+  })
+
+  it('initialize clears the store when refresh fails', async () => {
+    const { AuthApiService } = await import('@/services/Auth/AuthApiService')
+    vi.mocked(AuthApiService.refresh).mockRejectedValue(new Error('401'))
+
+    const { useAuthStore } = await import('../AuthStore')
+    const store = useAuthStore()
+    await store.initialize()
 
     expect(store.accessToken).toBeNull()
     expect(store.isAuthenticated).toBe(false)
-    expect(localStorage.getItem('access_token')).toBeNull()
+    expect(store.isLoading).toBe(false)
   })
 })
 ```
@@ -449,7 +475,8 @@ describe('useAuthStore', () => {
 ### Key patterns
 
 - **`setActivePinia(createPinia())`** — fresh Pinia instance per test
-- **`localStorage.clear()`** — store reads from localStorage on init
+- **Never assert on `localStorage` for the access token** — it must not be written there; a `localStorage.getItem('access_token')` returning anything non-null is a bug
+- **Mock the refresh endpoint** — `initialize()` drives the bootstrap, success AND failure paths must be covered
 - **Mock api object** — prevent side effects on Axios default headers
 - **When mocking a store whose properties a template accesses via the proxy, use `reactive()`** — a plain object with `ref()` values won't auto-unwrap
 
