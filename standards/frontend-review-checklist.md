@@ -17,7 +17,7 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] No `v-html` with user-provided content (XSS) — only with developer-authored, sanitized HTML
 - [ ] No secrets in `VITE_*` env vars (API keys, tokens, private URLs)
 - [ ] No redirects to query-param URLs without `isAllowedRedirect()` validation
-- [ ] No `localStorage` for access tokens in consumer frontends (memory `ref` only); `localStorage` allowed only in the auth frontend
+- [ ] No `localStorage` for access tokens in any frontend (memory `ref` only) — auth frontends included; per ADR-001 the auth frontend also performs a silent refresh from its HttpOnly cookie on boot
 - [ ] No SSL verification disabled (`NODE_TLS_REJECT_UNAUTHORIZED=0`, etc.)
 
 ## Architecture & layering
@@ -56,7 +56,7 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] Store name lowercase
 - [ ] State as `ref()`, derived as `computed()`
 - [ ] No destructuring of reactive state from store (only actions)
-- [ ] Auth pattern: token in memory + `localStorage` for persistence (auth frontend only)
+- [ ] Auth pattern: access token in memory only (Pinia `ref`), refresh via HttpOnly cookie on `AuthStore.initialize()` — applies to every frontend (auth and consumer). No `localStorage` for the access token, ever.
 
 ## Routing
 

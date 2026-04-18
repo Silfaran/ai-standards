@@ -29,26 +29,58 @@ fi
 
 echo "→ pre-commit: running backend quality checks"
 
+# Prefer running inside the Docker service container when available, so developers
+# do not need PHP/Composer installed on the host. Falls back to host binaries when
+# the container is not running. If neither is available, skip with a warning — CI
+# runs the full gate against a clean VM anyway.
+SERVICE_NAME="$(basename "$REPO_ROOT")"
+DOCKER_EXEC=""
+if command -v docker >/dev/null 2>&1 \
+    && docker compose ps --services --filter status=running 2>/dev/null | grep -qx "$SERVICE_NAME"; then
+    DOCKER_EXEC="docker compose exec -T $SERVICE_NAME"
+fi
+
+run_php() {
+    if [ -n "$DOCKER_EXEC" ]; then
+        $DOCKER_EXEC "$@"
+    elif command -v php >/dev/null 2>&1; then
+        "$@"
+    else
+        return 127
+    fi
+}
+
 if [ -n "$STAGED_COMPOSER" ]; then
-    if [ -x vendor/bin/composer ] || command -v composer >/dev/null 2>&1; then
-        echo "→ composer validate"
-        composer validate --strict --no-check-publish
+    echo "→ composer validate"
+    if ! run_php composer validate --strict --no-check-publish; then
+        rc=$?
+        if [ "$rc" -eq 127 ]; then
+            echo "  skip: composer not available on host and no running service container" >&2
+        else
+            exit $rc
+        fi
     fi
 fi
 
 if [ -n "$STAGED_PHP" ]; then
-    if [ -x vendor/bin/php-cs-fixer ]; then
-        echo "→ php-cs-fixer (staged files)"
-        vendor/bin/php-cs-fixer fix --dry-run --diff --path-mode=intersection -- $STAGED_PHP
-    else
-        echo "  skip: vendor/bin/php-cs-fixer not found (run composer install)" >&2
+    echo "→ php-cs-fixer (staged files)"
+    if ! run_php vendor/bin/php-cs-fixer fix --dry-run --diff --path-mode=intersection -- $STAGED_PHP; then
+        rc=$?
+        if [ "$rc" -eq 127 ]; then
+            echo "  skip: php not available on host and no running service container (CI will catch it)" >&2
+        else
+            exit $rc
+        fi
     fi
 
-    if [ -x vendor/bin/phpstan ]; then
-        echo "→ phpstan (staged files)"
-        vendor/bin/phpstan analyse --no-progress --memory-limit=1G -- $STAGED_PHP
-    else
-        echo "  skip: vendor/bin/phpstan not found (run composer install)" >&2
+    echo "→ phpstan (staged files)"
+    if ! run_php vendor/bin/phpstan analyse --no-progress --memory-limit=1G -- $STAGED_PHP; then
+        rc=$?
+        if [ "$rc" -eq 127 ]; then
+            echo "  skip: php not available on host and no running service container (CI will catch it)" >&2
+        else
+            exit $rc
+        fi
     fi
 fi
 

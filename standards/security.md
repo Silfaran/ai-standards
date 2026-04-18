@@ -291,22 +291,22 @@ Vue 3 escapes all template interpolation (`{{ }}`) by default. The main risk is 
 
 ### Authentication Token Storage
 
-Token storage strategy depends on the frontend's role:
+Token storage is unified across every frontend (auth and consumer) — see ADR-001:
 
-| Frontend type | Access token storage | Reason |
-|---|---|---|
-| Auth frontend (`login-front`) | `localStorage` | Receives token directly from login form. 15-min TTL limits exposure window. |
-| Consumer frontends (`task-front`, others) | Memory only (`ref`) | Recovers token via `POST /api/token/refresh` on load — never touches localStorage. |
+- **Access token:** memory only (Pinia `ref<string|null>`). Never written to `localStorage` or `sessionStorage`.
+- **Refresh token:** `httpOnly` secure cookie issued by the auth service. Never readable from JavaScript.
+- **Session bootstrap:** every frontend calls `POST /api/token/refresh` from `AuthStore.initialize()` before mounting the app. If the cookie is valid, the new access token is loaded into memory. If not, the user sees the login form (auth frontend) or is redirected to the auth frontend (consumer frontends).
 
-| Storage method | XSS risk | CSRF risk | Simplicity |
+| Storage method | XSS risk | CSRF risk | Notes |
 |---|---|---|---|
-| `localStorage` | Vulnerable (JS can read it) | Immune | Simple |
-| Memory (`ref`) | Lost on page reload — recovered via refresh cookie | Immune | Moderate |
-| `httpOnly` cookie | Immune | Vulnerable (needs CSRF token) | Complex |
+| `localStorage` | Vulnerable (JS can read it) | Immune | **Forbidden** for access tokens |
+| Memory (`ref`) | Contains blast radius — lost on reload, recovered via refresh cookie | Immune | Canonical |
+| `httpOnly` cookie | Immune | Needs CSRF protection | Used for the refresh token only |
 
-In all cases, the refresh token is stored in an `httpOnly` cookie (not accessible from JS). The 15-minute access token TTL limits the damage window if a token is stolen.
-
-**Mitigation:** keep access token lifetime short (15 min) and rely on the `httpOnly` refresh token for session continuity.
+**Mitigations:**
+- Access token TTL is short (15 min) so a leaked token's damage window is bounded.
+- Refresh token is invisible to JavaScript, so XSS cannot steal it.
+- All frontends follow the same pattern — there is no auth-frontend exception. A reviewer who sees `localStorage.setItem('access_token', ...)` anywhere in the diff must reject it.
 
 ### Redirect Validation
 
