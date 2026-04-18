@@ -50,6 +50,27 @@ Every service you create must have a `CLAUDE.md` pointing to `ai-standards`. Use
 Read `ai-standards/CLAUDE.md` and the relevant `ai-standards/standards/*.md` before doing anything.
 ```
 
+**4. Install Playwright MCP (enables live browser verification by the Tester):**
+
+The Tester agent drives a real browser — via the [Playwright MCP server](https://github.com/microsoft/playwright-mcp) — to verify visual and interactive DoD items (full-viewport gradients, rendered error copy, light/dark parity, viewport-size checks). Without it, those items fall back to "requires human verification" and slow down every `/build-plan` loop.
+
+Create `.mcp.json` at your **workspace root** (the folder that contains `ai-standards/` and your services — not inside any repo):
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    }
+  }
+}
+```
+
+Then reload Claude Code (close and reopen the session). On first use, `npx` downloads `@playwright/mcp` and Chromium (~150 MB, one-time). Verify with `/mcp` inside Claude Code — `playwright` should appear as connected.
+
+The workspace root is intentionally outside version control in this layout, so this step is per-machine. If you set up a second machine (or a teammate joins), re-run step 4 there. The Tester agent definition (`agents/tester-agent.md`) and `build-plan` command already assume Playwright MCP is available and will instruct the subagent accordingly.
+
 ---
 
 ## Building a feature
