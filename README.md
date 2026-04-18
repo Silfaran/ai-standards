@@ -3,7 +3,7 @@
 [![Latest release](https://img.shields.io/github/v/release/Silfaran/ai-standards?display_name=tag&sort=semver&label=release)](https://github.com/Silfaran/ai-standards/releases)
 [![Latest tag](https://img.shields.io/github/v/tag/Silfaran/ai-standards?sort=semver&label=tag)](https://github.com/Silfaran/ai-standards/tags)
 [![CI](https://img.shields.io/github/actions/workflow/status/Silfaran/ai-standards/validate.yml?branch=master&label=CI)](https://github.com/Silfaran/ai-standards/actions/workflows/validate.yml)
-[![License](https://img.shields.io/github/license/Silfaran/ai-standards)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 > **Status: work in progress.** This is an active, evolving framework — not a stable release. Breaking changes to standards, agent prompts, commands and repo layout land between `0.x` releases as the design matures. If you adopt it today, pin a tag (the latest is shown in the badge above; details in [`CHANGELOG.md`](CHANGELOG.md)) and expect to re-read that file before every upgrade. Feedback and issues are welcome.
 
