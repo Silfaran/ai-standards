@@ -234,7 +234,7 @@ When done, write your handoff to: {handoff_path}
 | Frontend Dev | Implement the frontend for the {feature} feature as described in the spec. After implementation, run `npm run test` and `npx vue-tsc --noEmit`. All must pass before writing the handoff. |
 | Backend Reviewer | Review the backend code listed in the handoff. This is review iteration {N} of max 3. |
 | Frontend Reviewer | Review the frontend code listed in the handoff. This is review iteration {N} of max 3. |
-| Tester | Ensure all Docker containers are running for each backend service. Run all test suites and linters. If any fail, identify which developer needs to fix them. |
+| Tester | Ensure all Docker containers are running for each backend service. Run all test suites and linters. For visual / interactive DoD items (gradients, rendered error copy, light/dark parity, viewport-size checks), use Playwright MCP tools to produce real evidence — resize to every target viewport, toggle dark mode, drive forms, and save screenshots to `ai-standards/handoffs/{feature}/screenshots/`. Fall back to "requires human verification" ONLY if the Playwright MCP is unavailable in-session, and state the reason explicitly. If any test fails, identify which developer needs to fix it. |
 | Dev+Tester (simple) | Implement the {feature} feature as described in the spec. After implementation, write unit tests as specified in the task file. For backend: ensure Docker is running (`docker compose up -d`), then run tests via `docker compose exec`. For frontend: run `npm run test`. Run linters. All must pass before writing the handoff. |
 
 ### Docker pre-flight for subagent prompts

@@ -36,6 +36,18 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:{port}
 
 If it returns a non-200 status or an error page, the container may be missing dependencies installed only on the host. Fix by running `docker compose exec {service} npm install` and restarting.
 
+### Live browser verification (Playwright MCP)
+
+When the task file lists **visual** or **interactive** DoD items — gradient coverage, form-error copy rendered on screen, light/dark-mode parity, viewport-size checks — do not mark them as "requires human verification". Use the Playwright MCP tools (`mcp__playwright__browser_navigate`, `browser_resize`, `browser_snapshot`, `browser_take_screenshot`, `browser_click`, `browser_fill_form`, `browser_evaluate`) to produce the evidence yourself.
+
+Mandatory when applicable:
+- **Viewport checks:** `browser_resize` to each size in the task file (e.g. 1400×900, 375×900), then `browser_take_screenshot` on each page under test.
+- **Light/dark mode:** toggle via `browser_evaluate` on `document.documentElement.classList` (add/remove `"dark"`) or via `localStorage.setItem('theme', 'dark')` + reload, per the project's `DD-002` convention. Screenshot in both modes.
+- **Form + error flows:** `browser_fill_form` + `browser_click` on submit, then `browser_snapshot` to read the accessibility tree and confirm the exact error-message text renders in the DOM (not just that the composable's `serverError.value` is right).
+- **Network outage flows:** stop the target backend container via Bash, drive the form, snapshot/screenshot the error state, then restart the container before moving on.
+
+Save screenshots under the handoff folder (`ai-standards/handoffs/{feature}/screenshots/`) and reference each file in the Tester handoff with the viewport + theme combination it proves. If Playwright MCP is unavailable in the current session, only then fall back to "requires human verification" — and say so explicitly, including the reason.
+
 ## Testing Process
 
 Runs once, after all developers and reviewers have completed their work:
@@ -60,7 +72,7 @@ Runs once, after all developers and reviewers have completed their work:
   Only log mistakes that would recur in future features. Do not log one-off typos or trivial fixes.
 
 ## Tools
-Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion
+Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, `mcp__playwright__*` (Playwright MCP — used for live browser verification; see "Live browser verification" above)
 
 ## Limitations
 - Does not implement features — only tests them
