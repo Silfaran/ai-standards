@@ -1,0 +1,43 @@
+# Changelog
+
+All notable changes to ai-standards. This file captures milestones, not every commit.
+
+The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 semantics:
+while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
+A `1.0.0` release will signal a stable public surface.
+
+## [Unreleased]
+
+## [0.1.0] — 2026-04-18
+
+Initial versioned release. The framework is still a work-in-progress — expect breaking changes in subsequent `0.x` releases.
+
+### Framework capabilities
+
+- **Seven-agent pipeline** running in isolated contexts: Spec Analyzer, Backend Developer, Frontend Developer, Backend Reviewer, Frontend Reviewer, Tester, DevOps. Backend and Frontend run in parallel; reviewers loop up to 3 iterations per side.
+- **Four slash commands** covering the full feature loop: `/create-specs`, `/refine-specs`, `/build-plan`, `/update-specs`.
+- **On-demand skills** (~13) for narrow playbooks — CORS, Docker env reload, safe migrations, JWT lifecycle, Messenger logging, Vitest patterns, quality-gate setup, and more. Claude Code auto-loads each only when the active task matches.
+- **Architecture enforced by standards**: Hexagonal + DDD + CQRS + event-driven. Every agent validates against them; reviewer agents consume closed-list checklists extracted from the standards.
+- **Token-conscious execution**: per-feature **context bundle** distills ~1,000+ lines of standards into a 200–400 line briefing. Reviewers read checklists instead of standards. Skills load only on match.
+- **Spec-first discipline**: no agent writes code without a validated spec. Specs, plans and task files live in the project docs repo and are version-controlled.
+- **Scaffolds and templates**: production-ready PHP classes (`AppController`, `ApiExceptionSubscriber`, `LoggingMiddleware`, `SecurityHeadersSubscriber`), GitHub Actions CI templates, pre-commit hook templates, Makefile quality snippets.
+- **Playwright MCP integration**: the Tester drives a real browser to verify visual / interactive DoD items (viewport sizes, dark-mode parity, rendered error copy, form flows). Falls back to "requires human verification" only when MCP is unavailable.
+- **Lessons-learned loop**: agent mistakes captured during a feature become warnings injected into future builds. Recurring patterns graduate to permanent standards.
+- **Quality gates enforced**: pre-commit hook + per-service `make quality` + GitHub Actions CI. PHPStan level 9, `vue-tsc --noEmit` strict, PHP-CS-Fixer, ESLint + Prettier, full test suite, `composer audit` / `npm audit`.
+- **Git workflow baked into `/build-plan`**: pre-flight master check before branching, post-feature merge prompt, consistent `feature/{aggregate}/{name}` branch naming.
+
+### Added in the final stretch before v0.1.0
+
+- Project-neutral layout — `workspace.md` and `workspace.mk` live in `{project-docs}/`, located via the gitignored `.workspace-config-path` pointer file inside `ai-standards/`. The public framework repo no longer stores project-specific names, ports or paths.
+- Per-project `lessons-learned/` directory split by `back.md` / `front.md` / `infra.md` / `general.md`. Framework-level lessons stay in `ai-standards/standards/lessons-learned.md`.
+- `/build-plan` pre-flight master branch check and post-feature merge prompt.
+- `handoffs/` directory moved to the workspace root — ephemeral, never committed, shared across service repos.
+- Playwright MCP install step documented in USAGE.
+
+### Breaking (compared to unversioned history)
+
+- **Workspace config relocation**: `workspace.md` and `workspace.mk` moved from `ai-standards/` to `{project-name}-docs/`. The `ai-standards/Makefile` and every agent now resolve the docs directory from `ai-standards/.workspace-config-path` (created by `/init-project`).
+- **Lessons-learned split**: project-specific entries moved from `ai-standards/standards/lessons-learned.md` to `{project-name}-docs/lessons-learned/`. The framework file is now reserved for framework-level mistakes only.
+- **Handoffs relocation**: `handoffs/` moved from `ai-standards/handoffs/` to the workspace root, so it is shared across service repos and lives outside any git tree.
+
+Existing workspaces must re-run `/init-project` (or apply the moves manually) to pick up the new layout.

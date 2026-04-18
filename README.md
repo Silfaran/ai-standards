@@ -1,6 +1,6 @@
 # AI Standards
 
-> **Status: work in progress.** This is an active, evolving framework — not a stable release. Breaking changes to standards, agent prompts, commands and repo layout land without notice as the design matures. If you adopt it today, pin a commit and expect to re-read the docs after every pull. Feedback and issues are welcome.
+> **Status: work in progress.** This is an active, evolving framework — not a stable release. Breaking changes to standards, agent prompts, commands and repo layout land between `0.x` releases as the design matures. If you adopt it today, pin a tag (the latest is listed in [`CHANGELOG.md`](CHANGELOG.md)) and expect to re-read that file before every upgrade. Feedback and issues are welcome.
 
 An orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that builds full-stack web applications — PHP/Symfony backend and Vue 3 frontend — using isolated AI agents that spec, implement, review, and test each feature.
 

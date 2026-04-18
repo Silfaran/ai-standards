@@ -1,0 +1,24 @@
+name: Release Please
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Maintain release PR and cut releases
+    runs-on: ubuntu-latest
+    steps:
+      # Reads conventional-commit history on master, keeps a "chore: release X.Y.Z"
+      # PR always up-to-date with the next version bump and the generated CHANGELOG
+      # section. When a maintainer merges that PR, the action creates the git tag
+      # and a GitHub Release. Nothing else is ever done by hand.
+      - uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          target-branch: master

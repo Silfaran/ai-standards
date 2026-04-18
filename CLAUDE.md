@@ -53,6 +53,34 @@ The reading protocol is binding. If it conflicts with an older instruction elsew
 - Specs are version-controlled — every spec update must be committed
 - When running as a `build-plan` subagent, read the **context bundle** (`{workspace_root}/handoffs/{feature}/context-bundle.md`, path defined in `{project-docs}/workspace.md` under the `handoffs:` key) instead of individual standards files — it contains the distilled rules relevant to the current feature
 
+### Commit convention
+
+Every commit to `ai-standards/` master must use [Conventional Commits](https://www.conventionalcommits.org/). The release-please Action reads this history to maintain the release PR, generate `CHANGELOG.md` entries and compute the next version bump. Getting the prefix wrong means the change is either invisible in the CHANGELOG or bumps the wrong version component.
+
+| Prefix | CHANGELOG section | Version bump (pre-1.0) |
+|---|---|---|
+| `feat:` | Added | minor (0.1.0 → 0.2.0) |
+| `fix:` | Fixed | patch (0.1.0 → 0.1.1) |
+| `refactor:` / `perf:` | Changed | patch |
+| `docs:` | Documentation | patch |
+| `chore:` / `ci:` / `test:` / `style:` / `build:` | hidden | no bump on its own |
+
+Breaking changes: append `!` after the type (e.g. `refactor!: move workspace.md to docs repo`) **or** include a `BREAKING CHANGE:` trailer in the body. Pre-1.0 this promotes the bump to minor; post-1.0 it will trigger a major.
+
+Commit scope (optional but recommended) matches the area: `feat(skill): add x`, `refactor(workspace): …`, `docs(readme): …`.
+
+### Release process
+
+Releases are cut by [release-please](https://github.com/googleapis/release-please) — see [`.github/workflows/release-please.yml`](.github/workflows/release-please.yml).
+
+Flow:
+1. You push commits to `master` following the convention above.
+2. The `Release Please` Action opens (or updates) a PR titled `chore(master): release X.Y.Z`. The PR's diff is the CHANGELOG update plus a bump in `.release-please-manifest.json`. **Never edit `CHANGELOG.md` by hand** — release-please owns it. Manual edits get overwritten on the next push.
+3. Review the PR. If the computed version or CHANGELOG section assignments are wrong, fix the offending commit message with a follow-up commit (e.g. an empty commit with a corrected `BREAKING CHANGE:` trailer).
+4. Merge the release PR. release-please then creates the git tag (`v0.2.0`) and a GitHub Release with the CHANGELOG excerpt as the release notes.
+
+The tag pointed to by the manifest is the most recent released version. `Unreleased` in `CHANGELOG.md` is populated by release-please from post-tag commits.
+
 ### Git (main conversation only — subagents do not perform git operations)
 
 - Main branch: `master`
