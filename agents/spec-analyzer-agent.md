@@ -6,7 +6,7 @@ First step of any feature — nothing is built without a validated spec.
 
 ## Before Starting
 
-Follow the canonical reading order in [`../standards/agent-reading-protocol.md`](../standards/agent-reading-protocol.md) — it defines both modes (build-plan subagent and standalone) and the common core (invariants → CLAUDE.md → tech-stack → workspace.md → services.md → decisions.md).
+Follow the canonical reading order in [`../standards/agent-reading-protocol.md`](../standards/agent-reading-protocol.md) — it defines both modes (build-plan subagent and standalone) and the common core (invariants → CLAUDE.md → tech-stack → `{project-docs}/workspace.md` via the `.workspace-config-path` pointer → services.md → decisions.md).
 
 Role-specific additions for the Spec Analyzer (read after the common core):
 1. `design-decisions.md` for the project — frontend visual and UX patterns already established.
@@ -22,7 +22,7 @@ Role-specific additions for the Spec Analyzer (read after the common core):
 - When a spec's Frontend Architecture contradicts an existing entry in `design-decisions.md`, flag it to the developer — update or remove the entry only after explicit approval
 
 ## Output Files
-Stored in the project docs folder defined in `workspace.md`:
+Stored in the project docs folder (the pointed-to dir from `ai-standards/.workspace-config-path`, path listed inside its `workspace.md`):
 - `specs/{Aggregate}/{feature}-specs.md`
 - `specs/{Aggregate}/{feature}-task.md`
 - `specs/{Aggregate}/{feature}-plan.md`

@@ -230,5 +230,5 @@ Components that read `prefers-reduced-motion` crash in Vitest without the `match
 
 - [standards/frontend.md](../../../standards/frontend.md) — testing rules in concise form.
 - [standards/frontend-reference.md](../../../standards/frontend-reference.md) — the authoritative test examples these patterns come from.
-- Your project's per-project lessons-learned directory (path in `ai-standards/workspace.md` under the `lessons-learned:` key — typically `{project-name}-docs/lessons-learned/front.md`), Frontend Developer entry on the `matchMedia` crash.
+- Your project's per-project lessons-learned directory (path in `{project-docs}/workspace.md` under the `lessons-learned:` key — typically `{project-name}-docs/lessons-learned/front.md`; resolve `{project-docs}` from `ai-standards/.workspace-config-path`), Frontend Developer entry on the `matchMedia` crash.
 - `vue-composable-mutation` skill — what the composables under test look like.

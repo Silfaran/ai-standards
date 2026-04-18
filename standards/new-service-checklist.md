@@ -208,7 +208,7 @@ For each backend this frontend calls:
 
 To diagnose: open DevTools → Network, filter XHR/Fetch, look for a failed preflight (`OPTIONS`) request or a response missing the `Access-Control-Allow-Origin` header.
 
-**Use `workspace.md` as the source of truth for frontend ports** — never assume default framework ports (e.g. Vite's 5173). The actual dev server port is configured per project and listed there.
+**Use `{project-docs}/workspace.md` as the source of truth for frontend ports** (resolve `{project-docs}` from `ai-standards/.workspace-config-path`) — never assume default framework ports (e.g. Vite's 5173). The actual dev server port is configured per project and listed there.
 
 ---
 

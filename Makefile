@@ -1,6 +1,12 @@
 INFRA_COMPOSE = docker compose -f ../docker-compose.yml
 
--include workspace.mk
+# Resolve the project docs directory from the pointer file.
+# `.workspace-config-path` is created by `/init-project` and contains a single
+# relative path (e.g. `../task-manager-docs`) to the project's docs repo where
+# `workspace.mk` and `workspace.md` live. Gitignored — per-workspace.
+PROJECT_DOCS := $(shell cat .workspace-config-path 2>/dev/null)
+
+-include $(PROJECT_DOCS)/workspace.mk
 
 ALL_SERVICES = $(BACKEND_SERVICES) $(FRONTEND_SERVICES)
 
@@ -18,7 +24,7 @@ infra-down:
 
 up: infra-up
 	@if [ -z "$(ALL_SERVICES)" ]; then \
-		echo "workspace.mk not found — run /init-project first"; exit 1; \
+		echo "Project workspace config not found (missing .workspace-config-path or {project-docs}/workspace.mk) — run /init-project first"; exit 1; \
 	fi
 	@for s in $(ALL_SERVICES); do \
 		echo "Starting $$s..."; \
@@ -33,7 +39,7 @@ down:
 
 build:
 	@if [ -z "$(ALL_SERVICES)" ]; then \
-		echo "workspace.mk not found — run /init-project first"; exit 1; \
+		echo "Project workspace config not found (missing .workspace-config-path or {project-docs}/workspace.mk) — run /init-project first"; exit 1; \
 	fi
 	@for s in $(ALL_SERVICES); do \
 		echo "Building $$s..."; \
@@ -46,7 +52,7 @@ update: build up
 
 test:
 	@if [ -z "$(BACKEND_SERVICES)$(FRONTEND_SERVICES)" ]; then \
-		echo "workspace.mk not found — run /init-project first"; exit 1; \
+		echo "Project workspace config not found (missing .workspace-config-path or {project-docs}/workspace.mk) — run /init-project first"; exit 1; \
 	fi
 	@for s in $(BACKEND_SERVICES); do \
 		echo "Testing $$s..."; \
@@ -59,7 +65,7 @@ test:
 
 test-unit:
 	@if [ -z "$(BACKEND_SERVICES)$(FRONTEND_SERVICES)" ]; then \
-		echo "workspace.mk not found — run /init-project first"; exit 1; \
+		echo "Project workspace config not found (missing .workspace-config-path or {project-docs}/workspace.mk) — run /init-project first"; exit 1; \
 	fi
 	@for s in $(BACKEND_SERVICES); do \
 		echo "Unit testing $$s..."; \
@@ -72,7 +78,7 @@ test-unit:
 
 test-integration:
 	@if [ -z "$(BACKEND_SERVICES)" ]; then \
-		echo "workspace.mk not found — run /init-project first"; exit 1; \
+		echo "Project workspace config not found (missing .workspace-config-path or {project-docs}/workspace.mk) — run /init-project first"; exit 1; \
 	fi
 	@for s in $(BACKEND_SERVICES); do \
 		echo "Integration testing $$s..."; \
@@ -83,7 +89,7 @@ test-integration:
 
 lint:
 	@if [ -z "$(BACKEND_SERVICES)$(FRONTEND_SERVICES)" ]; then \
-		echo "workspace.mk not found — run /init-project first"; exit 1; \
+		echo "Project workspace config not found (missing .workspace-config-path or {project-docs}/workspace.mk) — run /init-project first"; exit 1; \
 	fi
 	@for s in $(BACKEND_SERVICES); do \
 		echo "Linting $$s (php-cs-fixer)..."; \
@@ -97,7 +103,7 @@ lint:
 
 static:
 	@if [ -z "$(BACKEND_SERVICES)$(FRONTEND_SERVICES)" ]; then \
-		echo "workspace.mk not found — run /init-project first"; exit 1; \
+		echo "Project workspace config not found (missing .workspace-config-path or {project-docs}/workspace.mk) — run /init-project first"; exit 1; \
 	fi
 	@for s in $(BACKEND_SERVICES); do \
 		echo "Static analysis $$s (phpstan level 9)..."; \

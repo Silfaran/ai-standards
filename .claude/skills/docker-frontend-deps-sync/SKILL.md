@@ -64,5 +64,5 @@ Skipping host install creates a different desync (host vs container) that breaks
 
 ## See also
 
-- Your project's per-project lessons-learned directory (path in `ai-standards/workspace.md` under the `lessons-learned:` key — typically `{project-name}-docs/lessons-learned/`). Relevant entries for this trap live in `front.md` (Frontend Developer npm-in-Docker desync) and `infra.md` (Tester Docker-vs-local desync, container-rebuild log grep).
+- Your project's per-project lessons-learned directory (path in `{project-docs}/workspace.md` under the `lessons-learned:` key — typically `{project-name}-docs/lessons-learned/`; resolve `{project-docs}` from `ai-standards/.workspace-config-path`). Relevant entries for this trap live in `front.md` (Frontend Developer npm-in-Docker desync) and `infra.md` (Tester Docker-vs-local desync, container-rebuild log grep).
 - `docker-env-reload` skill — related category of "why my change didn't apply" in Docker.

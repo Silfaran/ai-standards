@@ -1,5 +1,7 @@
 # AI Standards
 
+> **Status: work in progress.** This is an active, evolving framework — not a stable release. Breaking changes to standards, agent prompts, commands and repo layout land without notice as the design matures. If you adopt it today, pin a commit and expect to re-read the docs after every pull. Feedback and issues are welcome.
+
 An orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that builds full-stack web applications — PHP/Symfony backend and Vue 3 frontend — using isolated AI agents that spec, implement, review, and test each feature.
 
 You describe a feature in plain language. The framework splits the work across seven specialized agents, each with its own context window, strict standards, and a single role. The result is implemented, reviewed, and tested code following Hexagonal Architecture, DDD, CQRS, and Event-Driven design.
@@ -93,7 +95,8 @@ ai-standards/
 │   └── skills/                     ← ~13 on-demand playbooks auto-loaded by Claude Code
 ├── CLAUDE.md                       ← Entry point for agents — global rules, naming, git workflow
 ├── USAGE.md                        ← Setup guide, make-command reference, skills catalog
-├── Makefile                        ← Workspace-level orchestration: up/down/build/test/quality
+├── Makefile                        ← Workspace-level orchestration: up/down/build/test/quality (includes `{project-docs}/workspace.mk`)
+├── .workspace-config-path          ← Gitignored pointer — one line with the path to the current project's docs repo
 ├── agents/                         ← 7 agent definitions (role, responsibilities, tools, limits)
 ├── commands/                       ← Command implementations (referenced by .claude/commands/)
 ├── templates/

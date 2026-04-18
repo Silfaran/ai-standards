@@ -11,7 +11,7 @@ For full-stack features, Backend Developer and Frontend Developer run **in paral
 
 ## Step 0 — Spec sign-off (mandatory, before spawning any agent)
 
-1. Read the spec file, plan file, task file, and every `*.md` file under the project's lessons-learned directory (path defined in `ai-standards/workspace.md` under the `lessons-learned:` key — typically `{project-name}-docs/lessons-learned/`). Also read `ai-standards/standards/lessons-learned.md` for framework-level mistakes that may apply regardless of project.
+1. Read the spec file, plan file, task file, and every `*.md` file under the project's lessons-learned directory (path defined in `{project-docs}/workspace.md` under the `lessons-learned:` key — typically `{project-name}-docs/lessons-learned/`; resolve `{project-docs}` from `ai-standards/.workspace-config-path`). Also read `ai-standards/standards/lessons-learned.md` for framework-level mistakes that may apply regardless of project.
 2. Display a summary to the developer:
    - Feature name and affected services
    - Phases that will run and in what order
@@ -36,7 +36,7 @@ Before spawning any subagent, generate a **context bundle** file that distills t
 3. Include a condensed **spec digest** — the Technical Details section of the spec (the part agents actually need for implementation), not the full business description and user stories
 4. Include relevant entries from `decisions.md` (only ADRs that overlap with this feature's aggregates or services)
 5. If the feature has a frontend component, include all entries from `design-decisions.md` — these are short and all relevant to visual consistency
-6. Write the bundle to: `{workspace_root}/handoffs/{feature-name}/context-bundle.md` (workspace-root `handoffs/` directory declared in `workspace.md` under the `handoffs:` key — ephemeral, never committed, lives outside any service repo)
+6. Write the bundle to: `{workspace_root}/handoffs/{feature-name}/context-bundle.md` (workspace-root `handoffs/` directory declared in `{project-docs}/workspace.md` under the `handoffs:` key — ephemeral, never committed, lives outside any service repo)
 
 The bundle replaces the individual standards file reads in **Developer / Tester / DevOps** subagent prompts. Agents still read their own agent definition file (which is short and role-specific).
 
@@ -129,7 +129,7 @@ For single-service features. Use the appropriate Developer/Reviewer type (Backen
    - **Sequential phases**: spawn and wait for the result before proceeding
    - **Parallel phases**: spawn the first with `run_in_background: true`, immediately spawn the second (foreground), then process both results before continuing
 7. Handle feedback loops per side — each loop reruns only the affected side (skip for `simple` — no review loop)
-8. After all agents are done and tests pass, check the final handoff for a `## Lessons Learned` section. If it contains new entries, append each one to the appropriate per-category file under the project's lessons-learned directory (path from `workspace.md` `lessons-learned:` key). Use this mapping to pick the file:
+8. After all agents are done and tests pass, check the final handoff for a `## Lessons Learned` section. If it contains new entries, append each one to the appropriate per-category file under the project's lessons-learned directory (path from `{project-docs}/workspace.md` `lessons-learned:` key). Use this mapping to pick the file:
 
     | Agent role of the entry | Default file |
     |---|---|

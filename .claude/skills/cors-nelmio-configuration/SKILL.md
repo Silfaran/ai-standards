@@ -89,7 +89,7 @@ For every backend this new frontend calls:
 
 ## Where the frontend port comes from
 
-Use `workspace.md` as the source of truth for frontend ports. Never assume Vite's default 5173 — the dev server port is configured per project and listed in `workspace.md` under Service Ports.
+Use `{project-docs}/workspace.md` (resolve `{project-docs}` from `ai-standards/.workspace-config-path`) as the source of truth for frontend ports. Never assume Vite's default 5173 — the dev server port is configured per project and listed in that file under Service Ports.
 
 ## See also
 

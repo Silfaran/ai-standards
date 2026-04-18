@@ -11,7 +11,7 @@ Every agent runs in one of two modes. Know which one you are in.
 
 ### Mode A — `build-plan` subagent (default)
 
-The orchestrator has already prepared a **context bundle** (`{workspace_root}/handoffs/{feature}/context-bundle.md`, workspace-root `handoffs/` directory declared in `workspace.md` under the `handoffs:` key) that distills every rule relevant to the feature from `invariants.md`, `CLAUDE.md`, and the role-specific standards.
+The orchestrator has already prepared a **context bundle** (`{workspace_root}/handoffs/{feature}/context-bundle.md`, workspace-root `handoffs/` directory declared in `{project-docs}/workspace.md` under the `handoffs:` key) that distills every rule relevant to the feature from `invariants.md`, `CLAUDE.md`, and the role-specific standards.
 
 Read, in order:
 
@@ -28,9 +28,9 @@ No context bundle exists. Read the full file set:
 1. [`invariants.md`](invariants.md) — non-negotiable rules. Always first.
 2. [`../CLAUDE.md`](../CLAUDE.md) — workspace-wide rules and conventions.
 3. [`tech-stack.md`](tech-stack.md) — authoritative versions and pinning policy.
-4. [`../workspace.md`](../workspace.md) — project config. If missing, stop and tell the developer to run `/init-project`.
-5. **`services.md`** — path listed inside `workspace.md`.
-6. **`decisions.md`** — path listed inside `workspace.md`. Never contradict a recorded decision without explicit developer approval.
+4. **Project workspace config** — resolve the project docs directory from the pointer file `ai-standards/.workspace-config-path` (single line, e.g. `../task-manager-docs`), then read `{docs-dir}/workspace.md`. If either file is missing, stop and tell the developer to run `/init-project`.
+5. **`services.md`** — path listed inside `{docs-dir}/workspace.md`.
+6. **`decisions.md`** — path listed inside `{docs-dir}/workspace.md`. Never contradict a recorded decision without explicit developer approval.
 7. **Role-specific standards** (see table below).
 8. **The spec, task, and any handoff** for the feature you are working on.
 

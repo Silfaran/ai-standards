@@ -31,6 +31,8 @@ Example input:
    ├── services.md
    ├── decisions.md
    ├── design-decisions.md
+   ├── workspace.md            ← local workspace config, read by all agents
+   ├── workspace.mk            ← Makefile variables (service lists) included by ai-standards/Makefile
    ├── lessons-learned/
    │   ├── README.md
    │   ├── general.md
@@ -45,9 +47,10 @@ Example input:
 6. Generate `design-decisions.md` as an empty frontend design log — the Frontend Developer will populate it as UI patterns are implemented
 7. Generate `lessons-learned/` with a `README.md` (scope + format + agent-to-file mapping) plus empty `general.md` / `back.md` / `front.md` / `infra.md` — `/build-plan` appends to these after each feature
 8. Generate `specs/INDEX.md` with an empty table — the Spec Analyzer will add rows as specs are created
-9. Create `ai-standards/workspace.md` with the project paths — gitignored, read by all agents
-10. Create `ai-standards/workspace.mk` with the service lists — gitignored, included by the Makefile for dynamic test targets
-11. Report what was created and instruct the developer to run `/create-specs` for the first feature
+9. Generate `{project-name}-docs/workspace.md` with the project paths (template below) — lives in the docs repo so `ai-standards/` stays project-neutral
+10. Generate `{project-name}-docs/workspace.mk` with the service lists (template below) — included by the `ai-standards/` Makefile via the pointer file
+11. Create the pointer file `ai-standards/.workspace-config-path` — a single line containing `../{project-name}-docs` (relative to the ai-standards repo). Gitignored. This is how the `ai-standards/` Makefile and every agent locates the project docs repo.
+12. Report what was created and instruct the developer to run `/create-specs` for the first feature
 
 ## Output
 - `{project-name}-docs/services.md` — project service catalog
@@ -55,7 +58,7 @@ Example input:
 - `{project-name}-docs/design-decisions.md` — frontend design decisions (starts empty, populated by Frontend Developer)
 - `{project-name}-docs/lessons-learned/` — per-project agent mistakes, split by category (starts empty, populated by `/build-plan`)
 - `{project-name}-docs/specs/INDEX.md` — specs quick-reference index (starts with empty table, populated by Spec Analyzer)
-- `ai-standards/workspace.md` — local workspace config (gitignored), content:
+- `{project-name}-docs/workspace.md` — local workspace config (lives in the docs repo, read by every agent), content:
 
 ```markdown
 # Workspace
@@ -69,17 +72,29 @@ lessons-learned: {project-name}-docs/lessons-learned/
 handoffs: handoffs/
 ```
 
-The `handoffs:` path is workspace-root-relative. The directory is used by `/build-plan` for ephemeral per-feature handoff files (context bundle, developer/reviewer/tester handoffs, screenshots). It lives at the workspace root — outside any service repo — and is deleted after each feature completes. Do not commit it anywhere.
+All paths are **workspace-root-relative** (the folder that contains `ai-standards/` and `{project-name}-docs/`). The `handoffs:` directory is used by `/build-plan` for ephemeral per-feature handoff files (context bundle, developer/reviewer/tester handoffs, screenshots). It lives at the workspace root — outside any service repo — and is deleted after each feature completes. Do not commit it anywhere.
 
-- `ai-standards/workspace.mk` — Makefile variables (gitignored), content:
+- `{project-name}-docs/workspace.mk` — Makefile variables (lives in the docs repo, included by `ai-standards/Makefile`), content:
 
 ```makefile
 BACKEND_SERVICES = {backend-service-1} {backend-service-2}
 FRONTEND_SERVICES = {frontend-service-1} {frontend-service-2}
 ```
 
-All agents read `ai-standards/workspace.md` to discover the project paths — no manual configuration needed.
-The Makefile includes `workspace.mk` automatically — `make test` runs tests for all listed services.
+- `ai-standards/.workspace-config-path` — pointer file (gitignored — per-workspace), single line:
+
+```
+../{project-name}-docs
+```
+
+### How lookup works
+
+Every agent and the `ai-standards/Makefile` discover the project config via the pointer file:
+
+1. Read `ai-standards/.workspace-config-path` → get `{docs-dir}` (relative to `ai-standards/`).
+2. Read `{docs-dir}/workspace.md` for paths, or include `{docs-dir}/workspace.mk` in Make.
+
+This keeps `ai-standards/` 100% project-neutral — the public framework repo stores only a pointer to the project, never the project's own config.
 
 ## services.md template
 
@@ -107,8 +122,6 @@ ai-standards/           ← global standards and AI configuration
 
 ## Convention
 
-All agents discover the project catalog by reading `{project-name}-docs/services.md`
-at the workspace root — derived from the spec or plan file path currently being worked on.
+All agents discover the project catalog by reading `{project-name}-docs/workspace.md`, and `services.md` from the path it declares.
 
-`ai-standards/` contains no project-specific information.
-All project documentation lives exclusively inside `{project-name}-docs/`.
+`ai-standards/` contains no project-specific information — only the pointer file `.workspace-config-path` (gitignored) telling the framework where the current project's docs repo is. Every piece of project documentation, config, and state lives exclusively inside `{project-name}-docs/`.
