@@ -29,8 +29,9 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] Application services have ONE `execute()` method, ONE responsibility
 - [ ] Services inject repository INTERFACES (Domain), not implementations (Infrastructure)
 - [ ] Services MAY depend on other services — duplicating logic that already exists in another service is a violation (prefer composition)
-- [ ] No inline `find + null check + throw` in handlers — repository exposes `getById()` (throws) and the handler calls it
-- [ ] Repository interfaces expose `getById(Id): Entity` (throw-on-miss) for every aggregate where lookup-by-id exists; `findById(Id): ?Entity` is kept only for genuine "maybe exists" flows
+- [ ] No inline `find + null check + throw` in handlers — a `{Aggregate}FinderService` owns the throw-on-miss lookup and the handler calls it
+- [ ] Repository interfaces expose ONLY nullable lookups (`findById(Id): ?Entity`, `findByEmail(...): ?Entity`, …) — throw-on-miss methods (`getById`, `findOrFail`) do NOT live on the repository
+- [ ] Every aggregate that has a throw-on-miss need has a `{Aggregate}FinderService` (canonical precedent: `UserFinderService` in login-service)
 - [ ] Handlers do NOT orchestrate 2+ repositories for a single domain operation — logic extracted to a service (cascade deletes, cross-aggregate updates)
 - [ ] Handlers do NOT contain authorization/ownership checks inline when the same check repeats across handlers — delegated to a shared service
 - [ ] Handlers do NOT contain branching business logic ("if exists reactivate else create", multi-step state transitions) — extracted to a service

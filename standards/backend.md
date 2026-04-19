@@ -86,7 +86,7 @@ Every application service class name MUST end with `Service` (e.g. `UserFinderSe
 
 | Pattern | Use for | Example |
 |---|---|---|
-| `{Aggregate}FinderService` | Finder logic not covered by `getById()` (e.g. "find active membership by board+user") | `BoardMembershipFinderService` |
+| `{Aggregate}FinderService` | Throw-on-miss lookups (by id, email, composite keys) — repositories stay nullable, the finder throws | `UserFinderService`, `BoardFinderService` |
 | `{Aggregate}AccessAuthorizationService` | Ownership / permission checks shared across handlers | `BoardAccessAuthorizationService` |
 | `{Aggregate}{Operation}Service` | A specific domain operation with orchestration or branching | `BoardDeletionService`, `BoardMemberInvitationService` |
 | `{Aggregate}{Topic}ValidatorService` | Reusable domain validation | `TaskAssigneeValidatorService` |
@@ -109,14 +109,16 @@ Do NOT extract when:
 - The handler has a single repository call plus one `save()` — that IS the operation
 - The handler only fetches one aggregate via `getById()` and returns it as a query response
 
-### Repositories: `findById` vs `getById`
+### Repositories: nullable lookups only
 
-Repository interfaces expose two lookup shapes when lookup by id is supported:
+Repository interfaces are pure data-access abstractions. They know how to load and persist aggregates; they have no opinion on whether absence is an error, because that decision is domain semantics and belongs in a service.
 
-- `getById(Id): Entity` — throws `{Entity}NotFoundException` when not found. **Default in handlers.** Use whenever "not found" is an error condition.
-- `findById(Id): ?Entity` — returns null when not found. Use ONLY when absence is a valid branch ("if user exists, reactivate; else create").
+- Repository id lookups return `?Entity` ALWAYS: `findById(Id): ?Entity`, `findByEmail(...): ?Entity`, etc.
+- Repositories MUST NOT expose throw-on-miss methods (`getById`, `findOrFail`, `getOrThrow`, …). The repository interface stays nullable-only.
+- Throw-on-miss lives in a `{Aggregate}FinderService`. Example signature: `BoardFinderService::findById(BoardId): Board` (throws `BoardNotFoundException`). The finder may expose any number of throw-on-miss lookups — `findByEmail`, `findByBoardAndUser`, etc.
+- Handlers and other services call the finder for reads where absence is an error. They call the repository directly for `save()`, `delete()`, and for lookups that are genuinely nullable by design (branch: "if exists then X else Y").
 
-The `find + null check + throw` pattern does NOT belong in handlers — it is a repository responsibility. Handlers call `getById()` directly and let the exception propagate to `ApiExceptionSubscriber`.
+The `find + null check + throw` pattern does NOT belong in handlers — it lives in the finder. Canonical precedent: `UserFinderService` in login-service. This is the pattern to replicate for every aggregate that has a throw-on-miss need.
 
 ## Controllers
 

@@ -27,7 +27,7 @@ The business spec file created by the `create-specs` command:
 6. If the feature has a frontend component, read `design-decisions.md` — ensure the Frontend Architecture section is consistent with established patterns. If a contradiction is needed, flag it to the developer before writing the spec
 7. Ask the developer technical or business questions if information is missing or ambiguous
 7b. **Detect architectural decision points and ask explicitly.** For every Command/Query handler the spec introduces or modifies, scan for these patterns and, when present, ask the developer before writing the spec:
-    - **Aggregate lookup by id** → confirm the repository exposes `getById()` (throw-on-miss) and the handler uses it; never propose an inline `find + null + throw`
+    - **Aggregate lookup by id** → confirm a `{Aggregate}FinderService` exists (or plan it in the spec) and the handler calls it for throw-on-miss lookups. Repositories stay nullable-only (`findById(Id): ?Entity`). Never propose an inline `find + null + throw` or a `getById` on the repository
     - **Multi-repository orchestration** (cascade delete, cross-aggregate update) → ask: new domain service or reuse existing one?
     - **Authorization / ownership checks** → ask: inline this once, or delegate to a shared `{Aggregate}AccessAuthorizationService` (preferred when the same check repeats in 2+ handlers)
     - **Branching business logic** ("if exists reactivate else create", state transitions with 2+ branches) → ask: extract to service
