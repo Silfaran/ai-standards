@@ -86,7 +86,8 @@ Every application service class name MUST end with `Service` (e.g. `UserFinderSe
 
 | Pattern | Use for | Example |
 |---|---|---|
-| `{Aggregate}FinderService` | Throw-on-miss lookups (by id, email, composite keys) — repositories stay nullable, the finder throws | `UserFinderService`, `BoardFinderService` |
+| `{Aggregate}FinderService` | Default throw-on-miss lookup by id — one `execute()` method | `UserFinderService`, `BoardFinderService` |
+| `{Aggregate}FinderBy{Key}Service` | Variant throw-on-miss lookups (by email, composite keys) — one service per key shape, one `execute()` each | `UserFinderByEmailService`, `BoardMemberFinderByBoardAndUserService` |
 | `{Aggregate}AccessAuthorizationService` | Ownership / permission checks shared across handlers | `BoardAccessAuthorizationService` |
 | `{Aggregate}{Operation}Service` | A specific domain operation with orchestration or branching | `BoardDeletionService`, `BoardMemberInvitationService` |
 | `{Aggregate}{Topic}ValidatorService` | Reusable domain validation | `TaskAssigneeValidatorService` |
@@ -115,7 +116,8 @@ Repository interfaces are pure data-access abstractions. They know how to load a
 
 - Repository id lookups return `?Entity` ALWAYS: `findById(Id): ?Entity`, `findByEmail(...): ?Entity`, etc.
 - Repositories MUST NOT expose throw-on-miss methods (`getById`, `findOrFail`, `getOrThrow`, …). The repository interface stays nullable-only.
-- Throw-on-miss lives in a `{Aggregate}FinderService`. Example signature: `BoardFinderService::findById(BoardId): Board` (throws `BoardNotFoundException`). The finder may expose any number of throw-on-miss lookups — `findByEmail`, `findByBoardAndUser`, etc.
+- Throw-on-miss lives in a `{Aggregate}FinderService`. **One finder, one lookup, one `execute()` method** — the generic service rule applies without exception. Example: `BoardFinderService::execute(BoardId): Board` (throws `BoardNotFoundException`).
+- Variant lookups on the same aggregate are **separate service classes** named `{Aggregate}FinderBy{Key}Service`. Canonical pair: `UserFinderService::execute(UserId): User` (default by id) and `UserFinderByEmailService::execute(Email): User` (variant by email) are two distinct classes — never merged, never a second method.
 - Handlers and other services call the finder for reads where absence is an error. They call the repository directly for `save()`, `delete()`, and for lookups that are genuinely nullable by design (branch: "if exists then X else Y").
 
 The `find + null check + throw` pattern does NOT belong in handlers — it lives in the finder. Canonical precedent: `UserFinderService` in login-service. This is the pattern to replicate for every aggregate that has a throw-on-miss need.
