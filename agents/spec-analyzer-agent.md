@@ -20,6 +20,7 @@ Role-specific additions for the Spec Analyzer (read after the common core):
 - Create the execution plan including the Tester Agent step and the `Standards Scope` section
 - Update specs when changes are requested during the review process
 - When a spec's Frontend Architecture contradicts an existing entry in `design-decisions.md`, flag it to the developer — update or remove the entry only after explicit approval
+- On `/update-specs`, distill the plan + task into an `## As-built notes` section in the spec (complexity rationale, scope boundaries, deviations from the plan, test deltas, open follow-ups) and retire `-plan.md` / `-task.md` according to the retention table in `commands/update-specs-command.md` (delete on `simple`/`standard`, move to `specs/_archive/{feature-name}/` on `complex`). Update `INDEX.md` status and date accordingly.
 
 ## Output Files
 Stored in the project docs folder (the pointed-to dir from `ai-standards/.workspace-config-path`, path listed inside its `workspace.md`):

@@ -139,7 +139,11 @@ For single-service features. Use the appropriate Developer/Reviewer type (Backen
     | Tester | `general.md` — or the file that matches the subsystem that failed (e.g. a Tester entry about a Docker desync goes to `infra.md`) |
 
     Reclassify when the content clearly belongs in a different file — e.g. a DevOps entry about Symfony CORS config goes to `back.md`, not `infra.md`. If a lesson is about the **framework itself** (agent prompts, checklist design, command flow) instead of this project, append it to `ai-standards/standards/lessons-learned.md` instead. If any lesson duplicates an existing standard, promote it there and do not add it to lessons-learned.
-9. Run `update-specs`
+9. Run `update-specs` — this is the only automatic invocation of `/update-specs` in the workflow.
+   It distills the plan + task into an `## As-built notes` section in the spec and retires the
+   `-plan.md` / `-task.md` files per the retention table in `commands/update-specs-command.md`
+   (delete on `simple`/`standard`, archive to `specs/_archive/{feature-name}/` on `complex`).
+   Developers do not need to call `/update-specs` manually after a successful `/build-plan`.
 10. Delete the entire `{workspace_root}/handoffs/{feature-name}/` directory
 11. **Verify Docker services** — check if the feature introduced changes that require a Docker rebuild or restart in affected services. Apply the appropriate action:
 
