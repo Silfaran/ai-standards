@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.5.3](https://github.com/Silfaran/ai-standards/compare/v0.5.2...v0.5.3) (2026-04-19)
+
+
+### Documentation
+
+* **lessons-learned:** note PHPUnit 13 vs final application service conflict ([f981e48](https://github.com/Silfaran/ai-standards/commit/f981e48ea9ebf3ac6160b4607c4b4869dde3de16))
+
 ## [0.5.2](https://github.com/Silfaran/ai-standards/compare/v0.5.1...v0.5.2) (2026-04-19)
 
 
