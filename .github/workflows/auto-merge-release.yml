@@ -4,6 +4,14 @@ name: Auto-merge release PR
 # "autorelease: pending"). GitHub performs the merge automatically as
 # soon as every required status check on validate.yml passes.
 #
+# IMPORTANT: the merge command must run with the same fine-grained PAT
+# used by release-please (RELEASE_PLEASE_TOKEN), NOT the default
+# GITHUB_TOKEN. Merges triggered by GITHUB_TOKEN do not fire downstream
+# workflow runs, so release-please never re-runs on the merge commit and
+# the release stays stuck at "autorelease: pending" (no tag, no GitHub
+# Release). With the PAT, the merge push triggers release-please which
+# then tags the commit and publishes the Release automatically.
+#
 # To hold a release: close the PR — release-please reopens it on the
 # next push with the latest changelog applied.
 
@@ -26,6 +34,6 @@ jobs:
     steps:
       - name: Enable auto-merge (squash)
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}
         run: gh pr merge --auto --squash "$PR_URL"
