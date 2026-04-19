@@ -104,21 +104,54 @@ Point to the plan file. The agent orchestrates the full implementation:
 - Runs Backend + Frontend in parallel
 - Runs reviewers in parallel, loops until approved
 - Runs tests, loops until they pass
+- **Calls `/update-specs` automatically** as the last step — syncs the spec with the code,
+  distills the plan + task into an `## As-built notes` section, and retires the plan/task files
+  (deleted on `simple`/`standard` complexity; archived under `specs/_archive/{feature}/` on
+  `complex`). After a successful `/build-plan`, you should not need to call `/update-specs`.
 
-### 4. `/update-specs`
-Point to the spec file. The agent compares spec vs actual implementation and updates the spec to match.
+### 4. `/update-specs` (rarely invoked manually)
+`/build-plan` runs this for you on every successful feature. Call it manually only when:
+
+- You edited the implementation directly (outside `/build-plan`) and the spec is now stale.
+- `/build-plan` aborted mid-run and the spec was never closed — re-run `/update-specs` pointing
+  at the same spec so the plan and task are properly distilled and retired.
+- A later bugfix changed something documented in a previous `## As-built notes` (rare — usually
+  better to create a new `-fix-specs.md` feature instead).
+
+The agent compares spec vs actual implementation, updates the spec to match, appends the
+`## As-built notes` section, and deletes or archives the plan/task files.
+
+---
+
+## Spec file lifecycle
+
+Each feature produces a triplet under `{project-name}-docs/specs/{Aggregate}/`:
+
+| File | Lifespan |
+|---|---|
+| `{feature}-specs.md` | Permanent — durable contract, read by future features and agents. |
+| `{feature}-plan.md`  | Ephemeral — deleted by `/update-specs` after `simple`/`standard` features; moved to `specs/_archive/{feature}/` after `complex` features. |
+| `{feature}-task.md`  | Same as the plan. |
+
+The non-obvious rationale from plan + task (complexity choice, files explicitly excluded from
+scope, deviations from the plan, test deltas) is distilled into an `## As-built notes` section
+appended to `{feature}-specs.md` before the plan/task are retired. That keeps the specs folder
+lean while preserving what would otherwise be lost. `INDEX.md` marks archived features with `📦`.
+
+If you want to keep plan/task for a specific feature (e.g. to review before deletion), tell the
+orchestrator during `/update-specs` — it will skip retirement but still update the spec and INDEX.
 
 ---
 
 ## Commands reference
 
-| Command | When to use |
-|---|---|
-| `/init-project` | Once, when starting a new project |
-| `/create-specs` | When you have a new feature to build |
-| `/refine-specs` | After create-specs, to produce the technical spec and plan |
-| `/build-plan` | After refine-specs, to implement the full feature |
-| `/update-specs` | After build-plan, to keep specs in sync with the code |
+| Command | When to use | Invokes |
+|---|---|---|
+| `/init-project` | Once, when starting a new project | — |
+| `/create-specs` | When you have a new feature to build | — |
+| `/refine-specs` | After create-specs, to produce the technical spec and plan | — |
+| `/build-plan` | After refine-specs, to implement the full feature | `/update-specs` (automatic, last step) |
+| `/update-specs` | Rarely by hand — see "When to run this manually" in [`commands/update-specs-command.md`](commands/update-specs-command.md) | — |
 
 ---
 
@@ -189,10 +222,15 @@ workspace/
 │   │   ├── front.md
 │   │   └── infra.md
 │   └── specs/
+│       ├── INDEX.md
+│       ├── _archive/                  ← complex features: plan + task preserved here after /update-specs
+│       │   └── {feature-name}/
+│       │       ├── {feature}-plan.md
+│       │       └── {feature}-task.md
 │       └── {Aggregate}/
-│           ├── {feature}-specs.md
-│           ├── {feature}-plan.md
-│           └── {feature}-task.md
+│           ├── {feature}-specs.md     ← durable contract (with ## As-built notes after /update-specs)
+│           ├── {feature}-plan.md      ← ephemeral — retired on /update-specs
+│           └── {feature}-task.md      ← ephemeral — retired on /update-specs
 ├── {service-1}/           ← your backend/frontend services
 ├── {service-2}/
 └── ...

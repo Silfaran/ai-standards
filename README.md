@@ -27,6 +27,42 @@ Architecture patterns — Hexagonal, DDD, CQRS, Event-Driven — are enforced by
 
 ---
 
+## Recommended prior knowledge
+
+The framework writes the code, but you review specs, approve architectural decisions, and resolve what the AI can't. The more of the list below you already know, the faster the feedback loop. Nothing here is a hard prerequisite — Claude can explain any of it on request — but the first three are what you actually need to drive the workflow.
+
+**Needed to operate the framework:**
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) basics — slash commands, MCP configuration, context windows. The whole framework is slash commands on top of Claude Code.
+- **Docker + docker compose** — every service runs in a container; you will `docker compose up`, read logs, and occasionally rebuild.
+- **Git** — branches, merges, pushing. `/build-plan` creates feature branches and asks you to confirm merges.
+
+**Needed to review what the agents produce:**
+- **PHP / Symfony** — enough to read controllers, commands, handlers, and migrations. You don't need to write them from scratch.
+- **Vue 3 + TypeScript + Vite** — enough to read `<script setup>` components, composables, and Pinia stores. Familiarity with shadcn/ui helps.
+- **Hexagonal Architecture, DDD, CQRS, Event-Driven design** — at concept level. The standards enforce these; if they are unfamiliar, specs and reviews will feel arbitrary.
+- **Markdown** — specs, plans, tasks, lessons-learned are all `.md` files you will read (and sometimes edit).
+
+**Useful but optional:**
+- **Make / Makefiles** — the workspace has `make up`, `make test`, `make quality`. If you can run them, you are fine — writing new targets is rare.
+- **PostgreSQL** — only needed when debugging data or writing a migration; agents write the SQL themselves.
+- **RabbitMQ / Symfony Messenger** — only if your project has cross-service events; otherwise you can ignore it.
+
+---
+
+## Spec lifecycle
+
+Every feature produces three files under `{project-name}-docs/specs/{Aggregate}/`:
+
+| File | Purpose | Lifespan |
+|---|---|---|
+| `{feature}-specs.md` | WHAT was built and WHY — the contract | Permanent. Read by future specs and agents. |
+| `{feature}-plan.md`  | HOW to execute — phases, agents, files to touch | Ephemeral. Deleted by `/update-specs` on `simple`/`standard` complexity. Archived under `specs/_archive/{feature}/` on `complex`. |
+| `{feature}-task.md`  | Test requirements and DoD checklist | Same as the plan. |
+
+Before retirement, `/update-specs` distills the plan and task into an `## As-built notes` section appended to the spec (complexity rationale, scope boundaries, deviations, test deltas, open follow-ups). That keeps the non-obvious rationale addressable without leaving every historical plan/task file in the main specs folder. `/build-plan` calls `/update-specs` automatically — you only invoke it by hand if you edited the code outside `/build-plan` or need to re-close a spec after an aborted run. See [`commands/update-specs-command.md`](commands/update-specs-command.md).
+
+---
+
 ## How it works
 
 Four commands, each backed by specialized agents:
