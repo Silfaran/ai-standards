@@ -26,7 +26,7 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] Folder layout: `Domain/`, `Application/`, `Infrastructure/` boundaries respected
 - [ ] Commands and queries are separated — never mixed in the same handler
 - [ ] Handlers call application services, never repositories from controllers
-- [ ] Application services have ONE `execute()` method, ONE responsibility
+- [ ] Application services expose exactly ONE public method (`execute`) plus the constructor — zero exceptions. Any additional method is `private` and called from `execute`. Multi-public services (twin signatures, overloaded variants, "convenience wrappers") split into separate classes
 - [ ] Services inject repository INTERFACES (Domain), not implementations (Infrastructure)
 - [ ] Services MAY depend on other services — duplicating logic that already exists in another service is a violation (prefer composition)
 - [ ] No inline `find + null check + throw` in handlers — a `{Aggregate}FinderService` owns the throw-on-miss lookup and the handler calls it

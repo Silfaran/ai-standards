@@ -76,7 +76,7 @@ Every class that should not be instantiated directly must use a **private constr
 Handlers **orchestrate**, they do NOT contain business logic. A handler reads like a short script: resolve aggregates → check access → call services → persist. A handler may call one or many services — the number is not a quality metric. The quality metric is "does the handler contain domain logic that is reusable, complex, or worth testing in isolation?". If yes, extract it.
 
 - Handlers call application services, not repositories directly
-- One service, one responsibility, one `execute()` method — always named `execute`
+- **100% of services expose exactly ONE public method**: `execute()`. The constructor is the only other public member. Any additional method the service needs MUST be `private` and called from `execute()`. There are no exceptions — not for finders, not for authorization services, not for "twin signatures for composition efficiency", not for anything. If a second public method feels necessary, split into two services (e.g. the by-id finder `UserFinderService` and the by-email finder `UserFinderByEmailService` are two classes, not one).
 - Services inject repository interfaces, never implementations
 - **Services MAY depend on other services.** A service can compose other services to reuse existing logic (e.g. an `InviteBoardMemberService` calls `BoardAccessAuthorizationService` internally). Composition is preferred over duplication — do NOT reinvent logic that already lives in another service
 
