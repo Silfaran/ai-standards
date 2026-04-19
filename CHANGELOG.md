@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.3.1](https://github.com/Silfaran/ai-standards/compare/v0.3.0...v0.3.1) (2026-04-19)
+
+
+### Fixed
+
+* **commands:** gate context loading on argument presence ([24e134a](https://github.com/Silfaran/ai-standards/commit/24e134a5cf4b6b99c5be426ed9895ab4a487235b))
+
 ## [0.3.0](https://github.com/Silfaran/ai-standards/compare/v0.2.1...v0.3.0) (2026-04-19)
 
 
