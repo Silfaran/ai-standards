@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.2.1](https://github.com/Silfaran/ai-standards/compare/v0.2.0...v0.2.1) (2026-04-19)
+
+
+### Changed
+
+* **build-plan:** scope browser verification to Tester only ([56f8454](https://github.com/Silfaran/ai-standards/commit/56f8454b41d7026e9f27f1b2d313b8ef76d1ef7b))
+
 ## [0.2.0](https://github.com/Silfaran/ai-standards/compare/v0.1.0...v0.2.0) (2026-04-19)
 
 
