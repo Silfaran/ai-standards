@@ -1,14 +1,19 @@
-name: Auto-merge Release PR
+name: Auto-merge release PR
 
-# Enables GitHub's auto-merge on any PR release-please opens (title
-# "chore(master): release X.Y.Z", label "autorelease: pending"). GitHub
-# will then merge the PR automatically once every required status check
-# on validate.yml passes. A human is NOT in the loop — if you want to
-# hold a release, close the PR (release-please will reopen it on the
-# next push with your changes applied).
+# Enables GitHub auto-merge on release-please PRs (label
+# "autorelease: pending"). GitHub performs the merge automatically as
+# soon as every required status check on validate.yml passes.
+#
+# To hold a release: close the PR — release-please reopens it on the
+# next push with the latest changelog applied.
+
 on:
   pull_request:
-    types: [opened, reopened, synchronize, labeled]
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
 
 permissions:
   contents: write
@@ -16,7 +21,7 @@ permissions:
 
 jobs:
   enable-auto-merge:
-    if: contains(github.event.pull_request.labels.*.name, 'autorelease: pending')
+    if: "contains(github.event.pull_request.labels.*.name, 'autorelease: pending')"
     runs-on: ubuntu-latest
     steps:
       - name: Enable auto-merge (squash)
