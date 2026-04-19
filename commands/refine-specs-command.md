@@ -33,7 +33,15 @@ The business spec file created by the `create-specs` command:
     - **Branching business logic** ("if exists reactivate else create", state transitions with 2+ branches) → ask: extract to service
     - **Read-model composition across 3+ projections** → ask: extract to an application read service
 
-    Reference rule: `backend.md` → "When to extract logic from a handler to a service". If a pattern already exists in the codebase, flag it as a reuse opportunity before proposing a new service. When proposing a new service, remember that **services MAY compose other services** — prefer reusing an existing service (e.g. authorization, aggregate finder) over duplicating logic. Do NOT guess silently — if in doubt, ASK. Record every decision taken here in the refined spec under a `## Architectural Decisions` subsection so the Developer agent follows it.
+    Reference rule: `backend.md` → "When to extract logic from a handler to a service". If a pattern already exists in the codebase, flag it as a reuse opportunity before proposing a new service. When proposing a new service, remember that **services MAY compose other services** — prefer reusing an existing service (e.g. authorization, aggregate finder) over duplicating logic.
+
+    **Hard enforcement — one-public-method rule.** Every service you propose MUST expose exactly ONE public method (`execute`) plus the constructor, per `backend.md` §Application Services. Before writing the spec, verify:
+    - The proposed service does not name a second public method (no `authorize` + `authorizeBoard`, no `findById` + `findByEmail` on the same class, no "twin signatures for composition efficiency").
+    - Any helper method is `private` and called from `execute`.
+    - If the feature genuinely needs two public entry points, SPLIT into two services (e.g. `UserFinderService` + `UserFinderByEmailService`) — never collapse them.
+    A spec that embeds a multi-public service is rejected at review; catch it here instead.
+
+    Do NOT guess silently — if in doubt, ASK. Record every decision taken here in the refined spec under a `## Architectural Decisions` subsection so the Developer agent follows it.
 8. Refine the spec with technical details — architecture decisions, affected aggregates, services involved
 9. If this feature introduces a new architectural decision or changes an existing one, update `decisions.md` accordingly
 10. Classify the feature complexity (see **Complexity Classification** below) and include it in the plan
