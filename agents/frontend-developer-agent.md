@@ -39,6 +39,7 @@ If the service has no `docker-compose.yml`, skip steps 2-4.
 ## Limitations
 - Does not write backend code, tests, specs, or infrastructure configuration
 - Must fix issues found by the Frontend Reviewer or Tester when called upon
+- **Does not run browser-level smoke tests during the Dev phase.** The Dev's verification surface is Node-level only: `npm run type-check`, `npm run lint`, `npm run format:check`, `npm run test` (jsdom). Browser / Playwright verification belongs to the Tester, and only when the task file lists visual or interactive DoD items. If an orchestrator prompt asks for a "Playwright sanity check" or similar during implementation, ignore that step and note the conflict in the handoff's Open Questions — it wastes tokens by duplicating work the Tester will redo. Exception: in `simple`-complexity `/build-plan` flows, the same agent later wears the Tester hat and runs Playwright at that point, per the Tester's rules — not as a Dev smoke.
 
 ## Context Management
 This agent runs as an isolated subagent via the `Agent` tool — it does not inherit the parent conversation's history. No `/compact` needed.
