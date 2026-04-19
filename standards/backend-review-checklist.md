@@ -25,17 +25,21 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 
 - [ ] Folder layout: `Domain/`, `Application/`, `Infrastructure/` boundaries respected
 - [ ] Commands and queries are separated — never mixed in the same handler
-- [ ] Handlers call application services, never repositories from controllers
-- [ ] Application services expose exactly ONE public method (`execute`) plus the constructor — zero exceptions. Any additional method is `private` and called from `execute`. Multi-public services (twin signatures, overloaded variants, "convenience wrappers") split into separate classes
+- [ ] Handlers call services (Domain or Application) or repositories directly — never inline extracted logic
+- [ ] Services expose exactly ONE public method (`execute`) plus the constructor — zero exceptions. Any additional method is `private` and called from `execute`. Multi-public services (twin signatures, overloaded variants, "convenience wrappers") split into separate classes
+- [ ] `[critical]` Service placement: domain services (pure rules) live in `src/Domain/Service/{Aggregate}/`; application services (use-case orchestrators) live in `src/Application/Service/{Aggregate}/`. A service under `Domain/Service/` MUST NOT import from `App\Infrastructure\*`, MUST NOT depend on framework classes beyond the ones it reads (PSR interfaces are fine), and MUST NOT orchestrate side effects (no event publishing, no email sending, no transactions). If it does any of these — move to `Application/Service/`
+- [ ] Services are declared `readonly class` — NOT `final` (PHPUnit 13 `createMock()` compatibility). `readonly` preserves immutability without blocking test doubles
+- [ ] Finder services (throw-on-miss aggregate lookups) live in Domain — `src/Domain/Service/{Aggregate}/{Aggregate}FinderService.php`
+- [ ] Handlers are not duplicated by a parallel `{Action}UseCase` class in `Application/Service/` — the handler IS the application service for that use case
 - [ ] Services inject repository INTERFACES (Domain), not implementations (Infrastructure)
-- [ ] Services MAY depend on other services — duplicating logic that already exists in another service is a violation (prefer composition)
+- [ ] Services MAY depend on other services — duplicating logic that already exists in another service is a violation (prefer composition). A domain service NEVER composes an application service (inverted-layer violation)
 - [ ] No inline `find + null check + throw` in handlers — a `{Aggregate}FinderService` owns the throw-on-miss lookup and the handler calls it
 - [ ] Repository interfaces expose ONLY nullable lookups (`findById(Id): ?Entity`, `findByEmail(...): ?Entity`, …) — throw-on-miss methods (`getById`, `findOrFail`) do NOT live on the repository
-- [ ] Every aggregate that has a throw-on-miss need has a `{Aggregate}FinderService` (canonical precedent: `UserFinderService` in login-service)
+- [ ] Every aggregate that has a throw-on-miss need has a `{Aggregate}FinderService` under `src/Domain/Service/{Aggregate}/` (canonical precedent: `UserFinderService` in login-service)
 - [ ] Finder services follow the one-execute rule: one finder = one lookup = one `execute()` method. Variant lookups live in separate `{Aggregate}FinderBy{Key}Service` classes (e.g. `UserFinderByEmailService`) — never a second method on an existing finder
-- [ ] Handlers do NOT orchestrate 2+ repositories for a single domain operation — logic extracted to a service (cascade deletes, cross-aggregate updates)
-- [ ] Handlers do NOT contain authorization/ownership checks inline when the same check repeats across handlers — delegated to a shared service
-- [ ] Handlers do NOT contain branching business logic ("if exists reactivate else create", multi-step state transitions) — extracted to a service
+- [ ] Handlers do NOT orchestrate 2+ repositories for a single domain operation — logic extracted to a service (cascade deletes, cross-aggregate updates → typically Application)
+- [ ] Handlers do NOT contain authorization/ownership checks inline when the same check repeats across handlers — delegated to a shared domain service
+- [ ] Handlers do NOT contain branching business logic ("if exists reactivate else create", multi-step state transitions) — extracted to a service (Application if it orchestrates side effects; Domain if it's a pure rule)
 - [ ] Domain layer has zero Symfony/Doctrine imports
 - [ ] Aggregates use `static create()` (new, raises events) and `static from()` (rehydration, no events)
 - [ ] Value objects, commands, queries, DTOs use `private __construct` + `static from()`

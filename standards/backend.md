@@ -9,9 +9,11 @@ All backend services follow Hexagonal Architecture + DDD + CQRS + Event-Driven.
 
 ### Layers
 
-- **Domain** — aggregates, entities, value objects, domain events, repository interfaces, domain exceptions
-- **Application** — commands, queries, handlers, application services
+- **Domain** — aggregates, entities, value objects, domain events, repository interfaces, domain exceptions, **domain services** (pure business rules with no framework or I/O concerns beyond repository abstractions)
+- **Application** — commands, queries, handlers, **application services** (use-case orchestrators — coordinate domain services, repositories and side effects)
 - **Infrastructure** — Symfony, Doctrine DBAL, repository implementations, controllers, external services
+
+> Services live on BOTH sides. The split is driven by responsibility, not by convention — see "Services — Domain vs Application placement" below for the decision rule. Historically some projects pushed all services into Application; that is incorrect under Hexagonal + DDD and produces artificial dependencies from pure rules to use-case code.
 
 ### CQRS
 
@@ -25,10 +27,11 @@ All backend services follow Hexagonal Architecture + DDD + CQRS + Event-Driven.
 ```
 src/
 ├── Domain/
-│   ├── Model/              ← aggregates, entities, value objects
-│   ├── Event/              ← domain events
-│   ├── Repository/         ← repository interfaces
-│   └── Exception/          ← domain exceptions
+│   ├── Model/                     ← aggregates, entities, value objects
+│   ├── Event/                     ← domain events
+│   ├── Repository/                ← repository interfaces
+│   ├── Exception/                 ← domain exceptions
+│   └── Service/{Aggregate}/       ← domain services (pure business rules)
 ├── Application/
 │   ├── Command/{Aggregate}/{ActionAggregate}/
 │   │   ├── {ActionAggregate}Command.php
@@ -36,14 +39,16 @@ src/
 │   ├── Query/{Aggregate}/{ActionAggregate}/
 │   │   ├── {ActionAggregate}Query.php
 │   │   └── {ActionAggregate}QueryHandler.php
-│   └── Service/            ← application services grouped by aggregate
+│   └── Service/{Aggregate}/       ← application services (use-case orchestrators)
 └── Infrastructure/
-    ├── Persistence/        ← DBAL repositories, Phinx migrations, seeds
-    ├── Messenger/          ← bus and token services
-    ├── Http/               ← one controller per command/query
+    ├── Persistence/               ← DBAL repositories, Phinx migrations, seeds
+    ├── Messenger/                 ← bus and token services
+    ├── Http/                      ← one controller per command/query
     │   └── {Aggregate}/
-    └── External/           ← calls to external services
+    └── External/                  ← calls to external services
 ```
+
+Both `Domain/Service/` and `Application/Service/` group classes by aggregate. The sub-folder is mandatory once a service count grows past 2-3 per layer, and recommended from the start for consistency.
 
 Exclude `Migration/` and `Seed/` from Symfony service auto-discovery in `services.yaml`:
 
@@ -71,52 +76,92 @@ Every class that should not be instantiated directly must use a **private constr
 - Invalid input throws `InvalidArgumentException` → `ApiExceptionSubscriber` maps it to 422
 - No validation logic in controllers
 
-## Application Services
+## Services
 
 Handlers **orchestrate**, they do NOT contain business logic. A handler reads like a short script: resolve aggregates → check access → call services → persist. A handler may call one or many services — the number is not a quality metric. The quality metric is "does the handler contain domain logic that is reusable, complex, or worth testing in isolation?". If yes, extract it.
 
-- Handlers call application services, not repositories directly
-- **100% of services expose exactly ONE public method**: `execute()`. The constructor is the only other public member. Any additional method the service needs MUST be `private` and called from `execute()`. There are no exceptions — not for finders, not for authorization services, not for "twin signatures for composition efficiency", not for anything. If a second public method feels necessary, split into two services (e.g. the by-id finder `UserFinderService` and the by-email finder `UserFinderByEmailService` are two classes, not one).
-- Services inject repository interfaces, never implementations
-- **Services MAY depend on other services.** A service can compose other services to reuse existing logic (e.g. an `InviteBoardMemberService` calls `BoardAccessAuthorizationService` internally). Composition is preferred over duplication — do NOT reinvent logic that already lives in another service
+Under Hexagonal + DDD + CQRS this codebase distinguishes two kinds of extracted services by their responsibility, and places them accordingly. **Every Command/Query Handler IS already an application service** — do not duplicate handlers with a parallel `{Action}UseCase` class. Explicit services exist only to host logic that does not fit inside a single handler.
+
+### Services — Domain vs Application placement
+
+| Kind | Lives in | Responsibility | What it MAY do | What it MUST NOT do |
+|---|---|---|---|---|
+| **Domain Service** | `src/Domain/Service/{Aggregate}/` | Encode a pure business rule that doesn't fit in an entity or VO | Read aggregates; raise domain exceptions; depend on repository INTERFACES and other domain services | Import from `App\Infrastructure\*`; orchestrate multiple aggregates; start transactions; publish events; send emails; call external APIs |
+| **Application Service** | `src/Application/Service/{Aggregate}/` | Orchestrate a use case or reusable multi-step flow across domain services, repositories and side effects | Call domain services; coordinate multiple repos; publish events; call `message.bus`; return DTOs | Contain raw business rules — those are delegated to domain services or value objects; import from framework-coupled infra beyond buses/dispatchers |
+
+**Decision rule — ask two questions, in order:**
+
+1. *Is the logic a pure rule about the domain itself — same output for the same inputs, no side effects, expressible with aggregates and VOs?* → **Domain Service** in `src/Domain/Service/`.
+2. *Does the logic coordinate domain services + repositories + side effects for a repeatable use case?* → **Application Service** in `src/Application/Service/`.
+
+Most extractions in a CQRS codebase land in Domain, because the typical "coordination" responsibility is already absorbed by the Command/Query Handler. Explicit application services appear when the same orchestration repeats in 2+ handlers, or the flow is too involved to keep inside the handler (invitation state machine, cascade delete, import pipeline).
+
+### Examples by type
+
+| Service | Kind | Why |
+|---|---|---|
+| `BoardFinderService`, `UserFinderService`, `TaskFinderService` | Domain | Encapsulates the invariant "a missing aggregate is exceptional" — no orchestration, no side effects |
+| `BoardAccessAuthorizationService` | Domain | Encodes the rule "owner or active member with permission X" — reads domain objects, throws a domain exception |
+| `TaskAssigneeValidatorService` | Domain | Validates an assignee candidate against domain invariants (active membership) — reusable rule |
+| `TaskDueDateCalculatorService` | Domain | Derives a value from the domain with no side effects |
+| `BoardDeletionService` | Application | Orchestrates cascade delete across 7 repositories and publishes an event — no single domain rule, it's a workflow |
+| `BoardMemberInvitationService` | Application | Multi-step flow: authorize → state-machine check → reactivate-or-create member → send email → publish event |
+| `ColumnDeletionService` | Application | Orchestrates the default-column guard → task relocation → column delete |
+
+### Class declaration — `readonly class`, not `final`
+
+Every service class MUST be declared `readonly class {Name}Service` — NOT `final`. Rationale: PHPUnit 13 rejects `createMock()` on `final` classes (`ClassIsFinalException`), which collides with handler unit tests that need to mock a collaborating service. `readonly` preserves immutability without blocking test doubles. This applies to both domain and application services.
+
+Handler unit tests default to **composing the real service with a fake in-memory repository** (Option B) — the service is stateless and cheap to construct, and fakes are closer to integration than mocks. `createMock($service)` (Option A) is available as a fallback for a specific test where composing a fake is demonstrably noisier, and works because the class is non-`final`.
+
+### One public method (`execute`) — no exceptions
+
+**100% of services expose exactly ONE public method**: `execute()`. The constructor is the only other public member. Any additional method the service needs MUST be `private` and called from `execute()`. There are no exceptions — not for finders, not for authorization services, not for "twin signatures for composition efficiency", not for anything. If a second public method feels necessary, split into two services (e.g. the by-id finder `UserFinderService` and the by-email finder `UserFinderByEmailService` are two classes, not one).
+
+### Services composition and DI
+
+- Services inject repository INTERFACES (Domain), never implementations (Infrastructure)
+- **Services MAY depend on other services.** Composition is preferred over duplication — do NOT reinvent logic that already lives in another service. An application service typically composes 1+ domain services (e.g. `BoardMemberInvitationService` → `BoardAccessAuthorizationService`). A domain service composes other domain services when useful, but NEVER composes an application service (that would invert the layer dependency rule)
+- Handlers call services, not repositories directly — except for `save()`, `delete()` or genuinely nullable "if exists then X else Y" lookups
 
 ### Naming services
 
-Every application service class name MUST end with `Service` (e.g. `UserFinderService.php`). Use these patterns to make the service's purpose unambiguous:
+Every service class name MUST end with `Service` (e.g. `UserFinderService.php`). Use these patterns to make the service's purpose unambiguous:
 
-| Pattern | Use for | Example |
-|---|---|---|
-| `{Aggregate}FinderService` | Default throw-on-miss lookup by id — one `execute()` method | `UserFinderService`, `BoardFinderService` |
-| `{Aggregate}FinderBy{Key}Service` | Variant throw-on-miss lookups (by email, composite keys) — one service per key shape, one `execute()` each | `UserFinderByEmailService`, `BoardMemberFinderByBoardAndUserService` |
-| `{Aggregate}AccessAuthorizationService` | Ownership / permission checks shared across handlers | `BoardAccessAuthorizationService` |
-| `{Aggregate}{Operation}Service` | A specific domain operation with orchestration or branching | `BoardDeletionService`, `BoardMemberInvitationService` |
-| `{Aggregate}{Topic}ValidatorService` | Reusable domain validation | `TaskAssigneeValidatorService` |
-| `{Aggregate}{Topic}CalculatorService` | Derived/calculated values | `TaskDueDateCalculatorService` |
+| Pattern | Kind | Use for | Example |
+|---|---|---|---|
+| `{Aggregate}FinderService` | Domain | Default throw-on-miss lookup by id | `UserFinderService`, `BoardFinderService` |
+| `{Aggregate}FinderBy{Key}Service` | Domain | Variant throw-on-miss lookups (by email, composite keys) — one class per key shape | `UserFinderByEmailService`, `BoardMemberFinderByBoardAndUserService` |
+| `{Aggregate}AccessAuthorizationService` | Domain | Ownership / permission rule shared across handlers | `BoardAccessAuthorizationService` |
+| `{Aggregate}{Topic}ValidatorService` | Domain | Reusable domain validation rule | `TaskAssigneeValidatorService` |
+| `{Aggregate}{Topic}CalculatorService` | Domain | Derived/calculated values | `TaskDueDateCalculatorService` |
+| `{Aggregate}{Operation}Service` | Application | Use-case orchestration (cascade delete, multi-step flow) | `BoardDeletionService`, `BoardMemberInvitationService`, `ColumnDeletionService` |
+| `{Aggregate}{Topic}ReadService` | Application | Read-model composition across 3+ projections | `AccessibleBoardsReadService` |
 
 If none of the patterns fit, choose a name that describes the ONE thing the service does — never invent generic names (`BoardManagerService`, `BoardHelperService`, `BoardUtilService` are all forbidden).
 
 ### When to extract logic from a handler to a service
 
-Extract to a service if ANY of the following apply:
+Extract to a service if ANY of the following apply (and place according to the two-question rule above):
 
 - The same sequence (find + check + throw, authorization check, cross-repo orchestration) appears in 2+ handlers
-- The handler coordinates 2+ repositories for a single domain operation (cascade delete, cross-aggregate update)
-- The handler enforces a domain rule beyond simple field validation (ownership/authorization, state-transition guard, uniqueness across non-trivial conditions)
-- The handler contains branching business logic ("if already exists, reactivate; else create", multi-step transitions)
-- A query composes a read model across 3+ repositories/projections
+- The handler coordinates 2+ repositories for a single domain operation (cascade delete, cross-aggregate update) → typically Application
+- The handler enforces a domain rule beyond simple field validation (ownership/authorization, state-transition guard, uniqueness across non-trivial conditions) → typically Domain
+- The handler contains branching business logic ("if already exists, reactivate; else create", multi-step transitions) → Application (it's orchestration) unless the branch is a pure domain rule
+- A query composes a read model across 3+ repositories/projections → Application
 
 Do NOT extract when:
 
 - The handler has a single repository call plus one `save()` — that IS the operation
-- The handler only fetches one aggregate via `getById()` and returns it as a query response
+- The handler only fetches one aggregate via the finder and returns it as a query response
 
 ### Repositories: nullable lookups only
 
-Repository interfaces are pure data-access abstractions. They know how to load and persist aggregates; they have no opinion on whether absence is an error, because that decision is domain semantics and belongs in a service.
+Repository interfaces are pure data-access abstractions. They know how to load and persist aggregates; they have no opinion on whether absence is an error, because that decision is domain semantics and belongs in a domain service.
 
 - Repository id lookups return `?Entity` ALWAYS: `findById(Id): ?Entity`, `findByEmail(...): ?Entity`, etc.
 - Repositories MUST NOT expose throw-on-miss methods (`getById`, `findOrFail`, `getOrThrow`, …). The repository interface stays nullable-only.
-- Throw-on-miss lives in a `{Aggregate}FinderService`. **One finder, one lookup, one `execute()` method** — the generic service rule applies without exception. Example: `BoardFinderService::execute(BoardId): Board` (throws `BoardNotFoundException`).
+- Throw-on-miss lives in a **domain** `{Aggregate}FinderService` at `src/Domain/Service/{Aggregate}/`. **One finder, one lookup, one `execute()` method** — the generic service rule applies without exception. Example: `BoardFinderService::execute(BoardId): Board` (throws `BoardNotFoundException`).
 - Variant lookups on the same aggregate are **separate service classes** named `{Aggregate}FinderBy{Key}Service`. Canonical pair: `UserFinderService::execute(UserId): User` (default by id) and `UserFinderByEmailService::execute(Email): User` (variant by email) are two distinct classes — never merged, never a second method.
 - Handlers and other services call the finder for reads where absence is an error. They call the repository directly for `save()`, `delete()`, and for lookups that are genuinely nullable by design (branch: "if exists then X else Y").
 
@@ -271,6 +316,7 @@ Every service must provide: `make test`, `make test-unit`, `make test-integratio
 | Value Object | `UserId` |
 | Repository Interface | `UserRepositoryInterface` |
 | Repository Implementation | `DbalUserRepository` |
-| Application Service | `UserFinderService` |
+| Domain Service | `UserFinderService`, `BoardAccessAuthorizationService` |
+| Application Service | `BoardDeletionService`, `BoardMemberInvitationService` |
 | Controller | `CreateUserController` |
 | Exception | `UserNotFoundException` |
