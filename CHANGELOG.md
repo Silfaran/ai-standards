@@ -6,6 +6,17 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.5.0](https://github.com/Silfaran/ai-standards/compare/v0.4.0...v0.5.0) (2026-04-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* a finder class may host only one throw-on-miss lookup (execute). Multi-method finders must split into one class per key shape.
+
+### Changed
+
+* one finder, one lookup, one execute() — no exceptions ([6880dae](https://github.com/Silfaran/ai-standards/commit/6880dae67cd42980298f16c6e2977145dc3af108))
+
 ## [0.4.0](https://github.com/Silfaran/ai-standards/compare/v0.3.2...v0.4.0) (2026-04-19)
 
 
