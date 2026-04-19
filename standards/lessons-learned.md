@@ -15,3 +15,4 @@ Agent and orchestration mistakes about the **ai-standards framework itself** —
 ## Entries
 
 <!-- Add new entries at the bottom. Remove when promoted to a standard. -->
+- [command] Playwright MCP has no native HAR export, so measurement specs that mandate HAR artifacts are unfulfillable as-written → accept the `browser_network_requests` + `performance.getEntriesByType(...)` JSON pair as the canonical substitute; consider updating measurement command templates to name the JSON pair rather than HAR.
