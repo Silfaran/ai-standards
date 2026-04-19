@@ -6,6 +6,17 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.4.0](https://github.com/Silfaran/ai-standards/compare/v0.3.2...v0.4.0) (2026-04-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* repository interfaces must not expose throw-on-miss lookups; throw-on-miss lives in {Aggregate}FinderService.
+
+### Changed
+
+* repositories stay nullable; FinderService owns throw-on-miss ([d991fb4](https://github.com/Silfaran/ai-standards/commit/d991fb4ab30681b8ca4755a132b121dac5f77963))
+
 ## [0.3.2](https://github.com/Silfaran/ai-standards/compare/v0.3.1...v0.3.2) (2026-04-19)
 
 
