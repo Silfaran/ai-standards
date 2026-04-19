@@ -6,6 +6,22 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.2.0](https://github.com/Silfaran/ai-standards/compare/v0.1.0...v0.2.0) (2026-04-19)
+
+
+### Added
+
+* **commands:** retire plan/task on update-specs with as-built distillation ([041e63a](https://github.com/Silfaran/ai-standards/commit/041e63a7c138bece339c32842a7aa1ac225ef11d))
+
+
+### Documentation
+
+* **lessons-learned:** capture Playwright MCP lacks HAR export ([7467e7e](https://github.com/Silfaran/ai-standards/commit/7467e7e986ba478aa30911640ccf90c397613d82))
+* **readme:** add Author section crediting the maintainer ([65ff4c4](https://github.com/Silfaran/ai-standards/commit/65ff4c4368ab4311cc6a90e36fcd65c70b5a54c2))
+* **readme:** add prior-knowledge and spec-lifecycle sections ([7632621](https://github.com/Silfaran/ai-standards/commit/763262105d1b105a21c331022d7d03d452234bd8))
+* **readme:** add release, CI and license badges + MIT LICENSE file ([4f430fb](https://github.com/Silfaran/ai-standards/commit/4f430fbb0e29eb084110d76c1802802f59022552))
+* **readme:** use static MIT badge instead of flaky dynamic license badge ([3a7460c](https://github.com/Silfaran/ai-standards/commit/3a7460cf92817575d05b83f1caf3961f2992cc54))
+
 ## [Unreleased]
 
 ## [0.1.0] — 2026-04-18
