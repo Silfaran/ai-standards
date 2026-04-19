@@ -25,9 +25,15 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 
 - [ ] Folder layout: `Domain/`, `Application/`, `Infrastructure/` boundaries respected
 - [ ] Commands and queries are separated — never mixed in the same handler
-- [ ] Handlers call application services (or repositories directly only when nullable result is acceptable) — never repositories from controllers
+- [ ] Handlers call application services, never repositories from controllers
 - [ ] Application services have ONE `execute()` method, ONE responsibility
 - [ ] Services inject repository INTERFACES (Domain), not implementations (Infrastructure)
+- [ ] Services MAY depend on other services — duplicating logic that already exists in another service is a violation (prefer composition)
+- [ ] No inline `find + null check + throw` in handlers — repository exposes `getById()` (throws) and the handler calls it
+- [ ] Repository interfaces expose `getById(Id): Entity` (throw-on-miss) for every aggregate where lookup-by-id exists; `findById(Id): ?Entity` is kept only for genuine "maybe exists" flows
+- [ ] Handlers do NOT orchestrate 2+ repositories for a single domain operation — logic extracted to a service (cascade deletes, cross-aggregate updates)
+- [ ] Handlers do NOT contain authorization/ownership checks inline when the same check repeats across handlers — delegated to a shared service
+- [ ] Handlers do NOT contain branching business logic ("if exists reactivate else create", multi-step state transitions) — extracted to a service
 - [ ] Domain layer has zero Symfony/Doctrine imports
 - [ ] Aggregates use `static create()` (new, raises events) and `static from()` (rehydration, no events)
 - [ ] Value objects, commands, queries, DTOs use `private __construct` + `static from()`
@@ -131,6 +137,7 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] API payload fields snake_case
 - [ ] Tables/columns snake_case
 - [ ] `CreateXxxCommand` / `CreateXxxCommandHandler`, `GetXxxQuery` / `GetXxxQueryHandler`, `XxxCreatedEvent`, `DbalXxxRepository`, `XxxRepositoryInterface`, `XxxNotFoundException`
+- [ ] Every application service class name ends with `Service` (e.g. `UserFinderService`) — no generic names like `XxxManager`, `XxxHelper`, `XxxUtil`
 
 ## Definition of Done
 

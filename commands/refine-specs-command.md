@@ -26,6 +26,14 @@ The business spec file created by the `create-specs` command:
 5. Read the relevant codebase in depth to understand the technical context
 6. If the feature has a frontend component, read `design-decisions.md` — ensure the Frontend Architecture section is consistent with established patterns. If a contradiction is needed, flag it to the developer before writing the spec
 7. Ask the developer technical or business questions if information is missing or ambiguous
+7b. **Detect architectural decision points and ask explicitly.** For every Command/Query handler the spec introduces or modifies, scan for these patterns and, when present, ask the developer before writing the spec:
+    - **Aggregate lookup by id** → confirm the repository exposes `getById()` (throw-on-miss) and the handler uses it; never propose an inline `find + null + throw`
+    - **Multi-repository orchestration** (cascade delete, cross-aggregate update) → ask: new domain service or reuse existing one?
+    - **Authorization / ownership checks** → ask: inline this once, or delegate to a shared `{Aggregate}AccessAuthorizationService` (preferred when the same check repeats in 2+ handlers)
+    - **Branching business logic** ("if exists reactivate else create", state transitions with 2+ branches) → ask: extract to service
+    - **Read-model composition across 3+ projections** → ask: extract to an application read service
+
+    Reference rule: `backend.md` → "When to extract logic from a handler to a service". If a pattern already exists in the codebase, flag it as a reuse opportunity before proposing a new service. When proposing a new service, remember that **services MAY compose other services** — prefer reusing an existing service (e.g. authorization, aggregate finder) over duplicating logic. Do NOT guess silently — if in doubt, ASK. Record every decision taken here in the refined spec under a `## Architectural Decisions` subsection so the Developer agent follows it.
 8. Refine the spec with technical details — architecture decisions, affected aggregates, services involved
 9. If this feature introduces a new architectural decision or changes an existing one, update `decisions.md` accordingly
 10. Classify the feature complexity (see **Complexity Classification** below) and include it in the plan

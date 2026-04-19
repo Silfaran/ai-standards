@@ -73,11 +73,50 @@ Every class that should not be instantiated directly must use a **private constr
 
 ## Application Services
 
+Handlers **orchestrate**, they do NOT contain business logic. A handler reads like a short script: resolve aggregates → check access → call services → persist. A handler may call one or many services — the number is not a quality metric. The quality metric is "does the handler contain domain logic that is reusable, complex, or worth testing in isolation?". If yes, extract it.
+
 - Handlers call application services, not repositories directly
 - One service, one responsibility, one `execute()` method — always named `execute`
 - Services inject repository interfaces, never implementations
-- If a nullable result is acceptable, call the repository directly — no service needed
-- Handlers can call multiple services; services can call other services
+- **Services MAY depend on other services.** A service can compose other services to reuse existing logic (e.g. an `InviteBoardMemberService` calls `BoardAccessAuthorizationService` internally). Composition is preferred over duplication — do NOT reinvent logic that already lives in another service
+
+### Naming services
+
+Every application service class name MUST end with `Service` (e.g. `UserFinderService.php`). Use these patterns to make the service's purpose unambiguous:
+
+| Pattern | Use for | Example |
+|---|---|---|
+| `{Aggregate}FinderService` | Finder logic not covered by `getById()` (e.g. "find active membership by board+user") | `BoardMembershipFinderService` |
+| `{Aggregate}AccessAuthorizationService` | Ownership / permission checks shared across handlers | `BoardAccessAuthorizationService` |
+| `{Aggregate}{Operation}Service` | A specific domain operation with orchestration or branching | `BoardDeletionService`, `BoardMemberInvitationService` |
+| `{Aggregate}{Topic}ValidatorService` | Reusable domain validation | `TaskAssigneeValidatorService` |
+| `{Aggregate}{Topic}CalculatorService` | Derived/calculated values | `TaskDueDateCalculatorService` |
+
+If none of the patterns fit, choose a name that describes the ONE thing the service does — never invent generic names (`BoardManagerService`, `BoardHelperService`, `BoardUtilService` are all forbidden).
+
+### When to extract logic from a handler to a service
+
+Extract to a service if ANY of the following apply:
+
+- The same sequence (find + check + throw, authorization check, cross-repo orchestration) appears in 2+ handlers
+- The handler coordinates 2+ repositories for a single domain operation (cascade delete, cross-aggregate update)
+- The handler enforces a domain rule beyond simple field validation (ownership/authorization, state-transition guard, uniqueness across non-trivial conditions)
+- The handler contains branching business logic ("if already exists, reactivate; else create", multi-step transitions)
+- A query composes a read model across 3+ repositories/projections
+
+Do NOT extract when:
+
+- The handler has a single repository call plus one `save()` — that IS the operation
+- The handler only fetches one aggregate via `getById()` and returns it as a query response
+
+### Repositories: `findById` vs `getById`
+
+Repository interfaces expose two lookup shapes when lookup by id is supported:
+
+- `getById(Id): Entity` — throws `{Entity}NotFoundException` when not found. **Default in handlers.** Use whenever "not found" is an error condition.
+- `findById(Id): ?Entity` — returns null when not found. Use ONLY when absence is a valid branch ("if user exists, reactivate; else create").
+
+The `find + null check + throw` pattern does NOT belong in handlers — it is a repository responsibility. Handlers call `getById()` directly and let the exception propagate to `ApiExceptionSubscriber`.
 
 ## Controllers
 
