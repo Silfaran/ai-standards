@@ -35,7 +35,12 @@
     "MD032": false,
     // Fenced code language — many of our blocks are tree diagrams, shell
     // transcripts or pseudo-code where no highlighter makes sense.
-    "MD040": false
+    "MD040": false,
+    // Unordered list style — release-please generates CHANGELOG sections
+    // with '*' bullets while hand-written sections tend to use '-'.
+    // Forcing a single style across the file would require rewriting every
+    // release-please commit, so we relax the consistency rule.
+    "MD004": false
 
     // Rules kept enabled (default: true) that catch actual problems:
     //   MD001 — heading levels increment by one

@@ -19,6 +19,15 @@ jobs:
       # and a GitHub Release. Nothing else is ever done by hand.
       - uses: googleapis/release-please-action@v4
         with:
+          # Fine-grained PAT (not the default GITHUB_TOKEN) so the release PR
+          # triggers downstream workflows like validate.yml. Events fired by
+          # the default GITHUB_TOKEN do not trigger other workflow runs, which
+          # left the release PR permanently blocked by required status checks.
+          # Required PAT permissions on this repo:
+          #   - Contents:      Read and write
+          #   - Pull requests: Read and write
+          #   - Workflows:     Read and write
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
           target-branch: master
