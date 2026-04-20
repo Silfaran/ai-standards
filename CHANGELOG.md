@@ -6,6 +6,14 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.6.1](https://github.com/Silfaran/ai-standards/compare/v0.6.0...v0.6.1) (2026-04-20)
+
+
+### Documentation
+
+* **lessons-learned:** reviewer guidance on CS-Fixer vs style guide + DBAL placement signal ([51106ab](https://github.com/Silfaran/ai-standards/commit/51106ab55846643124dd588b8630c0638f4fb180))
+* **standards:** promote PHPUnit method casing rule to backend.md and reviewer checklist ([b622b43](https://github.com/Silfaran/ai-standards/commit/b622b43162f397ec58c41f882c6d1cbf3868c4a9))
+
 ## [0.6.0](https://github.com/Silfaran/ai-standards/compare/v0.5.3...v0.6.0) (2026-04-19)
 
 
