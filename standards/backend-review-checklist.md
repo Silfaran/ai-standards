@@ -98,6 +98,20 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] Cross-service messages: identical FQCN + constructor + `messageName()` in both services
 - [ ] `composer.json` and `composer.lock` in sync after dependency changes
 
+## Caching
+
+- [ ] Every `GET` endpoint sets an explicit `Cache-Control` header — no framework default inherited silently
+- [ ] Per-user authenticated reads use `private, no-cache`; sensitive per-user data (tokens, payments, settings) uses `no-store`
+- [ ] Write endpoints (`POST`/`PUT`/`PATCH`/`DELETE`) explicitly set `no-store`
+- [ ] Cacheable `GET` responses emit either `ETag` or `Last-Modified` and honor `If-None-Match` / `If-Modified-Since` with `304`
+- [ ] `Vary` header declared on responses that differ by `Accept-Language`, `Authorization`, or any other header
+- [ ] No auth/session/PII/token values written to a shared Redis cache without a per-user key
+- [ ] Redis keys follow `{service}:{aggregate}:{operation}:{identifier}[:v{n}]`, lowercase, colon-separated
+- [ ] Every Redis key has an explicit TTL — no infinite keys
+- [ ] Every cached entity has an invalidation path on write (`$cache->delete(...)` in the write handler or via event listener) — TTL alone is not the invalidation strategy
+- [ ] Hot keys have stampede protection documented (soft TTL + lock, jittered TTL, or background refresh) — choice recorded in the spec's Technical Details
+- [ ] Redis is never the source of truth — data loss on cache restart must be recoverable from the primary store
+
 ## Logging
 
 - [ ] LoggingMiddleware wired into `command.bus`, `event.bus`, `message.bus`
@@ -106,6 +120,40 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] In `when@test`, monolog handler `type: null` (no log noise in tests)
 - [ ] No successful-handling logs (noise)
 - [ ] Sensitive fields redacted in payloads (see hard blockers above)
+
+## Observability
+
+- [ ] Every inbound HTTP request has a server span with `http.route` (template, not rendered path), `http.request.method`, `http.response.status_code`, and `service.name` / `service.version`
+- [ ] Every DBAL query emits a client span named by SQL operation (`SELECT boards`) — never with literal values
+- [ ] Every command/query/message handler wraps execution in a Messenger span
+- [ ] Every outgoing HTTP client call emits a span and propagates `traceparent` / `tracestate`
+- [ ] No span attribute carries passwords, tokens (access/refresh/API), request bodies with PII, or full SQL with literals
+- [ ] Every log line includes `trace_id`, `service.name`, `service.version`; `span_id` when inside a span
+- [ ] `http_server_requests_total`, `http_server_errors_total`, `http_server_request_duration_seconds` exposed per route/method (no high-cardinality labels like `user_id`, `trace_id`)
+- [ ] `messenger_handler_duration_seconds`, `messenger_handler_errors_total`, `messenger_queue_depth` exposed with `bus`/`message`/`transport` labels only
+- [ ] `/health/liveness` (process-only) and `/health/readiness` (DB + cache + broker pings; returns 503 with failing check JSON) both present and unauthenticated
+- [ ] Every user-facing service has an SLO documented in project docs — no un-measured user-facing routes
+
+## API Contracts
+
+- [ ] Every public endpoint lives under `/api/v{major}/...` — no un-versioned public routes
+- [ ] OpenAPI annotations complete for every controller (request schema, response schema per status, error envelope, query params, headers) — drift from implementation is a blocker
+- [ ] No breaking change (removed/renamed/re-typed field, narrower validation, changed status code) without following the breaking-change protocol (see `api-contracts.md`)
+- [ ] Deprecated endpoints/fields emit `Deprecation` + `Sunset` headers (and `Link: ...; rel="successor-version"` when applicable) and are marked `deprecated: true` in OpenAPI
+- [ ] Every call to a deprecated endpoint/field emits a `warn` log with `event=api.deprecated.usage` and the caller identity
+- [ ] Timestamps serialized as RFC 3339 UTC; money as integer minor unit + `currency` string; enums as `snake_case` strings; nullable fields always present in responses (never omitted)
+- [ ] Error envelope shape unchanged (changing it is a platform-wide breaking change) — if changed, full protocol applied
+- [ ] Collection endpoints use the `{ data, meta }` envelope defined in `performance.md`
+
+## Async messaging resilience
+
+- [ ] Every async transport declares `retry_strategy` with finite `max_retries` and bounded `max_delay` (no infinite retries)
+- [ ] Every async transport declares a `failure_transport` distinct from the live transport (a DLQ exists)
+- [ ] Unrecoverable failures (validation errors, missing aggregates, authorization rejections on async messages) throw `UnrecoverableMessageHandlingException` — never silently retried
+- [ ] Handlers are idempotent: either naturally idempotent via conditional writes or deduplicated via a persisted message id
+- [ ] Failed handler emits `error` log with `messageName()`, message id, exception class, `trace_id`; `messenger_handler_errors_total` increments
+- [ ] Consumer workers run with `--limit`, `--time-limit`, `--memory-limit`, and `--failure-limit` — no unbounded long-running workers
+- [ ] No blanket DLQ replay — replay is per-id after triage
 
 ## Security headers & CORS
 
@@ -158,6 +206,9 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 For deeper context on any rule above:
 - Architecture, controllers, CQRS, naming, migrations → `backend.md`
 - Indexes, pagination, N+1, response design → `performance.md`
+- HTTP cache headers, Redis keys, TTLs, invalidation → `caching.md`
+- Tracing, metrics, health endpoints, SLOs → `observability.md`
+- API versioning, breaking-change protocol, OpenAPI contract → `api-contracts.md`
 - CORS, validation layers, JWT, rate limiting, headers, error responses → `security.md`
 - Logging schema, redaction, middleware wiring → `logging.md`
 - Hard security/git invariants → `invariants.md`

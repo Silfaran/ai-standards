@@ -82,6 +82,36 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] Submit button disabled when `!isFormValid || isPending`
 - [ ] Forms use `@submit.prevent`
 
+## Performance
+
+- [ ] `web-vitals` wired in `main.ts` reporting LCP, INP, CLS, TTFB to the backend log endpoint
+- [ ] No Core Web Vitals regression on the pages the diff touches (LCP ≤ 2.5 s, INP ≤ 200 ms, CLS ≤ 0.1 on mid-tier mobile)
+- [ ] `vite.config.ts` sets `build.chunkSizeWarningLimit` explicitly and a `manualChunks` split (vendor libraries isolated from app code)
+- [ ] `vite build` output has no chunk-size warnings — CI fails if any appear
+- [ ] Initial JS ≤ 170 kB gzipped, initial CSS ≤ 50 kB gzipped, per-route lazy chunk ≤ 80 kB gzipped
+- [ ] Every `<img>` / `<video>` declares `width` and `height` (or a fixed-ratio container) — no CLS from media
+- [ ] Below-the-fold images use `loading="lazy"`; above-the-fold hero image uses `fetchpriority="high"` and is preloaded
+- [ ] Long lists (>50 visible items) virtualized (no naive `v-for` over thousands of rows)
+- [ ] `@font-face` uses `font-display: swap`; critical fonts preloaded with `rel="preload" as="font" crossorigin`
+- [ ] No polling `setInterval` when TanStack Query `refetchOnWindowFocus` + invalidation covers the use case
+- [ ] Asset URLs use `import.meta.env.BASE_URL` (not hardcoded same-origin paths) — frontend stays CDN-ready
+- [ ] No user/session state serialized into the HTML shell — shell is safe to cache publicly
+
+## Observability
+
+- [ ] Page navigations emit a `page.view` span with `page.route` (route name, not rendered URL)
+- [ ] Every TanStack Query `useQuery` / `useMutation` emits a client span linked to the navigation parent
+- [ ] Outgoing HTTP calls propagate `traceparent` / `tracestate` headers
+- [ ] Core Web Vitals recorded as span events on the navigation span (LCP, INP, CLS, TTFB) in addition to the `web-vitals` backend log pipeline
+- [ ] No span attribute carries the access token, password, or any field the backend redaction list forbids
+
+## API Contracts
+
+- [ ] All backend types come from the generated OpenAPI client — no hand-written types for shapes covered by OpenAPI
+- [ ] Consuming frontend never calls an endpoint that does not exist in the currently deployed backend (no merges gated behind a non-existent route)
+- [ ] Deprecated backend endpoints not consumed from the frontend — if a `Deprecation` header is observed, migration issue filed and surfaced in the review
+- [ ] Payload casing is `snake_case` on the wire, `camelCase` only inside the frontend domain layer — no leakage either direction
+
 ## Design consistency
 
 - [ ] Implementation respects entries in `design-decisions.md` (read it once if the diff touches UI)
@@ -113,6 +143,9 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 
 For deeper context on any rule above:
 - Architecture, stores, composables, services, types, routing → `frontend.md`
+- Core Web Vitals, Vite bundle config, budgets, images, fonts → `performance.md`
+- Tracing, Web Vitals span events, propagation → `observability.md`
+- OpenAPI client, breaking-change protocol, payload conventions → `api-contracts.md`
 - XSS, env vars, redirects, token storage → `security.md` (Frontend Security section)
 - Hard security invariants → `invariants.md`
 - Full code examples (composables, stores, page tests) → `frontend-reference.md`

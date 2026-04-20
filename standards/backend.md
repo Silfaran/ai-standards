@@ -243,6 +243,52 @@ CMD ["sh", "-c", "php vendor/bin/phinx migrate --environment=default && php-fpm"
 - Always run `composer update` after adding dependencies to regenerate `composer.lock`
 - Never leave `composer.json` and `composer.lock` out of sync — Docker build will fail
 
+### Resilience — retries, DLQ, poison messages
+
+Every async transport declares an explicit retry policy and a dead-letter transport. A consumer that crashes on a malformed message without a DLQ blocks the entire queue — this is the most common async production incident and is prevented at configuration time.
+
+```yaml
+# config/packages/messenger.yaml
+framework:
+  messenger:
+    transports:
+      async_events:
+        dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+        options:
+          exchange: { name: events, type: topic }
+          queues: { task-service.events: { binding_keys: ['*.event.*'] } }
+        retry_strategy:
+          max_retries: 3
+          delay: 1000          # 1 s
+          multiplier: 2        # 1 s, 2 s, 4 s
+          max_delay: 10000
+        failure_transport: failed_events
+
+      failed_events:
+        dsn: 'doctrine://default?queue_name=failed_events'
+```
+
+Mandatory rules:
+
+- **Every async transport** (`async_events`, `async_messages`, any service-specific transport) declares `retry_strategy` with a finite `max_retries` and a bounded `max_delay`. No infinite retries — a failed handler retries at most 3 times by default.
+- **Every async transport** declares a `failure_transport`. The DLQ may be a Doctrine-backed queue for inspection (`failed_events`, `failed_messages`). It is NEVER the same transport as the live one.
+- **Unrecoverable errors throw `UnrecoverableMessageHandlingException`.** These skip retries and go straight to the DLQ. Validation failures, missing aggregates, and authorization rejections on async messages are all unrecoverable — retrying them will never succeed.
+- **Idempotent handlers.** Every handler is safe to execute more than once for the same message. Either the operation is naturally idempotent (state transition guarded by a conditional write) or the handler deduplicates on a message id persisted alongside the write.
+- **Failure is observable.** A failed message emits a log at `error` level with the full `messageName()`, the message id, the exception class, and the `trace_id`. The `messenger_handler_errors_total` metric increments (see [`observability.md`](observability.md)).
+- **DLQ size is alerted on.** The `failure_transport` queue depth is a first-class metric. The project's SLOs treat "DLQ depth > 0 for N minutes" as an incident.
+- **Replay is manual, audited, and explicit.** `messenger:failed:show`, `messenger:failed:retry` (one id at a time for small volumes; scripted replay with explicit id list for larger ones). Never blanket-retry an entire DLQ without first triaging — a poison message will crash the consumer again.
+
+### Consumer workers — resource discipline
+
+- Each consumer runs with `--limit=100 --time-limit=3600 --memory-limit=256M` (or stricter). Long-running PHP workers leak, bounded restarts are the cheapest fix.
+- `--failure-limit` is set so a consumer that hits too many failures in a row exits and lets the supervisor restart it from a clean state.
+- Consumer deployments run **before** producers so there is never a producer enqueuing messages that no consumer can handle.
+- The supervisor (systemd, supervisord, k8s) restarts the worker on exit with a backoff — never a tight loop.
+
+### Queue-depth visibility
+
+Every async transport exposes its depth as a metric (`messenger_queue_depth`, labeled by `transport` and `queue`). Unbounded depth growth is the earliest signal that consumers are falling behind; catching it on the metric is cheaper than catching it on user reports. See [`observability.md`](observability.md) for the metric definition.
+
 ## Testing
 
 > Full test examples (integration, unit, async messages, PHPUnit config): see `backend-reference.md`
