@@ -98,6 +98,20 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] Cross-service messages: identical FQCN + constructor + `messageName()` in both services
 - [ ] `composer.json` and `composer.lock` in sync after dependency changes
 
+## Caching
+
+- [ ] Every `GET` endpoint sets an explicit `Cache-Control` header — no framework default inherited silently
+- [ ] Per-user authenticated reads use `private, no-cache`; sensitive per-user data (tokens, payments, settings) uses `no-store`
+- [ ] Write endpoints (`POST`/`PUT`/`PATCH`/`DELETE`) explicitly set `no-store`
+- [ ] Cacheable `GET` responses emit either `ETag` or `Last-Modified` and honor `If-None-Match` / `If-Modified-Since` with `304`
+- [ ] `Vary` header declared on responses that differ by `Accept-Language`, `Authorization`, or any other header
+- [ ] No auth/session/PII/token values written to a shared Redis cache without a per-user key
+- [ ] Redis keys follow `{service}:{aggregate}:{operation}:{identifier}[:v{n}]`, lowercase, colon-separated
+- [ ] Every Redis key has an explicit TTL — no infinite keys
+- [ ] Every cached entity has an invalidation path on write (`$cache->delete(...)` in the write handler or via event listener) — TTL alone is not the invalidation strategy
+- [ ] Hot keys have stampede protection documented (soft TTL + lock, jittered TTL, or background refresh) — choice recorded in the spec's Technical Details
+- [ ] Redis is never the source of truth — data loss on cache restart must be recoverable from the primary store
+
 ## Logging
 
 - [ ] LoggingMiddleware wired into `command.bus`, `event.bus`, `message.bus`
@@ -158,6 +172,7 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 For deeper context on any rule above:
 - Architecture, controllers, CQRS, naming, migrations → `backend.md`
 - Indexes, pagination, N+1, response design → `performance.md`
+- HTTP cache headers, Redis keys, TTLs, invalidation → `caching.md`
 - CORS, validation layers, JWT, rate limiting, headers, error responses → `security.md`
 - Logging schema, redaction, middleware wiring → `logging.md`
 - Hard security/git invariants → `invariants.md`

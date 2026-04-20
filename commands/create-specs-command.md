@@ -27,8 +27,9 @@ Example:
 5. Read relevant code if needed to better understand the existing implementation
 6. Detect and warn the developer about any incompatibilities with existing features
 7. Ask clarifying questions if business information is missing or ambiguous
-8. Create the spec file once all information is clear
-9. Update `{project-name}-docs/specs/INDEX.md` — add a row for the new spec
+8. **Caching opportunity check (conditional).** Evaluate whether this feature has a plausible caching benefit — trigger only if it involves a read-heavy endpoint, a computed value that depends on multiple aggregates or external APIs, a public resource servable at the edge, or a rate-limiter/idempotency mechanism. When triggered, ask the developer: (a) maximum tolerated staleness, (b) the write that invalidates the value, (c) whether the response is shared across users or per-user. Record the answers under **Business Rules** so `refine-specs` can later translate them into a concrete cache strategy. If the feature is clearly a write-only flow, one-off admin action, or otherwise not caching-relevant, skip this step silently — never ask for the sake of asking. See [`../standards/caching.md`](../standards/caching.md) → "Spec-time caching decision"
+9. Create the spec file once all information is clear
+10. Update `{project-name}-docs/specs/INDEX.md` — add a row for the new spec
 
 ## Output
 - A business-level spec file: `{project-name}-docs/specs/{Aggregate}/{feature-name}-specs.md`

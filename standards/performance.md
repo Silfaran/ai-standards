@@ -190,3 +190,110 @@ const result = groupBy(items, 'status')
 ```
 
 When adding a new dependency, check its bundle size with [bundlephobia.com](https://bundlephobia.com) before approving it. Prefer tree-shakeable libraries.
+
+### Core Web Vitals targets (per page)
+
+Every user-facing page must meet the "good" threshold for each Core Web Vital on a mid-tier mobile device on 4G. Pages that regress below these thresholds are not shippable.
+
+| Metric | Good | Needs improvement | Poor | What it measures |
+|---|---|---|---|---|
+| LCP (Largest Contentful Paint) | ≤ 2.5 s | 2.5–4.0 s | > 4.0 s | Time until the largest visible element finishes rendering |
+| INP (Interaction to Next Paint) | ≤ 200 ms | 200–500 ms | > 500 ms | Worst-case latency between a user input and the next visual update |
+| CLS (Cumulative Layout Shift) | ≤ 0.1 | 0.1–0.25 | > 0.25 | Total unexpected layout shift during page life |
+
+TTFB (Time To First Byte) should be under 800 ms for origin-served HTML and under 200 ms for CDN-cached HTML. A poor TTFB typically indicates a backend or caching problem, not a frontend one.
+
+### Measurement is non-negotiable
+
+Every frontend ships with the [`web-vitals`](https://github.com/GoogleChrome/web-vitals) library wired in `main.ts`. Metrics are reported to the logging pipeline (see [`logging.md`](logging.md)) as structured JSON so they can be aggregated server-side.
+
+```ts
+// main.ts — after app.mount()
+import { onCLS, onINP, onLCP, onTTFB } from 'web-vitals'
+
+const report = (metric: { name: string; value: number; id: string; rating: string }) => {
+  // POST to the backend log endpoint — never use navigator.sendBeacon directly to a third party
+  fetch(`${import.meta.env.VITE_API_URL}/internal/web-vitals`, {
+    method: 'POST',
+    body: JSON.stringify(metric),
+    keepalive: true,
+  })
+}
+
+onLCP(report)
+onINP(report)
+onCLS(report)
+onTTFB(report)
+```
+
+Lighthouse CI runs in GitHub Actions on every PR that touches the frontend. A performance score below 90 on the key pages (landing, login, dashboard) blocks the merge.
+
+### Vite bundle configuration
+
+Every frontend's `vite.config.ts` must set an explicit bundle budget and chunking strategy. Do not rely on the default — the default does not warn when the bundle grows past sensible limits.
+
+```ts
+// vite.config.ts
+export default defineConfig({
+  build: {
+    target: 'es2022',
+    chunkSizeWarningLimit: 250, // kB — fails CI if a chunk exceeds this
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vue: ['vue', 'vue-router', 'pinia'],
+          query: ['@tanstack/vue-query'],
+          forms: ['vee-validate', 'zod'],
+        },
+      },
+    },
+  },
+})
+```
+
+Rules:
+
+- `chunkSizeWarningLimit` is set explicitly. CI fails on warnings from `vite build`.
+- Vendor libraries shared across most routes (Vue runtime, router, store, query client) are split into a `vendor` chunk so they cache independently of application code.
+- Never use `manualChunks: undefined` or a `(id) => ...` catch-all that lumps everything into one vendor file.
+
+### Bundle size budgets per entry
+
+| Artifact | Max size (gzipped) | Rationale |
+|---|---|---|
+| Initial HTML response | 15 kB | Fits in one round trip on slow mobile |
+| Initial JS (entry + critical chunks) | 170 kB | Parse/compile budget on mid-tier Android |
+| Initial CSS | 50 kB | Render-blocking — keep lean |
+| Per-route lazy chunk | 80 kB | Navigating to a new route should feel instant |
+| Total JS over page lifetime | 500 kB | Hard ceiling — more than this is a design smell |
+
+If a budget is exceeded, the fix is one of: (1) code-split further, (2) remove the dependency, (3) replace the dependency with something smaller. Never raise the budget silently.
+
+### Images and media
+
+- Every `<img>` and `<video>` declares `width` and `height` attributes (or a fixed aspect-ratio container). Missing dimensions cause CLS.
+- Below-the-fold images use `loading="lazy"`. Above-the-fold images must not — they delay LCP.
+- The largest above-the-fold image uses `fetchpriority="high"` and is preloaded in the document head when it is known at build time.
+- Serve modern formats: AVIF with WebP fallback. PNG/JPEG only when the source pipeline cannot produce either.
+- Never ship an unoptimized source image straight from a designer. Images go through the build pipeline (responsive `srcset`, width-appropriate variants) or a media service.
+
+### Fonts
+
+- Preload the one or two font files the initial render actually needs: `<link rel="preload" as="font" type="font/woff2" crossorigin>`.
+- All `@font-face` declarations use `font-display: swap`. Never block text rendering on a font download.
+- Subset fonts to the characters actually used (Latin subset minimum). A full Unicode font is almost never justified.
+
+### Runtime performance
+
+- Long lists (> 50 visible items) use virtualization (`@tanstack/vue-virtual` or equivalent). A naive `v-for` over 10 000 rows freezes the page on input.
+- No synchronous `JSON.parse` / `JSON.stringify` on payloads larger than ~1 MB on the main thread. Offload to a worker or paginate the API.
+- No `setInterval` polling loops for data that changes rarely. Prefer TanStack Query's `refetchOnWindowFocus` + explicit invalidation.
+- `watchEffect` / `computed` with expensive work must memoize their inputs. A `computed` that filters a 1 000-item list on every keystroke is an INP regression waiting to happen.
+
+### What "cache-ready" means for the frontend
+
+Even without a CDN wired yet, the frontend is built so one can be added later with zero code changes:
+
+- Every built asset has a content hash in its filename (Vite's default — do not override).
+- No runtime code assumes same-origin for static assets: asset URLs use Vite's `import.meta.env.BASE_URL` or the public path Vite injects.
+- No session/auth state is embedded in the HTML shell. The shell must be safe to cache publicly and served identically to every user.

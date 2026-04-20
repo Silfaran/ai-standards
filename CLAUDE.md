@@ -18,6 +18,7 @@ Every service must have a `CLAUDE.md` referencing this file.
 - Logging standards: `ai-standards/standards/logging.md`
 - Security standards: `ai-standards/standards/security.md`
 - Performance standards: `ai-standards/standards/performance.md`
+- Caching standards: `ai-standards/standards/caching.md`
 - New service scaffold checklist: `ai-standards/standards/new-service-checklist.md`
 - Reviewer checklists: `ai-standards/standards/backend-review-checklist.md` / `frontend-review-checklist.md` — closed list of verifiable rules consumed by Backend/Frontend Reviewer agents instead of the full standards. **When you add or change a rule in any standards file, update the matching checklist entry in the same commit** — otherwise reviewers will silently miss new rules.
 - Project config lookup: `ai-standards/.workspace-config-path` (gitignored, one line created by `init-project`) points to the current project's docs repo — typically `../{project-name}-docs`. The real config files (`workspace.md`, `workspace.mk`, `services.md`, specs, decisions, lessons-learned) all live **inside that docs repo**, not in `ai-standards/`. To discover any project path, read `.workspace-config-path` first, then read `{docs-dir}/workspace.md`.

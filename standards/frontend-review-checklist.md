@@ -82,6 +82,21 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] Submit button disabled when `!isFormValid || isPending`
 - [ ] Forms use `@submit.prevent`
 
+## Performance
+
+- [ ] `web-vitals` wired in `main.ts` reporting LCP, INP, CLS, TTFB to the backend log endpoint
+- [ ] No Core Web Vitals regression on the pages the diff touches (LCP ≤ 2.5 s, INP ≤ 200 ms, CLS ≤ 0.1 on mid-tier mobile)
+- [ ] `vite.config.ts` sets `build.chunkSizeWarningLimit` explicitly and a `manualChunks` split (vendor libraries isolated from app code)
+- [ ] `vite build` output has no chunk-size warnings — CI fails if any appear
+- [ ] Initial JS ≤ 170 kB gzipped, initial CSS ≤ 50 kB gzipped, per-route lazy chunk ≤ 80 kB gzipped
+- [ ] Every `<img>` / `<video>` declares `width` and `height` (or a fixed-ratio container) — no CLS from media
+- [ ] Below-the-fold images use `loading="lazy"`; above-the-fold hero image uses `fetchpriority="high"` and is preloaded
+- [ ] Long lists (>50 visible items) virtualized (no naive `v-for` over thousands of rows)
+- [ ] `@font-face` uses `font-display: swap`; critical fonts preloaded with `rel="preload" as="font" crossorigin`
+- [ ] No polling `setInterval` when TanStack Query `refetchOnWindowFocus` + invalidation covers the use case
+- [ ] Asset URLs use `import.meta.env.BASE_URL` (not hardcoded same-origin paths) — frontend stays CDN-ready
+- [ ] No user/session state serialized into the HTML shell — shell is safe to cache publicly
+
 ## Design consistency
 
 - [ ] Implementation respects entries in `design-decisions.md` (read it once if the diff touches UI)
@@ -113,6 +128,7 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 
 For deeper context on any rule above:
 - Architecture, stores, composables, services, types, routing → `frontend.md`
+- Core Web Vitals, Vite bundle config, budgets, images, fonts → `performance.md`
 - XSS, env vars, redirects, token storage → `security.md` (Frontend Security section)
 - Hard security invariants → `invariants.md`
 - Full code examples (composables, stores, page tests) → `frontend-reference.md`
