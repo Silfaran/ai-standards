@@ -99,7 +99,7 @@ Use caret (`^`) for the same reason, and set `engines.node` to the minimum LTS:
 4. If the upgrade introduces breaking changes (removed APIs, renamed classes), update:
    - [backend-reference.md](backend-reference.md) or [frontend-reference.md](frontend-reference.md) — code examples
    - [new-service-checklist.md](new-service-checklist.md) — if the failure modes change
-   - Framework-level agent mistakes surfaced by the upgrade → add a one-liner to [`lessons-learned.md`](lessons-learned.md) (this file's neighbour). Project-specific gotchas caused by the upgrade go to the project docs repo under `{project-name}-docs/lessons-learned/` (see path in `{project-docs}/workspace.md` `lessons-learned:` key; `{project-docs}` comes from `ai-standards/.workspace-config-path`).
+   - Project-specific gotchas caused by the upgrade go to the project docs repo under `{project-name}-docs/lessons-learned/` (see path in `{project-docs}/workspace.md` `lessons-learned:` key; `{project-docs}` comes from `ai-standards/.workspace-config-path`). If a mistake recurs across projects, promote it to the matching standard/checklist in the same commit — do not keep a framework-level lessons-learned registry.
 5. Commit the standards change and the per-service bumps together — never leave the workspace in a mixed-version state.
 
 ## Single Stack — Honest Limitation

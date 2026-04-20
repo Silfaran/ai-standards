@@ -36,30 +36,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Each entry in lessons-learned.md must match the documented one-line format:
-      #   - [{agent|command}] {what went wrong} → {fix}
-      # Catches drift where someone adds a multi-paragraph entry or forgets the role tag.
-      - name: Validate lessons-learned entry format
-        run: |
-          set -e
-          file="standards/lessons-learned.md"
-          if [ ! -f "$file" ]; then
-            echo "::error::$file is missing"
-            exit 1
-          fi
-          # Any line starting with "- " that is not "- [Something]" is malformed.
-          # Skip lines inside fenced code blocks (format example) by stripping those first.
-          bad=$(awk '
-            /^```/ { in_code = !in_code; next }
-            !in_code && /^- / && !/^- \[/ { print NR": "$0 }
-          ' "$file")
-          if [ -n "$bad" ]; then
-            echo "::error::Malformed lessons-learned entries (expected '- [{role}] ... → ...'):"
-            echo "$bad"
-            exit 1
-          fi
-          echo "lessons-learned.md format OK"
-
       # Every SKILL.md must declare `name`, `description`, `paths` in its frontmatter.
       # Agents rely on the `paths` glob for auto-loading; a missing field silently disables the skill.
       - name: Validate skill frontmatter

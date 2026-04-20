@@ -115,7 +115,7 @@ Agents never share a context window. They communicate via **handoff files** — 
 
 **Token-conscious architecture.** Standards are split into concise rules files (always loaded, ~150 lines) and detailed reference files (loaded only when needed, ~500 lines each). Before agents run, a **context bundle** distills all relevant standards into a single 200–400 line file tailored to the current feature. This avoids agents reading ~1,000+ lines of standards they don't need.
 
-**Standards from real failures.** Every rule exists because it prevented a real problem. The bootstrap checklist includes the exact error each item avoids. Agent mistakes are logged by the Tester and recycled as warnings in future builds. Per-project mistakes are stored in the project's own docs repo (`{project-name}-docs/lessons-learned/`, split by `back.md` / `front.md` / `infra.md` / `general.md`), while mistakes about the framework itself stay in `ai-standards/standards/lessons-learned.md`. Patterns that recur get promoted to permanent standards.
+**Standards from real failures.** Every rule exists because it prevented a real problem. The bootstrap checklist includes the exact error each item avoids. Agent mistakes are logged by the Tester and recycled as warnings in future builds. Per-project mistakes are stored in the project's own docs repo (`{project-name}-docs/lessons-learned/`, split by `back.md` / `front.md` / `infra.md` / `general.md`). Mistakes that recur across projects get promoted directly to the relevant standard/command/checklist — `ai-standards/` keeps no framework-level lessons-learned registry, by design.
 
 **Visual consistency across features.** The Frontend Developer documents UI patterns (first form, first table, first modal...) in a project-level `design-decisions.md` file as they are implemented. The Spec Analyzer reads it when writing specs to avoid contradictions. The Frontend Reviewer verifies compliance. The result: the second feature looks like it was built by the same team as the first.
 
@@ -162,9 +162,11 @@ ai-standards/
     ├── logging.md                  ← Structured JSON logs, Monolog config, sensitive field redaction
     ├── security.md                 ← HTTP headers, CORS, JWT lifecycle, rate limiting, input validation
     ├── performance.md              ← Database indexes, pagination, N+1 prevention, lazy loading
-    ├── new-service-checklist.md    ← Bootstrap checklist — each item includes the error it prevents
-    └── lessons-learned.md          ← Framework-level agent mistakes — per-project lessons live in `{project-name}-docs/lessons-learned/`
+    └── new-service-checklist.md    ← Bootstrap checklist — each item includes the error it prevents
 ```
+
+> Per-project agent mistakes live in `{project-name}-docs/lessons-learned/` — never inside `ai-standards/`. If a lesson recurs across projects, promote it to the relevant standard/command/agent doc in the same commit.
+
 
 ---
 

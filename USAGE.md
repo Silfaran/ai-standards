@@ -253,7 +253,6 @@ Standards are split into **rules** (concise, always loaded by agents) and **refe
 | `standards/security.md` | Headers, CORS, JWT, rate limiting |
 | `standards/performance.md` | Database, API, and frontend performance |
 | `standards/new-service-checklist.md` | Pre-commit checklist for new services |
-| `standards/lessons-learned.md` | Framework-level agent mistakes only (orchestration, checklist design). Per-project mistakes live in `{project-name}-docs/lessons-learned/` |
 | `standards/tech-stack.md` | Authoritative versions (minimums, open to update) + upgrade procedure |
 | `standards/agent-reading-protocol.md` | Canonical reading order for every agent (build-plan + standalone modes) |
 | `standards/quality-gates.md` | CI + pre-commit + Makefile quality rules (PHPStan L9, vue-tsc, tests) |

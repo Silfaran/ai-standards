@@ -11,7 +11,7 @@ For full-stack features, Backend Developer and Frontend Developer run **in paral
 
 ## Step 0 — Spec sign-off (mandatory, before spawning any agent)
 
-1. Read the spec file, plan file, task file, and every `*.md` file under the project's lessons-learned directory (path defined in `{project-docs}/workspace.md` under the `lessons-learned:` key — typically `{project-name}-docs/lessons-learned/`; resolve `{project-docs}` from `ai-standards/.workspace-config-path`). Also read `ai-standards/standards/lessons-learned.md` for framework-level mistakes that may apply regardless of project.
+1. Read the spec file, plan file, task file, and every `*.md` file under the project's lessons-learned directory (path defined in `{project-docs}/workspace.md` under the `lessons-learned:` key — typically `{project-name}-docs/lessons-learned/`; resolve `{project-docs}` from `ai-standards/.workspace-config-path`).
 2. Display a summary to the developer:
    - Feature name and affected services
    - Phases that will run and in what order
@@ -138,7 +138,7 @@ For single-service features. Use the appropriate Developer/Reviewer type (Backen
     | DevOps | `infra.md` |
     | Tester | `general.md` — or the file that matches the subsystem that failed (e.g. a Tester entry about a Docker desync goes to `infra.md`) |
 
-    Reclassify when the content clearly belongs in a different file — e.g. a DevOps entry about Symfony CORS config goes to `back.md`, not `infra.md`. If a lesson is about the **framework itself** (agent prompts, checklist design, command flow) instead of this project, append it to `ai-standards/standards/lessons-learned.md` instead. If any lesson duplicates an existing standard, promote it there and do not add it to lessons-learned.
+    Reclassify when the content clearly belongs in a different file — e.g. a DevOps entry about Symfony CORS config goes to `back.md`, not `infra.md`. If a lesson is about the **framework itself** (agent prompts, checklist design, command flow) and would recur across projects, promote it to the matching standard/command/agent/checklist file in `ai-standards/` in the same commit — never keep a framework-level lessons-learned registry, and never promote a lesson that only surfaced once. If any project lesson duplicates an existing standard, promote it there and do not add it to lessons-learned.
 9. Run `update-specs` — this is the only automatic invocation of `/update-specs` in the workflow.
    It distills the plan + task into an `## As-built notes` section in the spec and retires the
    `-plan.md` / `-task.md` files per the retention table in `commands/update-specs-command.md`
@@ -189,7 +189,7 @@ Read these files in order before doing anything else:
 
 {instruction}
 Working directory: {service_path}
-{conditional: Warnings from past features: {relevant_lessons — entries from the project's lessons-learned file matching this agent's role (back.md / front.md / infra.md / general.md), plus any framework-level entries from ai-standards/standards/lessons-learned.md that apply}}
+{conditional: Warnings from past features: {relevant_lessons — entries from the project's lessons-learned file matching this agent's role (back.md / front.md / infra.md / general.md)}}
 
 When done, write your handoff to: {handoff_path}
 ```
