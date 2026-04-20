@@ -281,7 +281,7 @@ tests/
 - No Symfony kernel, no database, no HTTP — if you need these, write an integration test
 - Use closures or anonymous classes to stub dependencies
 - Test all validation branches — valid input, each invalid case, edge cases
-- Method naming: `test_descriptive_snake_case`
+- Method naming: `testDescriptiveCamelCase` — matches PHP-CS-Fixer's default `php_unit_method_casing` rule (`camelCase`). Use `test_descriptive_snake_case` only when the project has explicitly disabled that CS-Fixer rule
 
 ### Makefile commands
 

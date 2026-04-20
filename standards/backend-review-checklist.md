@@ -144,6 +144,7 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] Tables/columns snake_case
 - [ ] `CreateXxxCommand` / `CreateXxxCommandHandler`, `GetXxxQuery` / `GetXxxQueryHandler`, `XxxCreatedEvent`, `DbalXxxRepository`, `XxxRepositoryInterface`, `XxxNotFoundException`
 - [ ] Every application service class name ends with `Service` (e.g. `UserFinderService`) — no generic names like `XxxManager`, `XxxHelper`, `XxxUtil`
+- [ ] PHPUnit method names match the project's PHP-CS-Fixer config — `testDescriptiveCamelCase` under the default `php_unit_method_casing` rule, `test_descriptive_snake_case` only when that rule is disabled
 
 ## Definition of Done
 
