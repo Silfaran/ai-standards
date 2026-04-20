@@ -97,6 +97,21 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] Asset URLs use `import.meta.env.BASE_URL` (not hardcoded same-origin paths) — frontend stays CDN-ready
 - [ ] No user/session state serialized into the HTML shell — shell is safe to cache publicly
 
+## Observability
+
+- [ ] Page navigations emit a `page.view` span with `page.route` (route name, not rendered URL)
+- [ ] Every TanStack Query `useQuery` / `useMutation` emits a client span linked to the navigation parent
+- [ ] Outgoing HTTP calls propagate `traceparent` / `tracestate` headers
+- [ ] Core Web Vitals recorded as span events on the navigation span (LCP, INP, CLS, TTFB) in addition to the `web-vitals` backend log pipeline
+- [ ] No span attribute carries the access token, password, or any field the backend redaction list forbids
+
+## API Contracts
+
+- [ ] All backend types come from the generated OpenAPI client — no hand-written types for shapes covered by OpenAPI
+- [ ] Consuming frontend never calls an endpoint that does not exist in the currently deployed backend (no merges gated behind a non-existent route)
+- [ ] Deprecated backend endpoints not consumed from the frontend — if a `Deprecation` header is observed, migration issue filed and surfaced in the review
+- [ ] Payload casing is `snake_case` on the wire, `camelCase` only inside the frontend domain layer — no leakage either direction
+
 ## Design consistency
 
 - [ ] Implementation respects entries in `design-decisions.md` (read it once if the diff touches UI)
@@ -129,6 +144,8 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 For deeper context on any rule above:
 - Architecture, stores, composables, services, types, routing → `frontend.md`
 - Core Web Vitals, Vite bundle config, budgets, images, fonts → `performance.md`
+- Tracing, Web Vitals span events, propagation → `observability.md`
+- OpenAPI client, breaking-change protocol, payload conventions → `api-contracts.md`
 - XSS, env vars, redirects, token storage → `security.md` (Frontend Security section)
 - Hard security invariants → `invariants.md`
 - Full code examples (composables, stores, page tests) → `frontend-reference.md`
