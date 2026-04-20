@@ -6,6 +6,17 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.7.0](https://github.com/Silfaran/ai-standards/compare/v0.6.1...v0.7.0) (2026-04-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* **standards:** `standards/lessons-learned.md` is deleted. The framework no longer maintains a registry of its own mistakes — recurring cross-project lessons must be promoted directly to the relevant standard, command doc, agent definition or review checklist in the same commit. Per-project lessons continue to live in `{project-name}-docs/lessons-learned/`.
+
+### Changed
+
+* **standards:** remove framework lessons-learned registry ([8e4e285](https://github.com/Silfaran/ai-standards/commit/8e4e28544578e80782a61d98523508d6a4983905))
+
 ## [0.6.1](https://github.com/Silfaran/ai-standards/compare/v0.6.0...v0.6.1) (2026-04-20)
 
 
