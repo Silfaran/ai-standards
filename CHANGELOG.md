@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.10.0](https://github.com/Silfaran/ai-standards/compare/v0.9.0...v0.10.0) (2026-04-21)
+
+
+### Added
+
+* **standards:** add secrets and data-migrations standards, decouple ADR refs ([#20](https://github.com/Silfaran/ai-standards/issues/20)) ([6cef1cf](https://github.com/Silfaran/ai-standards/commit/6cef1cf953fb38d42cd1efb4f4a8718e2811c054))
+
 ## [0.9.0](https://github.com/Silfaran/ai-standards/compare/v0.8.0...v0.9.0) (2026-04-21)
 
 
