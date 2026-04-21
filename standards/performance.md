@@ -20,7 +20,7 @@ Every migration that adds a new table or column must be reviewed against these r
 |---|---|
 | Column appears in a `WHERE` clause in any repository query | Without index, PostgreSQL does a full table scan |
 | Column appears in `ORDER BY` | Sorting without index is slow on large tables |
-| Column is a UUID reference to another table's record (`board_id`, `user_id`, etc.) | See ADR-007 — no FK constraints means no automatic index |
+| Column is a UUID reference to another table's record (`board_id`, `user_id`, etc.) | The no-FK policy (captured in the project's `decisions.md`) means there is no automatic index — it must be added manually |
 | Column is used for searching or filtering by the API (e.g. `status`, `email`) | Predictable query pattern → index it now |
 
 **You do not need an index when:**
@@ -37,7 +37,7 @@ Every migration that adds a new table or column must be reviewed against these r
 1. List all columns in the new table or added in this migration
 2. For each column: will it appear in `WHERE`, `ORDER BY`, or as a reference to another table?
 3. If yes → add `CREATE INDEX`
-4. Never add `FOREIGN KEY`, `REFERENCES`, or `ON DELETE` — see ADR-007
+4. Never add `FOREIGN KEY`, `REFERENCES`, or `ON DELETE` — referential integrity is enforced at the application layer per the project's no-FK ADR (see `{project-docs}/decisions.md`)
 
 ### Safe migration patterns
 

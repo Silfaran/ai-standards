@@ -69,12 +69,26 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 
 - [ ] New tables use `id UUID DEFAULT gen_random_uuid()` as PK
 - [ ] Snake_case for tables and columns
-- [ ] Index added for every column appearing in `WHERE`, `ORDER BY`, or as a UUID reference (no FK constraints — see ADR-007)
-- [ ] No FOREIGN KEY / REFERENCES / ON DELETE clauses (ADR-007)
+- [ ] Index added for every column appearing in `WHERE`, `ORDER BY`, or as a UUID reference (the project's no-FK ADR means references are not indexed automatically — see `{project-docs}/decisions.md`)
+- [ ] No FOREIGN KEY / REFERENCES / ON DELETE clauses — per the project's no-FK ADR
 - [ ] On large tables: `CREATE INDEX CONCURRENTLY` instead of `CREATE INDEX`
 - [ ] On large tables: 3-step pattern for `NOT NULL` columns (add nullable → backfill → add NOT NULL)
 - [ ] No service queries another service's tables — each service owns its DB
 - [ ] Phinx seeds added for every new aggregate (realistic local data)
+
+## Data migrations strategy
+
+- [ ] Migration is classified as non-breaking or breaking using the lists in `data-migrations.md` — classification is visible in the commit message or PR description
+- [ ] Breaking changes decomposed into expand → migrate → contract phases; the phase is declared in the commit message, and each phase is its own commit
+- [ ] Contract-phase commits (dropping / renaming / re-typing a populated column or table) use `refactor(db)!:` prefix and a `BREAKING CHANGE:` trailer
+- [ ] Compatibility matrix holds: the previous application version continues to work correctly against the new schema for the duration of the deploy window
+- [ ] No removal, rename, or non-widening type change of a column/table/index happens in the same migration that creates its replacement
+- [ ] No `NOT NULL` added to a populated column without a completed backfill in a prior phase
+- [ ] Backfills on tables larger than ~10k rows run as a background job (Symfony console command), not inline in the Phinx migration
+- [ ] Background-job backfills are idempotent, batched (≤10k rows per commit), ordered by primary key, and report progress (row count, errors, last processed id)
+- [ ] The migration is idempotent — running it twice leaves the schema in the same state
+- [ ] PR description answers "how do we undo this if it lands bad?" in one sentence — "revert the commit" is not acceptable for breaking migrations
+- [ ] No cross-service database access introduced — new data dependencies use the owning service's API or a domain-event projection
 
 ## Repositories & queries
 
@@ -111,6 +125,18 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] Every cached entity has an invalidation path on write (`$cache->delete(...)` in the write handler or via event listener) — TTL alone is not the invalidation strategy
 - [ ] Hot keys have stampede protection documented (soft TTL + lock, jittered TTL, or background refresh) — choice recorded in the spec's Technical Details
 - [ ] Redis is never the source of truth — data loss on cache restart must be recoverable from the primary store
+
+## Secrets management
+
+- [ ] Every env var in the diff that matches the secret categories in `secrets.md` has a row in the project's `secrets-manifest.md` (owner, category, environments, source, rotation, `last_rotated`)
+- [ ] Secrets are read exclusively from process environment variables — no direct calls to provider SDKs (AWS Secrets Manager, Vault, etc.) from application code
+- [ ] Every required secret read uses a fail-fast helper that throws when the value is missing or empty — no silent fallbacks to `null` or empty string
+- [ ] `.env.example` lists every new secret with a placeholder (`CHANGE_ME`) and a category comment; no real value is committed
+- [ ] No secret value is baked into a Docker image (`COPY .env`, `ENV SECRET=...` in a Dockerfile) or passed as a CLI argument
+- [ ] No secret value is written to disk, logged, emitted as a span attribute, or used as a metric label
+- [ ] Frontend diffs: no secret placed in a `VITE_*` variable (API keys, OAuth client secrets, private URLs, private identifiers)
+- [ ] JWT/crypto key rotation uses a two-key window (current + previous) during the rotation window; the manifest lists both env vars
+- [ ] Any new secret category extends the redaction list in `logging.md` in the same commit
 
 ## Logging
 
@@ -210,6 +236,8 @@ For deeper context on any rule above:
 - Tracing, metrics, health endpoints, SLOs → `observability.md`
 - API versioning, breaking-change protocol, OpenAPI contract → `api-contracts.md`
 - CORS, validation layers, JWT, rate limiting, headers, error responses → `security.md`
+- Secret classification, manifest, injection matrix, rotation → `secrets.md`
+- Schema evolution, expand-contract, backfills, zero-downtime deploys → `data-migrations.md`
 - Logging schema, redaction, middleware wiring → `logging.md`
 - Hard security/git invariants → `invariants.md`
 - Full code examples (controllers, scaffolds, async config) → `backend-reference.md`

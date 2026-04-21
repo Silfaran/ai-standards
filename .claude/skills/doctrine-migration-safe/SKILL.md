@@ -8,13 +8,15 @@ paths: "**/src/Infrastructure/Persistence/Migration/**, **/phinx.php"
 
 Every migration touches production data sooner or later. These rules prevent the two failure modes that matter: table locks under write load, and missing indexes that turn `WHERE` into a full table scan.
 
+**Scope of this skill:** tactical rules for a single migration file — indexes, safe `ALTER TABLE` patterns, naming, never-edit-history. The cross-migration strategy (classifying a change as breaking, expand → migrate → contract phases, backfills as background jobs, zero-downtime deploy coordination) lives in [`standards/data-migrations.md`](../../../standards/data-migrations.md). Read the standard first when the change is breaking; come back here for how to write each phase's migration safely.
+
 ## Index rules — always add an index when
 
 | Situation | Why |
 |---|---|
 | Column appears in a `WHERE` clause in any repository query | Without an index, PostgreSQL does a full table scan |
 | Column appears in `ORDER BY` | Sorting without an index is slow on large tables |
-| Column is a UUID reference to another table (`board_id`, `user_id`, ...) | ADR-007 forbids FK constraints → no automatic index |
+| Column is a UUID reference to another table (`board_id`, `user_id`, ...) | The project's no-FK ADR (in `{project-docs}/decisions.md`) forbids FK constraints → no automatic index |
 | Column is used for search or API filters (`status`, `email`, ...) | Predictable query pattern — index it now |
 
 ## Index rules — do NOT add an index when
@@ -31,7 +33,7 @@ Every migration touches production data sooner or later. These rules prevent the
 1. List every column in the new/altered table.
 2. For each column: will it appear in `WHERE`, `ORDER BY`, or as a reference to another table?
 3. If yes → `CREATE INDEX`.
-4. Never add `FOREIGN KEY`, `REFERENCES`, or `ON DELETE` — ADR-007 prohibits these project-wide.
+4. Never add `FOREIGN KEY`, `REFERENCES`, or `ON DELETE` — the project's no-FK ADR (in `{project-docs}/decisions.md`) prohibits these project-wide.
 
 ## Safe `ALTER TABLE` patterns
 
@@ -83,6 +85,7 @@ Phinx migrations live in `src/Infrastructure/Persistence/Migration/`. Exclude th
 
 ## See also
 
+- [standards/data-migrations.md](../../../standards/data-migrations.md) — schema evolution strategy, expand-contract, zero-downtime deploy coordination, cross-service rules.
 - [standards/performance.md](../../../standards/performance.md) — full rules, including N+1 prevention and pagination.
-- [standards/backend.md](../../../standards/backend.md) — ADR-007 context and DBAL conventions.
-- ADR-007 (in `decisions.md`) — why this project uses no foreign keys.
+- [standards/backend.md](../../../standards/backend.md) — DBAL conventions and no-ORM context.
+- The project's no-FK ADR in `{project-docs}/decisions.md` — rationale for not using foreign key constraints at the database level.

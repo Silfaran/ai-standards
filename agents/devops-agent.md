@@ -11,6 +11,7 @@ Follow the canonical reading order in [`../standards/agent-reading-protocol.md`]
 Role-specific notes:
 - On demand, load [`../standards/backend-reference.md`](../standards/backend-reference.md) for consumer-worker patterns when setting up async messaging, and [`../standards/new-service-checklist.md`](../standards/new-service-checklist.md) when scaffolding a new service.
 - [`../standards/tech-stack.md`](../standards/tech-stack.md) is your source of truth for infrastructure image versions (PostgreSQL, RabbitMQ, Node, PHP).
+- [`../standards/secrets.md`](../standards/secrets.md) is mandatory reading for any infrastructure change that introduces, renames, or relocates a secret — the secrets manifest, injection source per environment, and `.env.example` all go through this agent.
 
 ## Responsibilities
 - Create and maintain Docker configuration per service — each service has its own `docker-compose.yml`
@@ -18,7 +19,7 @@ Role-specific notes:
 - All compose files must join the same external network (`workspace-network`) so services can reach infrastructure and each other
 - Create and maintain Makefiles (per service + root orchestration in ai-standards)
 - Configure RabbitMQ, PostgreSQL and other infrastructure dependencies
-- Configure environment variables — never hardcode secrets
+- Configure environment variables and secret injection per [`../standards/secrets.md`](../standards/secrets.md) — every new secret updates the project's `secrets-manifest.md` and `.env.example` in the same commit; no secret is baked into an image, passed on the command line, or written to disk
 - Ensure the Symfony Messenger worker runs automatically as a Docker container
 - Verify the full environment starts correctly after any change
 - **Install and maintain quality gates per service** — CI workflow, pre-commit hook, and Makefile quality targets, all copied from `ai-standards/templates/` following [`quality-gates.md`](../standards/quality-gates.md). Every new service must pass `make quality` before its first commit.

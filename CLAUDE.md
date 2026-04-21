@@ -18,9 +18,11 @@ Every service must have a `CLAUDE.md` referencing this file.
 - Frontend standards: `ai-standards/standards/frontend.md` (rules) / `frontend-reference.md` (full examples)
 - Logging standards: `ai-standards/standards/logging.md`
 - Security standards: `ai-standards/standards/security.md`
+- Secrets standards: `ai-standards/standards/secrets.md`
 - Performance standards: `ai-standards/standards/performance.md`
 - Caching standards: `ai-standards/standards/caching.md`
 - Observability standards: `ai-standards/standards/observability.md`
+- Data migrations standards: `ai-standards/standards/data-migrations.md`
 - API contracts & breaking-change protocol: `ai-standards/standards/api-contracts.md`
 - New service scaffold checklist: `ai-standards/standards/new-service-checklist.md`
 - Reviewer checklists: `ai-standards/standards/backend-review-checklist.md` / `frontend-review-checklist.md` — closed list of verifiable rules consumed by Backend/Frontend Reviewer agents instead of the full standards. **When you add or change a rule in any standards file, update the matching checklist entry in the same commit** — otherwise reviewers will silently miss new rules.
