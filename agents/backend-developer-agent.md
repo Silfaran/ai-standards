@@ -46,6 +46,9 @@ When running as a parallel subagent, **never stop or restart containers from oth
 ## Tools
 Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion
 
+## Model
+Opus — generates DDD/CQRS code from scratch; architectural errors propagate to reviewer and tester with no easy rollback.
+
 ## Limitations
 - Does not write frontend code, tests, specs, or infrastructure configuration
 - Must fix issues found by the Backend Reviewer or Tester when called upon

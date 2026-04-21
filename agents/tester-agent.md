@@ -74,6 +74,9 @@ Runs once, after all developers and reviewers have completed their work:
 ## Tools
 Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, `mcp__playwright__*` (Playwright MCP — used for live browser verification; see "Live browser verification" above)
 
+## Model
+Sonnet — test patterns are repeatable and Playwright verification is rail-guided by DoD items. Runs every feature, so the lighter tier compounds into real token savings.
+
 ## Limitations
 - Does not implement features — only tests them
 - Does not modify implementation code — only requests fixes

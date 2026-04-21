@@ -48,8 +48,10 @@ Target size: **200-400 lines** (vs ~1,000+ lines from reading all standards sepa
 
 ## How agent phases work
 
-Each phase is spawned with `Agent(subagent_type: "general-purpose")`.
+Each phase is spawned with `Agent(subagent_type: "general-purpose", model: "{tier}")`.
 The subagent starts with a clean context — it does **not** inherit this conversation's history.
+
+**`model` is required — never omit it.** Before each spawn, read the `## Model` section of the phase's agent definition file (e.g. `agents/backend-developer-agent.md`) and pass its tier (`opus` or `sonnet`) as the `model` argument. The workspace `settings.json` contains a `PreToolUse` hook that rejects any `Agent` invocation without an explicit `model` — if you see a tool error saying the model is missing, re-read the agent definition and retry. See also `CLAUDE.md` → "Agent model tiering" for the classification rules.
 
 The prompt passed to each subagent must be **self-contained** and include:
 - The absolute path to the agent definition file (which tells the agent what other files to read)
@@ -126,6 +128,7 @@ For single-service features. Use the appropriate Developer/Reviewer type (Backen
 4. **Create feature branch** — from `master`, create `feature/{aggregate}/{feature-name}` in every affected service repository. If the branch already exists, check it out. Do not proceed until the branch is created in all affected repos.
 5. **Generate context bundle** (see Step 0.5) — write to `{workspace_root}/handoffs/{feature-name}/context-bundle.md`
 6. Execute each phase using the subagent prompt template below, following the flow matching the plan's complexity:
+   - **Before each spawn**: read the `## Model` line from the agent definition file and pass its tier as the `model` argument of `Agent`. This is mandatory — the workspace `settings.json` hook rejects `Agent` invocations without `model`.
    - **Sequential phases**: spawn and wait for the result before proceeding
    - **Parallel phases**: spawn the first with `run_in_background: true`, immediately spawn the second (foreground), then process both results before continuing
 7. Handle feedback loops per side — each loop reruns only the affected side (skip for `simple` — no review loop)
@@ -219,15 +222,17 @@ When done, write your handoff to: {handoff_path}
 
 ### Files per phase
 
-| Phase | Agent Definition | Context bundle | Handoff reads | Handoff writes |
-|---|---|---|---|---|
-| DevOps | `agents/devops-agent.md` | Yes | plan file | `devops-handoff.md` |
-| Backend Dev | `agents/backend-developer-agent.md` | Yes | `devops-handoff.md` (if exists) | `backend-dev-handoff.md` |
-| Frontend Dev | `agents/frontend-developer-agent.md` | Yes | `devops-handoff.md` (if exists) | `frontend-dev-handoff.md` |
-| Backend Reviewer | `agents/backend-reviewer-agent.md` | **No** — uses `standards/backend-review-checklist.md` | `backend-dev-handoff.md` | `backend-reviewer-handoff.md` |
-| Frontend Reviewer | `agents/frontend-reviewer-agent.md` | **No** — uses `standards/frontend-review-checklist.md` (+ `design-decisions.md` if UI diff) | `frontend-dev-handoff.md` | `frontend-reviewer-handoff.md` |
-| Tester | `agents/tester-agent.md` | Yes | `backend-reviewer-handoff.md`, `frontend-reviewer-handoff.md` | `tester-handoff.md` |
-| Dev+Tester (simple) | `agents/{role}-developer-agent.md` | Yes | `devops-handoff.md` (if exists) | `dev-tester-handoff.md` |
+| Phase | Agent Definition | Model | Context bundle | Handoff reads | Handoff writes |
+|---|---|---|---|---|---|
+| DevOps | `agents/devops-agent.md` | `opus` | Yes | plan file | `devops-handoff.md` |
+| Backend Dev | `agents/backend-developer-agent.md` | `opus` | Yes | `devops-handoff.md` (if exists) | `backend-dev-handoff.md` |
+| Frontend Dev | `agents/frontend-developer-agent.md` | `opus` | Yes | `devops-handoff.md` (if exists) | `frontend-dev-handoff.md` |
+| Backend Reviewer | `agents/backend-reviewer-agent.md` | `sonnet` | **No** — uses `standards/backend-review-checklist.md` | `backend-dev-handoff.md` | `backend-reviewer-handoff.md` |
+| Frontend Reviewer | `agents/frontend-reviewer-agent.md` | `sonnet` | **No** — uses `standards/frontend-review-checklist.md` (+ `design-decisions.md` if UI diff) | `frontend-dev-handoff.md` | `frontend-reviewer-handoff.md` |
+| Tester | `agents/tester-agent.md` | `sonnet` | Yes | `backend-reviewer-handoff.md`, `frontend-reviewer-handoff.md` | `tester-handoff.md` |
+| Dev+Tester (simple) | `agents/{role}-developer-agent.md` | `opus` | Yes | `devops-handoff.md` (if exists) | `dev-tester-handoff.md` |
+
+The `Model` column is a quick reference — always source of truth is the `## Model` line in the agent definition file. If they diverge, the agent file wins and this table needs an update.
 
 **Conditional reference files** — include when the plan's `Standards Scope` indicates:
 

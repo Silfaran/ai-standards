@@ -27,6 +27,9 @@ Role-specific notes:
 ## Tools
 Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion
 
+## Model
+Opus — Vue composables, TanStack Query wiring, accessibility, and design-decision follow-through need careful reasoning; first-in-pipeline UI mistakes cascade into reviewer and tester iterations.
+
 ## Docker-aware dependency management
 Frontend services run inside Docker containers with their own `node_modules`. When installing or removing npm packages:
 1. Run `npm install` on the host (for IDE and local test support)

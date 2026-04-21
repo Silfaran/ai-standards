@@ -31,6 +31,9 @@ Stored in the project docs folder (the pointed-to dir from `ai-standards/.worksp
 ## Tools
 Read, Write, Glob, Grep, AskUserQuestion
 
+## Model
+Opus — first link in the pipeline; ambiguous specs contaminate every downstream agent. Clarifying questions and cross-feature incompatibility detection need strong reasoning.
+
 ## Limitations
 - Does not write or modify any code
 - Does not execute plans — only creates them
