@@ -12,6 +12,7 @@ Every service must have a `CLAUDE.md` referencing this file.
 - Commands: `ai-standards/commands/` (full implementations, referenced by the `.claude/commands/` stubs)
 - Templates: `ai-standards/templates/`
 - Scaffold files: `ai-standards/scaffolds/` — copy-verbatim PHP classes (AppController, ApiExceptionSubscriber, etc.)
+- Agent model-tier hook template: `ai-standards/templates/agent-model-hook.json` — `PreToolUse` hook installed by `/init-project` into `{workspace-root}/.claude/settings.json`; enforces the tier declared in each agent's `## Model` section (see "Agent model tiering" below)
 - **Skills: `ai-standards/.claude/skills/`** — on-demand playbooks (CORS, Docker env reload, migrations, JWT, Vitest patterns, ...). Claude auto-loads a skill only when it matches the active task or file paths; description-only otherwise. See `USAGE.md` → Skills reference for the full catalog.
 - Backend standards: `ai-standards/standards/backend.md` (rules) / `backend-reference.md` (full examples)
 - Frontend standards: `ai-standards/standards/frontend.md` (rules) / `frontend-reference.md` (full examples)
