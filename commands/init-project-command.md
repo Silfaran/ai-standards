@@ -50,7 +50,30 @@ Example input:
 9. Generate `{project-name}-docs/workspace.md` with the project paths (template below) — lives in the docs repo so `ai-standards/` stays project-neutral
 10. Generate `{project-name}-docs/workspace.mk` with the service lists (template below) — included by the `ai-standards/` Makefile via the pointer file
 11. Create the pointer file `ai-standards/.workspace-config-path` — a single line containing `../{project-name}-docs` (relative to the ai-standards repo). Gitignored. This is how the `ai-standards/` Makefile and every agent locates the project docs repo.
-12. Report what was created and instruct the developer to run `/create-specs` for the first feature
+12. **Install the Agent model-tier enforcement hook** — merge `ai-standards/templates/agent-model-hook.json` into `{workspace-root}/.claude/settings.json`. This hook rejects any `Agent` tool invocation that does not include an explicit `model` argument, guaranteeing every subagent runs on the tier declared in its `## Model` section (see `CLAUDE.md` → "Agent model tiering").
+
+    Run this from the workspace root (the directory containing `ai-standards/` and `{project-name}-docs/`):
+
+    ```bash
+    mkdir -p .claude
+    TARGET=".claude/settings.json"
+    TEMPLATE="ai-standards/templates/agent-model-hook.json"
+    if [ -f "$TARGET" ]; then
+      jq -s '
+        .[0] as $existing | .[1].hooks.PreToolUse[0] as $new_hook |
+        $existing
+        | .hooks //= {}
+        | .hooks.PreToolUse //= []
+        | .hooks.PreToolUse = (.hooks.PreToolUse | map(select(.matcher != "Agent")) + [$new_hook])
+      ' "$TARGET" "$TEMPLATE" > "$TARGET.tmp" && mv "$TARGET.tmp" "$TARGET"
+    else
+      cp "$TEMPLATE" "$TARGET"
+    fi
+    ```
+
+    The merge is idempotent: running it twice leaves a single `Agent` hook entry, and any existing hooks for other matchers (Bash, Write, etc.) are preserved. After install, verify with `jq '.hooks.PreToolUse[] | select(.matcher == "Agent")' .claude/settings.json`.
+
+13. Report what was created and instruct the developer to run `/create-specs` for the first feature
 
 ## Output
 - `{project-name}-docs/services.md` — project service catalog
@@ -86,6 +109,8 @@ FRONTEND_SERVICES = {frontend-service-1} {frontend-service-2}
 ```
 ../{project-name}-docs
 ```
+
+- `{workspace-root}/.claude/settings.json` — created or updated with the `Agent` `PreToolUse` hook that enforces the model tier declared in each agent definition. See `ai-standards/templates/agent-model-hook.json` for the source fragment.
 
 ### How lookup works
 
