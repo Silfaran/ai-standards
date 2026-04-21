@@ -48,6 +48,20 @@ All agents follow the canonical reading order defined in [`standards/agent-readi
 
 The reading protocol is binding. If it conflicts with an older instruction elsewhere, the protocol wins.
 
+### Agent model tiering
+
+Every agent definition in `agents/` declares a `## Model` section with the Claude tier it must run on (`Opus` or `Sonnet`). The orchestrator (`/build-plan` and any other command that spawns an agent) is required to read that value from the agent definition file and pass it to the `Agent` tool's `model` parameter. **Never spawn an agent without an explicit `model` argument.**
+
+The tier is assigned by two rules, applied in order:
+
+1. **Generates new content → Opus.** Errors propagate downstream with no safety net (spec-analyzer, backend-developer, frontend-developer).
+2. **Verifies against a closed checklist or fills templates → Sonnet.** The reasoning is already compressed into the artifact being consumed (backend-reviewer, frontend-reviewer, tester).
+3. **Correct for call frequency.** If a rail-guided agent runs rarely per feature, upgrade to Opus because the aggregate cost is marginal but the impact of a mistake is outsized. This is why DevOps runs on Opus despite being mostly copy-from-template.
+
+Use the generic tier name (`Opus`, `Sonnet`) — never hardcode a version (`Opus 4.7`) in the agent definition. The `Agent` tool accepts `opus` / `sonnet` / `haiku` and resolves to the latest available.
+
+When adding a new agent, classify first, then correct for frequency. Do not downgrade a generator to Sonnet without strong evidence that the downstream pipeline is robust enough to catch its mistakes.
+
 ### Specs & Documentation
 
 - Specs must be written before any code — never implement without a validated spec

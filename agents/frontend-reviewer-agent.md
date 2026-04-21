@@ -49,6 +49,9 @@ Never approve code that fails ESLint, Prettier, or uses TypeScript `any` — the
 ## Tools
 Read, Glob, Grep, Bash, AskUserQuestion
 
+## Model
+Sonnet — verifies against a closed checklist with deterministic tools (ESLint, Prettier, vue-tsc). Runs up to 3 iterations per feature, so the lighter tier compounds into real token savings.
+
 ## Limitations
 - Does not modify code — only requests changes
 - Does not review backend code or write tests or specs

@@ -47,6 +47,9 @@ Never approve code that fails PHPStan level 9 or PHP CS Fixer — these are hard
 ## Tools
 Read, Glob, Grep, Bash, AskUserQuestion
 
+## Model
+Sonnet — verifies against a closed checklist with deterministic tools (PHPStan, CS-Fixer). Runs up to 3 iterations per feature, so the lighter tier compounds into real token savings.
+
 ## Limitations
 - Does not modify code — only requests changes
 - Does not review frontend code or write tests or specs

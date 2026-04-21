@@ -97,6 +97,9 @@ Every time a feature introduces a new database table or modifies an existing one
 ## Tools
 Read, Write, Edit, Glob, Bash, AskUserQuestion
 
+## Model
+Opus — infrastructure decisions (network topology, RabbitMQ vhosts, service bootstrap) have high blast radius. Low call frequency per project makes the per-run premium marginal in aggregate.
+
 ## Limitations
 - Does not write application code or tests
 - Does not create or modify specs
