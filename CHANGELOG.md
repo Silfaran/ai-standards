@@ -6,6 +6,19 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.9.0](https://github.com/Silfaran/ai-standards/compare/v0.8.0...v0.9.0) (2026-04-21)
+
+
+### Added
+
+* **agents:** declare per-agent model tier (opus/sonnet) ([a413bde](https://github.com/Silfaran/ai-standards/commit/a413bde269fef041024639d3f0230f170177dd83))
+* **init-project:** install Agent model-tier enforcement hook ([92d51c9](https://github.com/Silfaran/ai-standards/commit/92d51c9e09111ede31dda3e47ecd8fbf60f7180d))
+
+
+### Documentation
+
+* **standards,usage:** document Agent model-tier enforcement hook ([6d25d18](https://github.com/Silfaran/ai-standards/commit/6d25d183bb5b3237ddf0cc19847a63583517fa0f))
+
 ## [0.8.0](https://github.com/Silfaran/ai-standards/compare/v0.7.0...v0.8.0) (2026-04-20)
 
 
