@@ -269,16 +269,23 @@ Standards are split into **rules** (concise, always loaded by agents) and **refe
 | File | What it governs |
 |---|---|
 | `standards/invariants.md` | Non-negotiable rules — read first by all agents |
+| `standards/agent-reading-protocol.md` | Canonical reading order for every agent (build-plan + standalone modes) |
+| `standards/tech-stack.md` | Authoritative versions (minimums, open to update) + upgrade procedure |
 | `standards/backend.md` | PHP/Symfony: architecture rules (concise) |
 | `standards/backend-reference.md` | Full code examples, configs, scaffold usage |
+| `standards/backend-review-checklist.md` | Closed list of verifiable rules consumed by the Backend Reviewer agent |
 | `standards/frontend.md` | Vue 3/TS: rules (concise) |
 | `standards/frontend-reference.md` | Full code examples, test patterns |
-| `standards/logging.md` | Structured logs, Monolog config |
-| `standards/security.md` | Headers, CORS, JWT, rate limiting |
-| `standards/performance.md` | Database, API, and frontend performance |
+| `standards/frontend-review-checklist.md` | Closed list of verifiable rules consumed by the Frontend Reviewer agent |
+| `standards/security.md` | Headers, CORS, JWT, rate limiting, input validation, XSS, redirect allowlist |
+| `standards/secrets.md` | Secret classification, project manifest, injection matrix, rotation, redaction |
+| `standards/performance.md` | Database indexing, pagination, N+1, response envelope, frontend perf budget |
+| `standards/caching.md` | HTTP cache headers, Redis keys/TTLs, invalidation, stampede protection |
+| `standards/observability.md` | OpenTelemetry tracing, RED metrics, health endpoints, SLO shape |
+| `standards/logging.md` | Structured JSON logs, Monolog config, sensitive-field redaction |
+| `standards/api-contracts.md` | URL versioning, OpenAPI as contract, breaking-change protocol, deprecation headers |
+| `standards/data-migrations.md` | Schema evolution strategy, expand-contract, backfills, zero-downtime deploy matrix |
 | `standards/new-service-checklist.md` | Pre-commit checklist for new services |
-| `standards/tech-stack.md` | Authoritative versions (minimums, open to update) + upgrade procedure |
-| `standards/agent-reading-protocol.md` | Canonical reading order for every agent (build-plan + standalone modes) |
 | `standards/quality-gates.md` | CI + pre-commit + Makefile quality rules (PHPStan L9, vue-tsc, tests) |
 | `scaffolds/` | Copy-verbatim PHP classes (AppController, etc.) |
 | `templates/ci/` | GitHub Actions workflow templates (backend + frontend) |

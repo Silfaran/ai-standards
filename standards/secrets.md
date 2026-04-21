@@ -37,7 +37,7 @@ Boundary cases are resolved by the stricter rule: when in doubt, treat the value
 
 ## The secrets manifest
 
-Every project maintains a canonical `secrets-manifest.md` inside the project docs repo (path declared in `{project-docs}/workspace.md` under a `secrets-manifest:` key). This file is the single place that enumerates every secret in the system.
+Every project maintains a canonical manifest at `{project-docs}/secrets-manifest.md` — where `{project-docs}` is resolved from `ai-standards/.workspace-config-path`, the same pointer used for `decisions.md`, `services.md` and `design-decisions.md`. The manifest is the single place that enumerates every secret in the system.
 
 Each row lists:
 
