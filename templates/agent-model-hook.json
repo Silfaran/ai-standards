@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -e '(.tool_input.model // \"\") != \"\"' >/dev/null || printf \"%s\" '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Agent() invocation is missing the model parameter. Read the ## Model line from the agent definition file (ai-standards/agents/*.md) and pass opus or sonnet as the model argument. See ai-standards/CLAUDE.md Agent model tiering.\"}}'"
+          }
+        ]
+      }
+    ]
+  }
+}
