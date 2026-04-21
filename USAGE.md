@@ -30,7 +30,7 @@ Re-run the `cp` commands when ai-standards updates its skills or commands. For a
 ```
 /init-project
 ```
-The agent will ask for your project name and list of services, then create:
+The agent will ask for your project name and list of services, then create the project-docs folder **and** install the `Agent` model-tier enforcement hook into `.claude/settings.json` (source: [`templates/agent-model-hook.json`](templates/agent-model-hook.json); rationale in [`CLAUDE.md`](CLAUDE.md) → "Agent model tiering"). Result:
 ```
 workspace/
 ├── ai-standards/
@@ -73,6 +73,30 @@ Create `.mcp.json` at your **workspace root** (the folder that contains `ai-stan
 Then reload Claude Code (close and reopen the session). On first use, `npx` downloads `@playwright/mcp` and Chromium (~150 MB, one-time). Verify with `/mcp` inside Claude Code — `playwright` should appear as connected.
 
 The workspace root is intentionally outside version control in this layout, so this step is per-machine. If you set up a second machine (or a teammate joins), re-run step 4 there. The Tester agent definition (`agents/tester-agent.md`) and `build-plan` command already assume Playwright MCP is available and will instruct the subagent accordingly.
+
+---
+
+## Upgrading ai-standards in an existing workspace
+
+If you pulled a new version of `ai-standards` into a workspace that was already initialized (so `/init-project` will not run again), refresh the `Agent` model-tier enforcement hook by running this from the workspace root. The merge is idempotent — existing permissions and hooks for other matchers are preserved:
+
+```bash
+TARGET=".claude/settings.json"
+TEMPLATE="ai-standards/templates/agent-model-hook.json"
+if [ -f "$TARGET" ]; then
+  jq -s '
+    .[0] as $existing | .[1].hooks.PreToolUse[0] as $new_hook |
+    $existing
+    | .hooks //= {}
+    | .hooks.PreToolUse //= []
+    | .hooks.PreToolUse = (.hooks.PreToolUse | map(select(.matcher != "Agent")) + [$new_hook])
+  ' "$TARGET" "$TEMPLATE" > "$TARGET.tmp" && mv "$TARGET.tmp" "$TARGET"
+else
+  mkdir -p .claude && cp "$TEMPLATE" "$TARGET"
+fi
+```
+
+After the merge, open the `/hooks` menu in Claude Code once (or restart the session) so the harness picks up the change. Verify with `jq '.hooks.PreToolUse[] | select(.matcher == "Agent")' .claude/settings.json`.
 
 ---
 
@@ -260,6 +284,7 @@ Standards are split into **rules** (concise, always loaded by agents) and **refe
 | `templates/ci/` | GitHub Actions workflow templates (backend + frontend) |
 | `templates/hooks/` | Git pre-commit hooks (backend + frontend) |
 | `templates/makefile/` | Makefile quality snippets to drop into a service Makefile |
+| `templates/agent-model-hook.json` | `PreToolUse` hook that rejects `Agent` invocations without a `model` argument — installed by `/init-project` into `.claude/settings.json` |
 | `.claude/skills/` | On-demand playbooks (see below) |
 
 ---
