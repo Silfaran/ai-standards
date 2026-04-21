@@ -91,6 +91,14 @@ DEFAULT_URI=http://localhost
 ###< symfony/routing ###
 ```
 
+Every env var that survives this cleanup and matches a secret category (see [`secrets.md`](secrets.md) → "What counts as a secret") MUST:
+
+- appear in `.env.example` with a placeholder value and a one-line category comment;
+- get a row in the project's `secrets-manifest.md` (owner, category, environments, source, rotation);
+- be loaded via a fail-fast helper in application code — no silent fallbacks.
+
+A service that boots with a missing required secret is a deployment bug, not a soft warning.
+
 ---
 
 ## 6. `composer.json` + `composer.lock` must always be in sync
