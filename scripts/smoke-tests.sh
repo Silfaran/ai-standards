@@ -98,6 +98,50 @@ done
 [ $missing -eq 0 ] && pass "all ai-standards/* paths in docs resolve"
 
 # -----------------------------------------------------------------------------
+# Check 5 — every primary standard is indexed in CLAUDE.md
+# -----------------------------------------------------------------------------
+# An agent entering via CLAUDE.md must see every top-level standard. A new
+# standards/ file that nobody remembers to list becomes a silent orphan
+# (real case: quality-gates.md was reachable only via USAGE.md/ARCHITECTURE.md
+# until the gap was caught). Excludes files that ride alongside a primary
+# one by convention: *-reference.md (examples) and *-review-checklist.md
+# (consumed by reviewer agents, cited next to their parent standard).
+section "CLAUDE.md index coverage"
+missing=0
+for f in standards/*.md; do
+  base=$(basename "$f")
+  case "$base" in
+    *-reference.md|*-review-checklist.md) continue ;;
+  esac
+  if ! grep -qF "$base" CLAUDE.md; then
+    fail "standards/$base not referenced in CLAUDE.md (silent orphan)"
+    missing=1
+  fi
+done
+[ $missing -eq 0 ] && pass "all primary standards indexed in CLAUDE.md"
+
+# -----------------------------------------------------------------------------
+# Check 6 — every primary standard appears in agent-reading-protocol.md
+# -----------------------------------------------------------------------------
+# The reading protocol is the canonical per-role list of which standards
+# each agent consumes. A standard absent from the protocol is read by no
+# agent — the file exists, but its rules never reach the pipeline. The
+# protocol naturally omits itself (role consumes it implicitly via the
+# protocol's own definition).
+section "Standards ↔ agent-reading-protocol coverage"
+missing=0
+protocol="standards/agent-reading-protocol.md"
+for f in standards/*.md; do
+  base=$(basename "$f")
+  [ "$base" = "agent-reading-protocol.md" ] && continue
+  if ! grep -qF "$base" "$protocol"; then
+    fail "standards/$base missing from $protocol — no agent will read it"
+    missing=1
+  fi
+done
+[ $missing -eq 0 ] && pass "all standards covered by agent-reading-protocol.md"
+
+# -----------------------------------------------------------------------------
 section "Result"
 if [ $FAIL -eq 0 ]; then
   echo "All smoke tests passed."
