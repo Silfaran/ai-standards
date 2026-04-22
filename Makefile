@@ -10,7 +10,12 @@ PROJECT_DOCS := $(shell cat .workspace-config-path 2>/dev/null)
 
 ALL_SERVICES = $(BACKEND_SERVICES) $(FRONTEND_SERVICES)
 
-.PHONY: up down build update infra-up infra-down test test-unit test-integration lint static quality logs ps
+.PHONY: up down build update infra-up infra-down test test-unit test-integration lint static quality smoke logs ps
+
+# --- Framework self-checks ---
+
+smoke:
+	@./scripts/smoke-tests.sh
 
 # --- Infrastructure (shared: PostgreSQL, RabbitMQ, Mailpit) ---
 
