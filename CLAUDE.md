@@ -26,7 +26,7 @@ Every service must have a `CLAUDE.md` referencing this file.
 - API contracts & breaking-change protocol: `ai-standards/standards/api-contracts.md`
 - New service scaffold checklist: `ai-standards/standards/new-service-checklist.md`
 - Quality gates: `ai-standards/standards/quality-gates.md` — PHPStan L9, vue-tsc strict, PHP-CS-Fixer, ESLint/Prettier, test suite, dependency audits; installed per service via `templates/`
-- Reviewer checklists: `ai-standards/standards/backend-review-checklist.md` / `frontend-review-checklist.md` — closed list of verifiable rules consumed by Backend/Frontend Reviewer agents instead of the full standards. **When you add or change a rule in any standards file, update the matching checklist entry in the same commit** — otherwise reviewers will silently miss new rules.
+- Reviewer checklists: `ai-standards/standards/backend-review-checklist.md` / `frontend-review-checklist.md` — closed list of verifiable rules consumed by Backend/Frontend Reviewer agents instead of the full standards. Every rule has a stable ID (`BE-*`, `FE-*`, `SE-*`, `PE-*`, `OB-*`, `CA-*`, `SC-*`, `DM-*`, `AC-*`, `LO-*`) — see "Rule IDs" below. **When you add or change a rule in any standards file, update the matching checklist entry in the same commit** — otherwise reviewers will silently miss new rules.
 - Project config lookup: `ai-standards/.workspace-config-path` (gitignored, one line created by `init-project`) points to the current project's docs repo — typically `../{project-name}-docs`. The real config files (`workspace.md`, `workspace.mk`, `services.md`, specs, decisions, lessons-learned) all live **inside that docs repo**, not in `ai-standards/`. To discover any project path, read `.workspace-config-path` first, then read `{docs-dir}/workspace.md`.
 
 ## Tech Stack
@@ -65,6 +65,32 @@ The tier is assigned by two rules, applied in order:
 Use the generic tier name (`Opus`, `Sonnet`) — never hardcode a version (`Opus 4.7`) in the agent definition. The `Agent` tool accepts `opus` / `sonnet` / `haiku` and resolves to the latest available.
 
 When adding a new agent, classify first, then correct for frequency. Do not downgrade a generator to Sonnet without strong evidence that the downstream pipeline is robust enough to catch its mistakes.
+
+### Rule IDs
+
+Every bullet in the reviewer checklists (`backend-review-checklist.md`, `frontend-review-checklist.md`) carries a stable ID so a violation can be cited unambiguously (`"violates BE-015"` beats quoting the full prose). The prefix reflects the source-standard domain, not the checklist file:
+
+| Prefix | Domain | Source standard |
+|---|---|---|
+| `BE-*` | Backend architecture, handlers, controllers, validation, testing | `backend.md` |
+| `FE-*` | Frontend architecture, stores, composables, TypeScript, routing | `frontend.md` |
+| `SE-*` | Security (CORS, JWT, XSS, rate limiting, headers, redirects) | `security.md` |
+| `PE-*` | Performance (DB indexing, N+1, pagination, Web Vitals, Vite bundle) | `performance.md` |
+| `OB-*` | Observability (tracing, metrics, health endpoints, SLOs) | `observability.md` |
+| `CA-*` | Caching (HTTP cache, Redis keys, TTLs, invalidation) | `caching.md` |
+| `SC-*` | Secrets (manifest, injection, rotation, `.env.example`) | `secrets.md` |
+| `DM-*` | Data migrations (expand-contract, backfills, compatibility matrix) | `data-migrations.md` |
+| `AC-*` | API contracts (versioning, OpenAPI, deprecation, payload shape) | `api-contracts.md` |
+| `LO-*` | Logging (structure, redaction, middleware wiring) | `logging.md` |
+
+**Invariants of the ID scheme:**
+
+- **Format:** `<PREFIX>-<3 digits>`, e.g. `BE-015`. Regex: `^(BE|FE|SE|PE|OB|CA|SC|DM|AC|LO)-\d{3}$`.
+- **Stability:** IDs are never reassigned. A rule that is deleted leaves a gap in the sequence; a new rule takes the next free integer in its prefix (not the gap).
+- **Global uniqueness:** an ID never refers to two different rules. When a rule applies to both backend and frontend (e.g. `SE-003` — no SSL verification disabled), the same ID appears in both checklists.
+- **New rules:** when a reviewer flags a missing rule (see the footer of each checklist), the orchestrator assigns the next free ID in the matching prefix. Contributors do not invent IDs.
+
+The `smoke` CI job validates format, uniqueness and prefix legality on every push.
 
 ### Specs & Documentation
 

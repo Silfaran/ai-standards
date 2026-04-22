@@ -22,7 +22,7 @@ If you find a violation that is NOT in the checklist, report it as `minor` and i
 - Treat every "Hard blocker" as auto-reject regardless of iteration count
 - Run PHPStan level 9 and PHP-CS-Fixer — never approve with violations
 - Verify Definition of Done conditions from the task file
-- Request changes with severity (critical/major/minor), file:line, and the checklist rule that was violated
+- Request changes with severity (critical/major/minor), file:line, and the **rule ID** that was violated (e.g. `BE-015`, `DM-004`, `SE-007`) — never paraphrase the rule; the ID is the canonical reference
 - Approve when every checklist item passes and DoD is met
 
 ## Output

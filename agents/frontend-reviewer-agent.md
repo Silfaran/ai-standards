@@ -24,7 +24,7 @@ If you find a violation that is NOT in the checklist, report it as `minor` and i
 - Run ESLint, Prettier, and `vue-tsc --noEmit` — never approve with violations
 - Verify Definition of Done conditions from the task file
 - Verify decisions in `design-decisions.md` are followed (only when diff touches UI)
-- Request changes with severity (critical/major/minor), file:line, and the checklist rule that was violated
+- Request changes with severity (critical/major/minor), file:line, and the **rule ID** that was violated (e.g. `FE-014`, `PE-010`, `SE-021`) — never paraphrase the rule; the ID is the canonical reference
 - Approve when every checklist item passes and DoD is met
 
 ## Output

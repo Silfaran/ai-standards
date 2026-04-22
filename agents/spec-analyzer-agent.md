@@ -13,7 +13,7 @@ Role-specific additions for the Spec Analyzer (read after the common core):
 2. Existing specs in the project docs folder — to stay consistent with prior work.
 
 ## Responsibilities
-- Ask clarifying questions until all ambiguities are resolved — never assume
+- Ask clarifying questions until all ambiguities are resolved — never assume. If the developer answers "you decide" or defers the choice, **do not invent silently**: record the assumption verbatim in the spec's `## Open Questions` section (with the rationale for the chosen default) and flag it in the handoff so downstream agents know it's a revisitable decision, not a hard requirement
 - Detect and warn about incompatibilities with existing features before writing the spec
 - Create the spec following the template in `ai-standards/templates/feature-specs-template.md`
 - Create the task file following the template in `ai-standards/templates/feature-task-template.md`
