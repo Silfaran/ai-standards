@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.13.0](https://github.com/Silfaran/ai-standards/compare/v0.12.1...v0.13.0) (2026-04-22)
+
+
+### Added
+
+* **standards,ci,agents:** stable rule IDs for reviewer-checklist citations ([#32](https://github.com/Silfaran/ai-standards/issues/32)) ([2858fc2](https://github.com/Silfaran/ai-standards/commit/2858fc24aa518ca2e9bc1280f097bb660943e848))
+
 ## [0.12.1](https://github.com/Silfaran/ai-standards/compare/v0.12.0...v0.12.1) (2026-04-22)
 
 
