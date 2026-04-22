@@ -77,3 +77,17 @@ jobs:
       # Config and globs live in `.markdownlint-cli2.jsonc` at repo root;
       # the action auto-discovers it.
       - uses: DavidAnson/markdownlint-cli2-action@v18
+
+  smoke:
+    name: Static smoke tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Catch framework regressions that lychee + markdownlint cannot:
+      # missing agent model tier, dangling agent references in commands,
+      # skill folder/name drift, and moved files still cited in docs.
+      # Source of truth is scripts/smoke-tests.sh — also runnable locally
+      # via `make smoke`.
+      - name: Run smoke tests
+        run: ./scripts/smoke-tests.sh
