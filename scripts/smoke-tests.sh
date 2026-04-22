@@ -142,6 +142,67 @@ done
 [ $missing -eq 0 ] && pass "all standards covered by agent-reading-protocol.md"
 
 # -----------------------------------------------------------------------------
+# Check 7 — reviewer checklist rule IDs are well-formed and globally unique
+# -----------------------------------------------------------------------------
+# Every bullet in the reviewer checklists must carry a stable ID matching the
+# documented prefixes (BE|FE|SE|PE|OB|CA|SC|DM|AC|LO) + 3 digits. An ID that
+# maps to two different rule texts makes reviewer citations ambiguous; an
+# unknown prefix is a typo that will spread through agent usage. When the same
+# ID appears in multiple checklists, the rule text must match exactly — that
+# is the legitimate reuse pattern (one rule, two audiences).
+section "Reviewer checklist rule IDs"
+format_violations=0
+bad_prefix=0
+dupes=0
+
+valid_prefix='BE|FE|SE|PE|OB|CA|SC|DM|AC|LO'
+id_regex="\*\*(${valid_prefix})-[0-9]{3}\*\*"
+
+for cl in standards/backend-review-checklist.md standards/frontend-review-checklist.md; do
+  # Every bullet line (starts with "- [ ] ") must contain a bolded ID.
+  bad=$(awk '/^- \[ \]/ && !/\*\*('"$valid_prefix"')-[0-9]{3}\*\*/' "$cl")
+  if [ -n "$bad" ]; then
+    fail "$cl: bullets without a valid rule ID:"
+    printf "%s\n" "$bad" | sed 's/^/    /'
+    format_violations=1
+  fi
+
+  # Any ID that DOES appear must use a known prefix (regex enforces this, but
+  # we double-check in case someone adds a new prefix without updating docs).
+  unknown=$(grep -oE '\*\*[A-Z]{2}-[0-9]{3}\*\*' "$cl" | grep -vE "$id_regex" || true)
+  if [ -n "$unknown" ]; then
+    fail "$cl: unknown prefix used:"
+    printf "%s\n" "$unknown" | sort -u | sed 's/^/    /'
+    bad_prefix=1
+  fi
+done
+
+# Within-file duplicates: an ID that appears twice in the same checklist
+# makes reviewer citations ambiguous ("violates SE-021 where?"). Across files,
+# reuse is allowed — a rule that applies to both backend and frontend rightly
+# appears in both checklists, possibly with context-adapted wording.
+# Uses POSIX awk — no gawk extensions (BSD awk on macOS lacks match()'s array arg).
+for cl in standards/backend-review-checklist.md standards/frontend-review-checklist.md; do
+  within=$(awk '
+    /^- \[ \]/ {
+      if (match($0, /\*\*[A-Z]{2}-[0-9]{3}\*\*/) == 0) next
+      id = substr($0, RSTART + 2, RLENGTH - 4)
+      if (id in seen) print id
+      else seen[id] = 1
+    }
+  ' "$cl" | sort -u)
+
+  if [ -n "$within" ]; then
+    fail "$cl: rule IDs duplicated within the same file:"
+    printf "%s\n" "$within" | sed 's/^/    /'
+    dupes=1
+  fi
+done
+
+[ $format_violations -eq 0 ] && [ $bad_prefix -eq 0 ] && [ $dupes -eq 0 ] \
+  && pass "all checklist bullets have valid, non-conflicting rule IDs"
+
+# -----------------------------------------------------------------------------
 section "Result"
 if [ $FAIL -eq 0 ]; then
   echo "All smoke tests passed."
