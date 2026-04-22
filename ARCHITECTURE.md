@@ -110,7 +110,7 @@ Agents never share a context window. They communicate via **handoff files** — 
 
 **Definition of Done is a checklist.** Every feature generates a task file with explicit checkboxes: architecture compliance, static analysis, formatting, tests passing, security checks, spec updated. A feature is done when every box is checked.
 
-**On-demand skills.** Narrow playbooks (CORS gotchas, safe migrations, JWT lifecycle, Vitest patterns, quality-gate setup...) live in `.claude/skills/`. Claude Code auto-loads a skill only when the active task or file paths match — description-only otherwise, so they cost nothing until needed. See [USAGE.md](USAGE.md#skills-reference) for the full catalog (~13 skills).
+**On-demand skills.** Narrow playbooks (CORS gotchas, safe migrations, JWT lifecycle, Vitest patterns, quality-gate setup...) live in `.claude/skills/`. Claude Code auto-loads a skill only when the active task or file paths match — description-only otherwise, so they cost nothing until needed. See [USAGE.md](USAGE.md#skills-reference) for the full catalog (~16 skills).
 
 **Deterministic quality gates.** Three layers — pre-commit hook, per-service `make quality`, and GitHub Actions CI — enforce PHPStan level 9, `vue-tsc --noEmit` strict, PHP-CS-Fixer, ESLint + Prettier, full test suite, and `composer audit` / `npm audit`. Reviewer agents keep doing what humans do best; the mechanical bar is enforced by machines. Install per service from [`templates/`](templates/); authoritative rules in [`standards/quality-gates.md`](standards/quality-gates.md).
 
@@ -122,7 +122,7 @@ Agents never share a context window. They communicate via **handoff files** — 
 ai-standards/
 ├── .claude/
 │   ├── commands/                   ← 5 slash commands (Claude Code integration)
-│   └── skills/                     ← ~13 on-demand playbooks auto-loaded by Claude Code
+│   └── skills/                     ← ~16 on-demand playbooks auto-loaded by Claude Code
 ├── CLAUDE.md                       ← Entry point for agents — global rules, naming, git workflow
 ├── USAGE.md                        ← Setup guide, make-command reference, skills catalog
 ├── Makefile                        ← Workspace-level orchestration: up/down/build/test/quality (includes `{project-docs}/workspace.mk`)

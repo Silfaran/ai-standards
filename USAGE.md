@@ -313,6 +313,9 @@ Skills are narrow, auto-loading playbooks. Claude reads only each skill's `descr
 | `jwt-security` | Implementing JWT auth, refresh-token rotation, httpOnly cookie storage, Lexik config |
 | `rate-limiting-auth` | Adding Symfony RateLimiter to login/register/password-reset/token-refresh endpoints |
 | `vue-composable-mutation` | Writing a Vue 3 composable with TanStack Query `useMutation` for write operations |
+| `pinia-store-pattern` | Creating/modifying a Pinia store — canonical setup-store shape, destructuring rules, reactive() in tests |
+| `empty-loading-error-states` | Writing a Vue page that renders server data — canonical loading / error / filtered-empty / initial-empty branches |
+| `openapi-controller-docs` | Adding `#[OA\...]` attributes on a Symfony controller — request body, response schemas, error envelope, security |
 | `vitest-composable-test` | Writing Vitest tests for composables, stores, pages (mocks, captured callbacks, jsdom shims) |
 | `quality-gates-setup` | Installing CI workflow, pre-commit hook, and Makefile quality targets in a new or existing service |
 
