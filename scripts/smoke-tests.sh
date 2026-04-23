@@ -203,6 +203,37 @@ done
   && pass "all checklist bullets have valid, non-conflicting rule IDs"
 
 # -----------------------------------------------------------------------------
+# Check 8 — dynamic smoke staleness reminder (non-fatal)
+# -----------------------------------------------------------------------------
+# Count commits since the most recent release tag that touched the structural
+# files exercised by `make smoke-dynamic` (agents/, build-plan-command.md,
+# agent-reading-protocol.md). Non-zero = the orchestrator's runtime behaviour
+# may have drifted since the last time anyone ran the dynamic smoke. Print
+# a reminder, do NOT fail — full enforcement would require running the
+# dynamic smoke on every push (real tokens), a trade-off the user declined.
+section "Dynamic smoke staleness"
+last_tag=$(git describe --tags --abbrev=0 2>/dev/null || true)
+if [ -z "$last_tag" ]; then
+  pass "no release tag yet — dynamic smoke cadence starts at v0.1.0"
+else
+  changed=$(git log --format='%h %s' "$last_tag"..HEAD -- \
+      agents/ \
+      commands/build-plan-command.md \
+      standards/agent-reading-protocol.md 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$changed" -eq 0 ]; then
+    pass "no structural changes since $last_tag — dynamic smoke still valid"
+  else
+    printf "  ! %d structural commit(s) since %s — run \`make smoke-dynamic\` before the next release\n" \
+      "$changed" "$last_tag"
+    printf "    (this is a reminder, not a failure — CI stays green)\n"
+    git log --format='      - %h %s' "$last_tag"..HEAD -- \
+      agents/ \
+      commands/build-plan-command.md \
+      standards/agent-reading-protocol.md 2>/dev/null | head -10
+  fi
+fi
+
+# -----------------------------------------------------------------------------
 section "Result"
 if [ $FAIL -eq 0 ]; then
   echo "All smoke tests passed."

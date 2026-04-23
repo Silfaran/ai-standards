@@ -8,6 +8,11 @@
     "prompt_contains": [
       "agents/backend-developer-agent.md",
       "board-set-title"
+    ],
+    "prompt_template_sections": [
+      "Read these files in order",
+      "Working directory",
+      "write your handoff to"
     ]
   },
   "required_handoff_files": [
@@ -16,8 +21,8 @@
   "context_bundle": {
     "path": "handoffs/board-set-title/context-bundle.md",
     "required_sections": [
-      "Invariants",
-      "Spec"
+      "Invariants|invariants",
+      "Spec|Technical"
     ]
   }
 }

@@ -1,0 +1,28 @@
+{
+  "_comment": "Expected invariants for the `simple` fixture. Plan declares `## Complexity: simple`, mapped per commands/build-plan-command.md to a single Dev+Tester agent (backend-developer-agent.md, opus). No Reviewer phase. First spawn prompt must reference the combined dev+tester role.",
+  "fixture": "simple",
+  "complexity": "simple",
+  "expected_first_spawn": {
+    "model": "opus",
+    "description_regex": "(?i)(backend|developer|dev|tester)",
+    "prompt_contains": [
+      "agents/backend-developer-agent.md",
+      "board-title-length-validator"
+    ],
+    "prompt_template_sections": [
+      "Read these files in order",
+      "Working directory",
+      "write your handoff to"
+    ]
+  },
+  "required_handoff_files": [
+    "handoffs/board-title-length-validator/context-bundle.md"
+  ],
+  "context_bundle": {
+    "path": "handoffs/board-title-length-validator/context-bundle.md",
+    "required_sections": [
+      "Invariants|invariants",
+      "Spec|Technical"
+    ]
+  }
+}

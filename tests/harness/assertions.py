@@ -86,6 +86,24 @@ def run_assertions(fixture: str, capture_path: Path, expected: Dict[str, Any],
                 f"{first.get('description', '')!r}"
             )
 
+    # --- spawn.prompt follows the subagent prompt template ------------------
+    # build-plan-command.md mandates a specific template for Developer/Tester/
+    # DevOps prompts: "Read these files in order", "Working directory:", and
+    # "write your handoff to:". Missing any of these signals that the
+    # orchestrator is not following the documented prompt template. Patterns
+    # are treated as regex (re.search) — use `A|B` to accept paraphrase
+    # variations the LLM may produce across runs ("Working directory" vs
+    # "Working dir:" etc).
+    required_template = spawn.get("prompt_template_sections", []) or []
+    for section in required_template:
+        if not re.search(section, prompt):
+            failures.append(
+                f"first spawn prompt missing required template pattern: "
+                f"/{section}/ — the orchestrator is not following the "
+                "Developer/Tester/DevOps prompt template in "
+                "commands/build-plan-command.md"
+            )
+
     # --- handoffs: required files present at spawn time ---------------------
     required_files = expected.get("required_handoff_files", []) or []
     present = set(first.get("handoffs_at_spawn", []) or [])
@@ -108,10 +126,15 @@ def run_assertions(fixture: str, capture_path: Path, expected: Dict[str, Any],
             )
         else:
             body = bundle_path.read_text()
+            # Patterns are regex (re.search) — use `A|B` to accept paraphrase
+            # variations. The orchestrator sometimes writes "## Spec digest"
+            # and sometimes "## Technical Details" — both indicate the spec
+            # summary section is present.
             for section in bundle_sections:
-                if section not in body:
+                if not re.search(section, body):
                     failures.append(
-                        f"context bundle missing required section: '{section}'"
+                        f"context bundle missing required section pattern: "
+                        f"/{section}/"
                     )
 
     return failures
