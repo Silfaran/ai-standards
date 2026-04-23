@@ -18,9 +18,10 @@ input=$(cat)
 model=$(printf '%s' "$input" | jq -r '.tool_input.model // ""')
 subagent_type=$(printf '%s' "$input" | jq -r '.tool_input.subagent_type // ""')
 description=$(printf '%s' "$input" | jq -r '.tool_input.description // ""')
-# Truncate the prompt to 2000 chars — enough to assert on agent paths without
-# bloating the capture file.
-prompt_snippet=$(printf '%s' "$input" | jq -r '.tool_input.prompt // ""' | head -c 2000)
+# Truncate the prompt to 4000 chars — enough to cover both the opening "Read
+# these files in order" section and the closing "write your handoff to:"
+# section so prompt-template assertions see the full envelope.
+prompt_snippet=$(printf '%s' "$input" | jq -r '.tool_input.prompt // ""' | head -c 4000)
 
 # Snapshot the handoffs directory at the moment the orchestrator is about to
 # spawn the first agent. Assertions verify that the context bundle was written

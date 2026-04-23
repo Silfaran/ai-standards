@@ -1,0 +1,28 @@
+{
+  "_comment": "Expected invariants for the `complex` fixture. Plan declares `## Complexity: complex` with new infrastructure (RabbitMQ transport + Redis DB), so per commands/build-plan-command.md the DevOps phase runs first. agents/devops-agent.md declares `## Model Opus`.",
+  "fixture": "complex",
+  "complexity": "complex",
+  "expected_first_spawn": {
+    "model": "opus",
+    "description_regex": "(?i)devops",
+    "prompt_contains": [
+      "agents/devops-agent.md",
+      "board-activity-feed"
+    ],
+    "prompt_template_sections": [
+      "Read these files in order",
+      "Working directory",
+      "write your handoff to"
+    ]
+  },
+  "required_handoff_files": [
+    "handoffs/board-activity-feed/context-bundle.md"
+  ],
+  "context_bundle": {
+    "path": "handoffs/board-activity-feed/context-bundle.md",
+    "required_sections": [
+      "Invariants|invariants",
+      "Spec|Technical"
+    ]
+  }
+}
