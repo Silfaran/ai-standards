@@ -10,12 +10,19 @@ PROJECT_DOCS := $(shell cat .workspace-config-path 2>/dev/null)
 
 ALL_SERVICES = $(BACKEND_SERVICES) $(FRONTEND_SERVICES)
 
-.PHONY: up down build update infra-up infra-down test test-unit test-integration lint static quality smoke logs ps
+.PHONY: up down build update infra-up infra-down test test-unit test-integration lint static quality smoke smoke-dynamic logs ps
 
 # --- Framework self-checks ---
 
 smoke:
 	@./scripts/smoke-tests.sh
+
+# Dynamic smoke — exercises the /build-plan orchestrator against a minimal
+# fixture, intercepts the first Agent spawn, asserts the model tier +
+# context-bundle invariants. Real API tokens — local only, run manually
+# before cutting a release or after changing agents/commands. See tests/README.md.
+smoke-dynamic:
+	@./tests/harness/run-smoke.sh
 
 # --- Infrastructure (shared: PostgreSQL, RabbitMQ, Mailpit) ---
 

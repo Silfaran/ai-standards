@@ -1,0 +1,147 @@
+#!/usr/bin/env python3
+"""
+Assertion runner for the dynamic smoke harness.
+
+Reads the JSONL capture produced by tests/harness/hooks/capture-agent.sh and
+compares its first entry against the invariants declared in
+tests/expected/<fixture>.json. Stdlib only — no pip dependencies — so
+`make smoke-dynamic` works on a fresh machine.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+from pathlib import Path
+from typing import Any, Dict, List
+
+
+# --- Assertions --------------------------------------------------------------
+
+def _fail(msg: str, hint: str | None = None) -> None:
+    print(f"   assertion failed: {msg}", file=sys.stderr)
+    if hint:
+        print(f"     hint: {hint}", file=sys.stderr)
+
+
+def run_assertions(fixture: str, capture_path: Path, expected: Dict[str, Any],
+                   workdir: Path) -> List[str]:
+    """Returns a list of failure messages (empty = pass)."""
+    failures: List[str] = []
+
+    if not capture_path.exists() or capture_path.stat().st_size == 0:
+        failures.append(
+            "capture file is empty — the orchestrator never reached the first "
+            "Agent spawn. Check claude.log for why it stalled (sign-off "
+            "prompt, pre-flight branch check, missing file)."
+        )
+        return failures
+
+    lines = [ln for ln in capture_path.read_text().splitlines() if ln.strip()]
+    if not lines:
+        failures.append("capture file has no JSONL lines")
+        return failures
+
+    try:
+        first = json.loads(lines[0])
+    except json.JSONDecodeError as exc:
+        failures.append(f"first capture line is not valid JSON: {exc}")
+        return failures
+
+    # --- spawn.model ---------------------------------------------------------
+    spawn = expected.get("expected_first_spawn", {}) or {}
+    expected_model = spawn.get("model")
+    if expected_model:
+        actual_model = first.get("model", "")
+        if actual_model != expected_model:
+            failures.append(
+                f"first spawn model = '{actual_model}', expected '{expected_model}'"
+            )
+            if not actual_model:
+                _fail(
+                    "first spawn model is empty",
+                    "the orchestrator invoked Agent without a `model` argument. "
+                    "Verify commands/build-plan-command.md Step 6 and the "
+                    "workspace PreToolUse hook that enforces `model`.",
+                )
+
+    # --- spawn.prompt contains agent path -----------------------------------
+    required_substrings = spawn.get("prompt_contains", []) or []
+    prompt = first.get("prompt_snippet", "")
+    for needle in required_substrings:
+        if needle not in prompt:
+            failures.append(
+                f"first spawn prompt does not contain '{needle}' — got snippet: "
+                f"{prompt[:200]!r}"
+            )
+
+    # --- spawn.description matches regex ------------------------------------
+    desc_regex = spawn.get("description_regex")
+    if desc_regex:
+        if not re.search(desc_regex, first.get("description", "") or ""):
+            failures.append(
+                f"first spawn description does not match /{desc_regex}/ — got "
+                f"{first.get('description', '')!r}"
+            )
+
+    # --- handoffs: required files present at spawn time ---------------------
+    required_files = expected.get("required_handoff_files", []) or []
+    present = set(first.get("handoffs_at_spawn", []) or [])
+    for rel in required_files:
+        if rel not in present:
+            failures.append(
+                f"required handoff file not present at first spawn: {rel}"
+            )
+
+    # --- handoffs: context bundle sections ----------------------------------
+    bundle_rules = expected.get("context_bundle", {}) or {}
+    bundle_rel = bundle_rules.get("path")
+    bundle_sections = bundle_rules.get("required_sections", []) or []
+    if bundle_rel and bundle_sections:
+        bundle_path = workdir / bundle_rel
+        if not bundle_path.exists():
+            failures.append(
+                f"context bundle not found at {bundle_rel} — the orchestrator "
+                "did not generate it before the first Agent spawn"
+            )
+        else:
+            body = bundle_path.read_text()
+            for section in bundle_sections:
+                if section not in body:
+                    failures.append(
+                        f"context bundle missing required section: '{section}'"
+                    )
+
+    return failures
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--fixture", required=True)
+    ap.add_argument("--capture", required=True, type=Path)
+    ap.add_argument("--expected", required=True, type=Path)
+    ap.add_argument("--workdir", required=True, type=Path)
+    args = ap.parse_args()
+
+    try:
+        expected = json.loads(args.expected.read_text())
+    except Exception as exc:
+        print(f"   could not parse {args.expected}: {exc}", file=sys.stderr)
+        return 2
+
+    failures = run_assertions(args.fixture, args.capture, expected, args.workdir)
+
+    if not failures:
+        return 0
+
+    print(f"   {len(failures)} assertion(s) failed for fixture '{args.fixture}':",
+          file=sys.stderr)
+    for msg in failures:
+        print(f"   - {msg}", file=sys.stderr)
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
