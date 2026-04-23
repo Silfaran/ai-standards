@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.15.1](https://github.com/Silfaran/ai-standards/compare/v0.15.0...v0.15.1) (2026-04-23)
+
+
+### Documentation
+
+* **standards:** expand tech-stack for oficios-construcción — PostGIS, search strategy, payment provider guidance ([#38](https://github.com/Silfaran/ai-standards/issues/38)) ([8e6b402](https://github.com/Silfaran/ai-standards/commit/8e6b40294f4b0c684652f8bcf8a79d80a6ef7604))
+
 ## [0.15.0](https://github.com/Silfaran/ai-standards/compare/v0.14.0...v0.15.0) (2026-04-23)
 
 
