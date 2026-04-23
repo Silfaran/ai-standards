@@ -1,0 +1,23 @@
+{
+  "_comment": "Expected invariants for the `standard` fixture. The fixture's plan declares `## Complexity: standard`, which per commands/build-plan-command.md maps to: Backend Developer → Reviewer (loop) → Tester. The first Agent spawn must be the Backend Developer running on the `opus` tier (per agents/backend-developer-agent.md `## Model`). Update the corresponding line below when build-plan's flow table or the agent's model tier changes — a mismatch here is the smoke test's signal.",
+  "fixture": "standard",
+  "complexity": "standard",
+  "expected_first_spawn": {
+    "model": "opus",
+    "description_regex": "(?i)(backend|developer|dev)",
+    "prompt_contains": [
+      "agents/backend-developer-agent.md",
+      "board-set-title"
+    ]
+  },
+  "required_handoff_files": [
+    "handoffs/board-set-title/context-bundle.md"
+  ],
+  "context_bundle": {
+    "path": "handoffs/board-set-title/context-bundle.md",
+    "required_sections": [
+      "Invariants",
+      "Spec"
+    ]
+  }
+}

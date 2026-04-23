@@ -8,4 +8,7 @@
 # (e.g. `../task-manager-docs`). The real workspace.md and workspace.mk
 # now live inside that docs repo, not here.
 .workspace-config-path
+# Negation — smoke-test fixtures carry their own pointer inside
+# tests/fixtures/<name>/ and must stay tracked.
+!tests/fixtures/**/.workspace-config-path
 

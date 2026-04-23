@@ -219,6 +219,13 @@ The root `Makefile` in `ai-standards/` orchestrates every service in the workspa
 
 Run `make quality` before a push. See [`standards/quality-gates.md`](standards/quality-gates.md) for the full rules and [`templates/`](templates/) for the installable CI / hook / Makefile assets per service.
 
+### Framework self-checks
+
+| Command | What it does |
+|---|---|
+| `make smoke` | Static checks over the `ai-standards/` repo (agent model tier, command→agent wiring, skill folder/name drift, docs path refs, CLAUDE.md index coverage, reviewer checklist rule IDs). 0 tokens. Runs on every CI push. |
+| `make smoke-dynamic` | **Local only.** Runs `/build-plan` against a minimal fixture (`tests/fixtures/standard/`), intercepts the first `Agent` spawn, asserts the model tier + context-bundle invariants. Real API tokens. Run before cutting a release, or after changing `commands/build-plan-command.md`, any file under `agents/`, or `standards/agent-reading-protocol.md`. See [`tests/README.md`](tests/README.md). |
+
 ### What's NOT in the root Makefile
 
 Per-service commands — `make lint`, `make static`, `make quality` — also exist **inside each service directory** after you install the quality snippets. The root targets iterate over services; the per-service targets run directly via `docker compose exec`.

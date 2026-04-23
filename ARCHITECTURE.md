@@ -139,6 +139,13 @@ ai-standards/
 │   ├── ApiExceptionSubscriber.php  ← Maps domain exceptions to HTTP status codes
 │   ├── LoggingMiddleware.php       ← Structured JSON logging with sensitive field redaction
 │   └── SecurityHeadersSubscriber.php
+├── scripts/
+│   └── smoke-tests.sh              ← Static framework self-checks — free, runs on every CI push (`make smoke`)
+├── tests/                          ← Dynamic framework self-checks — local only, run via `make smoke-dynamic`
+│   ├── fixtures/                   ← Minimal project stubs (`standard/`) exercised by the harness
+│   ├── harness/                    ← Hook + runner + assertions (stdlib Python)
+│   ├── expected/                   ← Per-fixture JSON invariants
+│   └── README.md                   ← When to run, how to add a fixture, what the harness intercepts
 └── standards/
     ├── invariants.md               ← Non-negotiable rules — security, code, git, agent behavior
     ├── agent-reading-protocol.md   ← Canonical reading order for every agent (build-plan + standalone)
