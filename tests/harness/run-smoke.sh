@@ -21,7 +21,22 @@ cd "$ROOT"
 
 # Fixtures to run when no argument is given. Add new fixtures here after
 # wiring their expected/<name>.yaml file.
-FIXTURES=(standard simple complex)
+# Mode selection.
+# - Default (fast mode): the first Agent spawn is intercepted and denied;
+#   assertions target the shape of that single spawn + the context bundle.
+# - SMOKE_FULL=1 (full mode): the capture hook logs but ALLOWS the spawn,
+#   the orchestrator runs the whole pipeline (Dev → Reviewer → Tester),
+#   produced handoff files get snapshotted by a PostToolUse hook, and
+#   assertions target the structure of those handoffs. Only the `standard`
+#   fixture is used in full mode — simple+complex carry too little signal
+#   to justify the ~500k-token cost each.
+SMOKE_FULL="${SMOKE_FULL:-}"
+
+if [ -n "$SMOKE_FULL" ]; then
+  FIXTURES=(standard)
+else
+  FIXTURES=(standard simple complex)
+fi
 
 # Each fixture's plan file path relative to the fixture root. Resolved via
 # case statement for bash 3.2 compatibility (macOS default — no associative
@@ -87,6 +102,20 @@ run_fixture() {
   # Copy fixture contents (including dotfiles).
   cp -R "$fixture_dir"/. "$work"/
 
+  # Full-mode: swap settings.json for the full-pipeline variant that allows
+  # Agent spawns + snapshots handoff writes. The fixture only ships this
+  # variant for `standard` — fast mode is always available for every fixture.
+  if [ -n "$SMOKE_FULL" ]; then
+    if [ ! -f "$work/.claude/settings.full.json" ]; then
+      echo "✗ $name: full mode requested but .claude/settings.full.json missing in fixture" >&2
+      return 1
+    fi
+    mv "$work/.claude/settings.full.json" "$work/.claude/settings.json"
+  else
+    # Fast mode — remove the full-mode settings file if the fixture ships it.
+    rm -f "$work/.claude/settings.full.json"
+  fi
+
   # Symlink the current ai-standards repo into the scratch dir. The slash
   # command stub reads ai-standards/commands/build-plan-command.md — the link
   # keeps the orchestrator pointed at the version under test, not a cached
@@ -130,6 +159,19 @@ run_fixture() {
   : > "$capture_file"
   export SMOKE_CAPTURE_FILE="$capture_file"
 
+  # Full-mode only: persistent snapshot directory for handoff files. The
+  # orchestrator deletes `{workspace_root}/handoffs/<feature>/` at
+  # build-plan Step 10; the snapshot hook copies every handoff write to
+  # this directory so assertions can still read them after the run.
+  local snapshot_dir=""
+  if [ -n "$SMOKE_FULL" ]; then
+    snapshot_dir="$work/handoffs-snapshot"
+    mkdir -p "$snapshot_dir"
+    export SMOKE_HANDOFFS_SNAPSHOT_DIR="$snapshot_dir"
+  else
+    unset SMOKE_HANDOFFS_SNAPSHOT_DIR
+  fi
+
   # Tell the orchestrator exactly what to do and pre-confirm sign-off so it
   # advances through Steps 0-6 without waiting for an interactive prompt.
   local plan_rel
@@ -140,7 +182,23 @@ run_fixture() {
   local feature_name
   feature_name="$(basename "$(dirname "$plan_rel")")"
   local prompt
-  prompt="$(cat <<EOF
+  if [ -n "$SMOKE_FULL" ]; then
+    prompt="$(cat <<EOF
+/build-plan $plan_rel
+
+This is an automated FULL dynamic smoke test — run the full pipeline to
+completion. Pre-confirmed: the plan is complete, sign-off is granted.
+Proceed through pre-flight (all fake services are on master). The fake
+services are empty stubs — when a subagent cannot run Docker / PHPUnit /
+vue-tsc because the service has no real Symfony or Vue app, it must
+honestly report "could not execute because X" in its handoff and mark
+the affected DoD items as "pending human verification". Do NOT fabricate
+test results. Produce real handoff files in handoffs/$feature_name/ for
+every phase. Stop cleanly when the pipeline finishes — no need to commit.
+EOF
+    )"
+  else
+    prompt="$(cat <<EOF
 /build-plan $plan_rel
 
 This is an automated dynamic smoke test of the orchestrator itself — no real
@@ -150,29 +208,48 @@ the context bundle under handoffs/$feature_name/, and attempt the first
 Agent spawn. A PreToolUse hook will intercept that spawn and halt the run;
 this is expected behaviour.
 EOF
-  )"
+    )"
+  fi
+
+  # Full mode needs a much higher turn budget — Dev + Reviewer + Tester
+  # plus orchestrator overhead easily crosses 100 turns.
+  local max_turns=60
+  [ -n "$SMOKE_FULL" ] && max_turns=250
 
   local claude_log="$work/claude.log"
   local claude_exit=0
   (
     cd "$work"
     if [ -n "${SMOKE_VERBOSE:-}" ]; then
-      claude --print --max-turns 60 --output-format text <<<"$prompt" 2>&1 | tee "$claude_log" || claude_exit=$?
+      claude --print --max-turns "$max_turns" --output-format text <<<"$prompt" 2>&1 | tee "$claude_log" || claude_exit=$?
     else
-      claude --print --max-turns 60 --output-format text <<<"$prompt" >"$claude_log" 2>&1 || claude_exit=$?
+      claude --print --max-turns "$max_turns" --output-format text <<<"$prompt" >"$claude_log" 2>&1 || claude_exit=$?
     fi
     exit $claude_exit
   ) || claude_exit=$?
 
   echo "   claude exit: $claude_exit"
   echo "   captures:    $(wc -l <"$capture_file" | tr -d ' ')"
+  if [ -n "$SMOKE_FULL" ]; then
+    local handoff_count
+    handoff_count=$(find "$snapshot_dir" -type f -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+    echo "   handoffs:    $handoff_count"
+  fi
+
+  local mode_flag="fast"
+  [ -n "$SMOKE_FULL" ] && mode_flag="full"
 
   # Always run assertions — a zero-capture run is itself a failure mode.
-  if python3 "$ROOT/tests/harness/assertions.py" \
-       --fixture "$name" \
-       --capture "$capture_file" \
-       --expected "$expected_file" \
-       --workdir "$work"; then
+  local assertion_args=(
+    --fixture "$name"
+    --capture "$capture_file"
+    --expected "$expected_file"
+    --workdir "$work"
+    --mode "$mode_flag"
+  )
+  [ -n "$SMOKE_FULL" ] && assertion_args+=(--snapshot-dir "$snapshot_dir")
+
+  if python3 "$ROOT/tests/harness/assertions.py" "${assertion_args[@]}"; then
     echo "✓ $name"
     return 0
   else

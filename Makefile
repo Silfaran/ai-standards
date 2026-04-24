@@ -10,7 +10,7 @@ PROJECT_DOCS := $(shell cat .workspace-config-path 2>/dev/null)
 
 ALL_SERVICES = $(BACKEND_SERVICES) $(FRONTEND_SERVICES)
 
-.PHONY: up down build update infra-up infra-down test test-unit test-integration lint static quality smoke smoke-dynamic logs ps
+.PHONY: up down build update infra-up infra-down test test-unit test-integration lint static quality smoke smoke-dynamic smoke-dynamic-full logs ps
 
 # --- Framework self-checks ---
 
@@ -23,6 +23,16 @@ smoke:
 # before cutting a release or after changing agents/commands. See tests/README.md.
 smoke-dynamic:
 	@./tests/harness/run-smoke.sh
+
+# Dynamic smoke — FULL mode. Allows the first Agent spawn through; the
+# orchestrator runs Dev → Reviewer → Tester against the `standard` fixture.
+# Assertions target the STRUCTURE of produced handoff files (Files Created
+# section present, Reviewer citing rule IDs, Tester stating pass/fail).
+# Real subagents run on their declared tiers (Opus/Sonnet) — expect
+# ~$5-15 in API costs per run. Local only, run manually before cutting
+# a release or after editing any agents/*.md. See tests/README.md.
+smoke-dynamic-full:
+	@SMOKE_FULL=1 ./tests/harness/run-smoke.sh
 
 # --- Infrastructure (shared: PostgreSQL, RabbitMQ, Mailpit) ---
 
