@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.19.0](https://github.com/Silfaran/ai-standards/compare/v0.18.0...v0.19.0) (2026-04-24)
+
+
+### Added
+
+* **checklist:** add BE-068 — prefer const-array lookup over match for VO ranks ([#46](https://github.com/Silfaran/ai-standards/issues/46)) ([dabf250](https://github.com/Silfaran/ai-standards/commit/dabf250ca1e2a199725bfb036284ad5083d7b8fc))
+
 ## [0.18.0](https://github.com/Silfaran/ai-standards/compare/v0.17.0...v0.18.0) (2026-04-24)
 
 
