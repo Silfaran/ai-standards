@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.17.0](https://github.com/Silfaran/ai-standards/compare/v0.16.0...v0.17.0) (2026-04-24)
+
+
+### Added
+
+* **tests:** retry-on-flake wrapper for the dynamic smoke harness (L2.2) ([#42](https://github.com/Silfaran/ai-standards/issues/42)) ([f0bda91](https://github.com/Silfaran/ai-standards/commit/f0bda910a31b0b8753198611fb5721a496856b2d))
+
 ## [0.16.0](https://github.com/Silfaran/ai-standards/compare/v0.15.1...v0.16.0) (2026-04-24)
 
 
