@@ -221,6 +221,10 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **BE-065** — Every application service class name ends with `Service` (e.g. `UserFinderService`) — no generic names like `XxxManager`, `XxxHelper`, `XxxUtil`
 - [ ] **BE-066** — PHPUnit method names match the project's PHP-CS-Fixer config — `testDescriptiveCamelCase` under the default `php_unit_method_casing` rule, `test_descriptive_snake_case` only when that rule is disabled
 
+## PHP / PHPStan idioms
+
+- [ ] **BE-068** — Avoid `match` for closed, low-cardinality (≤6) value-to-value mappings where PHPStan cannot prove the scrutinee narrow (e.g. a Value Object method like `Priority::rank()` whose storage is `string`). Prefer a `private const array MAP = [...]` with `return self::MAP[$this->value];`. `match` either trips `match.unhandled` (no default + string scrutinee) or `match.alwaysTrue` (default becomes unreachable after input narrowing) at level 9. The array lookup has the same runtime cost, is shorter, and side-steps both errors. Applies to both new code and refactors. Two prior incidents in task-manager: (a) narrowed enum + unreachable default, (b) string VO with covered literals but no narrowing.
+
 ## Definition of Done
 
 - [ ] **BE-067** — Every DoD item from the task file checked
