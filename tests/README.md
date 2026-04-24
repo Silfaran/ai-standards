@@ -80,9 +80,20 @@ Keep fixtures minimal — the goal is to exercise orchestrator decisions, not to
 
 The LLM orchestrator paraphrases prose across runs — the same spec can produce a context bundle headed `## Spec digest — Technical Details` in one run and `## 4. Spec digest — Technical Details` (or occasionally `## Technical summary`) in another. Assertions that check for exact prose are brittle.
 
-Design choice: `prompt_template_sections` and `context_bundle.required_sections` are treated as **regex** (`re.search`), not literal substrings. Write patterns that tolerate paraphrase — e.g. `"Spec|Technical"` to accept either heading — while still catching real regressions (the section disappearing altogether, or the orchestrator skipping the spec-digest step).
+Two defenses are stacked:
 
-If a fixture still flakes after widening patterns, the legitimate fallback is to re-run (`make smoke-dynamic`) — one spurious failure in ~10 runs is the accepted noise floor. A reliably-failing fixture is a real regression.
+**1. Regex-based assertions.** `prompt_template_sections` and `context_bundle.required_sections` are treated as regex (`re.search`), not literal substrings. Write patterns that tolerate paraphrase — e.g. `"Spec|Technical"` to accept either heading — while still catching real regressions (the section disappearing altogether, or the orchestrator skipping the spec-digest step).
+
+**2. Automatic retries.** Every fixture runs up to `SMOKE_MAX_ATTEMPTS` times. A single attempt passing is sufficient — the first pass short-circuits the loop. Defaults:
+
+| Mode | Default attempts | Worst-case cost per fixture | Rationale |
+|---|---|---|---|
+| Fast | 3 | ~$3-9 | Single attempt is ~$1-3 — retries are cheap insurance |
+| Full | 2 | ~$10-30 | Single attempt is ~$5-15 — cap worst case at ~$30 |
+
+Override with `SMOKE_MAX_ATTEMPTS=N`. Use `SMOKE_NO_RETRY=1` when debugging a fixture so retries do not mask the signal.
+
+If a fixture still fails after exhausting retries, it is a real regression — not flakiness. Retries are a noise filter, not a correctness patch.
 
 ## What the harness does NOT verify (known limitations)
 
