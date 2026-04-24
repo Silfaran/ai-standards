@@ -29,7 +29,7 @@ Every ADR carries exactly one of these status values, declared on the first line
 **Supersedes chain.** When ADR-007 replaces ADR-003:
 
 - ADR-003 keeps its original prose, adds a `## Deprecated` section, and updates its status line to `superseded by ADR-007`.
-- ADR-007 adds a `## Supersedes` section: "Replaces ADR-003. Reason: ..." 
+- ADR-007 adds a `## Supersedes` section: "Replaces ADR-003. Reason: ..."
 
 Never delete the old ADR — the history of why a decision was changed is itself valuable.
 
