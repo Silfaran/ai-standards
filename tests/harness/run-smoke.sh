@@ -11,8 +11,12 @@
 #   ./tests/harness/run-smoke.sh standard   # runs a single fixture
 #
 # Environment:
-#   SMOKE_KEEP_WORK=1   keep the scratch directory after the run (debug)
-#   SMOKE_VERBOSE=1     stream claude's stdout/stderr live
+#   SMOKE_KEEP_WORK=1       keep the scratch directory after the run (debug)
+#   SMOKE_VERBOSE=1         stream claude's stdout/stderr live
+#   SMOKE_MAX_ATTEMPTS=N    override retry budget (default: 3 in fast mode,
+#                           2 in full mode — full-mode retries are expensive)
+#   SMOKE_NO_RETRY=1        shortcut for SMOKE_MAX_ATTEMPTS=1 (no retries)
+#   SMOKE_FULL=1            full-pipeline mode (real subagents run, ~$5-15)
 
 set -euo pipefail
 
@@ -37,6 +41,29 @@ if [ -n "$SMOKE_FULL" ]; then
 else
   FIXTURES=(standard simple complex)
 fi
+
+# Retry budget.
+# The orchestrator is an LLM — even with flakiness-tolerant regex assertions
+# (PR #36), a non-zero fraction of runs fails on paraphrase drift (fast mode)
+# or on the agent choosing a slightly different structural pattern for its
+# handoff (full mode). A single retry gets the signal right.
+# Fast retries are ~$1-3 each — default 3 attempts is cheap insurance.
+# Full retries are ~$5-15 each — default 2 attempts caps worst case at ~$30.
+if [ -n "${SMOKE_NO_RETRY:-}" ]; then
+  SMOKE_MAX_ATTEMPTS=1
+elif [ -z "${SMOKE_MAX_ATTEMPTS:-}" ]; then
+  if [ -n "$SMOKE_FULL" ]; then
+    SMOKE_MAX_ATTEMPTS=2
+  else
+    SMOKE_MAX_ATTEMPTS=3
+  fi
+fi
+
+# Validate: must be a positive integer.
+case "$SMOKE_MAX_ATTEMPTS" in
+  ''|*[!0-9]*) echo "SMOKE_MAX_ATTEMPTS must be a positive integer, got: $SMOKE_MAX_ATTEMPTS" >&2; exit 2 ;;
+  0)           echo "SMOKE_MAX_ATTEMPTS cannot be zero" >&2; exit 2 ;;
+esac
 
 # Each fixture's plan file path relative to the fixture root. Resolved via
 # case statement for bash 3.2 compatibility (macOS default — no associative
@@ -91,9 +118,13 @@ run_fixture() {
 
   local work
   work="$(mktemp -d -t ai-smoke-"$name"-XXXXXX)"
-  if [ -z "${SMOKE_KEEP_WORK:-}" ]; then
-    trap 'rm -rf "$work"' RETURN
-  fi
+
+  # Cleanup closure: the earlier RETURN trap leaked to the caller in
+  # bash 3.2 (the retry wrapper's own return fired it too, with `$work`
+  # unbound). Explicit function avoids the sticky-trap quirk.
+  _cleanup_work() {
+    [ -z "${SMOKE_KEEP_WORK:-}" ] && rm -rf "$work"
+  }
 
   echo ""
   echo "== Running fixture: $name =="
@@ -108,6 +139,7 @@ run_fixture() {
   if [ -n "$SMOKE_FULL" ]; then
     if [ ! -f "$work/.claude/settings.full.json" ]; then
       echo "✗ $name: full mode requested but .claude/settings.full.json missing in fixture" >&2
+      _cleanup_work
       return 1
     fi
     mv "$work/.claude/settings.full.json" "$work/.claude/settings.json"
@@ -177,6 +209,7 @@ run_fixture() {
   local plan_rel
   plan_rel="$(plan_rel_for "$name")" || {
     echo "✗ $name: no plan_rel_for() case — add one in tests/harness/run-smoke.sh" >&2
+    _cleanup_work
     return 1
   }
   local feature_name
@@ -251,6 +284,7 @@ EOF
 
   if python3 "$ROOT/tests/harness/assertions.py" "${assertion_args[@]}"; then
     echo "✓ $name"
+    _cleanup_work
     return 0
   else
     echo "✗ $name"
@@ -258,12 +292,41 @@ EOF
       echo "   --- last 40 lines of claude.log ---"
       tail -40 "$claude_log" | sed 's/^/   /'
     fi
+    _cleanup_work
     return 1
   fi
 }
 
+# run_with_retry — wraps run_fixture so that a flaky LLM run does not fail
+# the whole smoke. Returns 0 as soon as any attempt passes; returns 1 only
+# after every attempt has failed. When SMOKE_MAX_ATTEMPTS=1 (or
+# SMOKE_NO_RETRY=1) the retry loop runs once and behaves identically to the
+# unwrapped call — useful when debugging a fixture and retries would just
+# mask the signal.
+run_with_retry() {
+  local fixture="$1"
+  local attempt rc
+  for attempt in $(seq 1 "$SMOKE_MAX_ATTEMPTS"); do
+    if [ "$SMOKE_MAX_ATTEMPTS" -gt 1 ]; then
+      echo ""
+      echo "▶ $fixture attempt $attempt/$SMOKE_MAX_ATTEMPTS"
+    fi
+    if run_fixture "$fixture"; then
+      if [ "$attempt" -gt 1 ]; then
+        echo "   (passed on retry $attempt — LLM flakiness absorbed)"
+      fi
+      return 0
+    fi
+    rc=$?
+    if [ "$attempt" -lt "$SMOKE_MAX_ATTEMPTS" ]; then
+      echo "   attempt $attempt failed — retrying"
+    fi
+  done
+  return "${rc:-1}"
+}
+
 for fixture in "${FIXTURES[@]}"; do
-  run_fixture "$fixture" || FAIL=1
+  run_with_retry "$fixture" || FAIL=1
 done
 
 echo ""
@@ -271,5 +334,5 @@ if [ $FAIL -eq 0 ]; then
   echo "All dynamic smoke fixtures passed."
   exit 0
 fi
-echo "Dynamic smoke FAILED — see ✗ lines above."
+echo "Dynamic smoke FAILED after $SMOKE_MAX_ATTEMPTS attempt(s) per fixture — see ✗ lines above."
 exit 1
