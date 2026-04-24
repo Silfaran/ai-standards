@@ -2,10 +2,21 @@
 """
 Assertion runner for the dynamic smoke harness.
 
-Reads the JSONL capture produced by tests/harness/hooks/capture-agent.sh and
-compares its first entry against the invariants declared in
-tests/expected/<fixture>.json. Stdlib only — no pip dependencies — so
-`make smoke-dynamic` works on a fresh machine.
+Two modes:
+
+- **fast**: reads the JSONL capture produced by
+  tests/harness/hooks/capture-agent.sh and compares its first entry against
+  the invariants declared in tests/expected/<fixture>.json. The orchestrator
+  never ran past the first Agent spawn — cheap, deterministic.
+
+- **full**: additionally reads the handoff snapshots captured by
+  tests/harness/hooks/snapshot-handoff.sh during a real end-to-end pipeline
+  run and asserts structural invariants on each produced handoff file (e.g.
+  `backend-dev-handoff.md` contains `## Files Created`, reviewer handoff
+  cites rule IDs, tester handoff mentions pass/fail). Costs real tokens.
+
+Stdlib only — no pip dependencies — so `make smoke-dynamic` works on a
+fresh machine.
 """
 
 from __future__ import annotations
@@ -26,9 +37,9 @@ def _fail(msg: str, hint: str | None = None) -> None:
         print(f"     hint: {hint}", file=sys.stderr)
 
 
-def run_assertions(fixture: str, capture_path: Path, expected: Dict[str, Any],
-                   workdir: Path) -> List[str]:
-    """Returns a list of failure messages (empty = pass)."""
+def run_fast_assertions(fixture: str, capture_path: Path, expected: Dict[str, Any],
+                        workdir: Path) -> List[str]:
+    """Fast-mode assertions — first-spawn shape + context bundle."""
     failures: List[str] = []
 
     if not capture_path.exists() or capture_path.stat().st_size == 0:
@@ -140,12 +151,98 @@ def run_assertions(fixture: str, capture_path: Path, expected: Dict[str, Any],
     return failures
 
 
+def run_full_assertions(fixture: str, capture_path: Path, expected: Dict[str, Any],
+                        workdir: Path, snapshot_dir: Path) -> List[str]:
+    """Full-mode assertions — structural invariants on produced handoff files."""
+    failures: List[str] = []
+
+    full_rules = expected.get("full_mode", {}) or {}
+    if not full_rules:
+        failures.append(
+            "expected file has no `full_mode` section — add handoff invariants "
+            "before running SMOKE_FULL=1"
+        )
+        return failures
+
+    # Full mode still benefits from the fast-mode checks on the first spawn —
+    # model tier, prompt template, context bundle. Re-use them verbatim.
+    failures.extend(
+        run_fast_assertions(fixture, capture_path, expected, workdir)
+    )
+
+    # --- handoff snapshots --------------------------------------------------
+    if not snapshot_dir.exists():
+        failures.append(
+            f"handoffs snapshot directory not found at {snapshot_dir} — the "
+            "snapshot-handoff.sh PostToolUse hook did not run or did not "
+            "capture any files"
+        )
+        return failures
+
+    # Collect every snapshotted handoff by basename (flatten feature subdirs).
+    snapshots: Dict[str, Path] = {}
+    for p in snapshot_dir.rglob("*.md"):
+        snapshots[p.name] = p
+
+    handoffs_spec = full_rules.get("handoffs", {}) or {}
+    for handoff_name, rules in handoffs_spec.items():
+        required = bool(rules.get("required", True))
+        snapshot = snapshots.get(handoff_name)
+
+        if snapshot is None:
+            if required:
+                failures.append(
+                    f"required handoff file not produced: {handoff_name} — the "
+                    "orchestrator did not reach this phase OR the phase agent "
+                    f"did not write its handoff. Snapshot dir contains: "
+                    f"{sorted(snapshots.keys()) or '[empty]'}"
+                )
+            continue
+
+        body = snapshot.read_text()
+
+        # Must-contain patterns (regex — alternation welcome).
+        for pattern in rules.get("body_must_match", []) or []:
+            if not re.search(pattern, body, re.IGNORECASE | re.MULTILINE):
+                failures.append(
+                    f"handoff '{handoff_name}' missing required pattern: "
+                    f"/{pattern}/ (case-insensitive, multiline)"
+                )
+
+        # At-least-one-of: accept any one pattern from the set. Use for
+        # outcomes where the agent has several legitimate phrasings
+        # (e.g. "approved" vs "no violations found" vs rule-ID citations).
+        any_of_groups = rules.get("body_must_match_any_of", []) or []
+        for group in any_of_groups:
+            if not any(re.search(p, body, re.IGNORECASE | re.MULTILINE)
+                       for p in group):
+                failures.append(
+                    f"handoff '{handoff_name}' satisfies none of the "
+                    f"patterns in any-of group: {group}"
+                )
+
+        # Non-empty body sanity check.
+        if rules.get("min_length"):
+            min_len = int(rules["min_length"])
+            if len(body.strip()) < min_len:
+                failures.append(
+                    f"handoff '{handoff_name}' is too short "
+                    f"({len(body.strip())} chars < {min_len}) — the agent "
+                    "probably aborted early"
+                )
+
+    return failures
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--fixture", required=True)
     ap.add_argument("--capture", required=True, type=Path)
     ap.add_argument("--expected", required=True, type=Path)
     ap.add_argument("--workdir", required=True, type=Path)
+    ap.add_argument("--mode", choices=("fast", "full"), default="fast")
+    ap.add_argument("--snapshot-dir", type=Path, default=None,
+                    help="Full-mode: directory containing snapshotted handoffs")
     args = ap.parse_args()
 
     try:
@@ -154,7 +251,18 @@ def main() -> int:
         print(f"   could not parse {args.expected}: {exc}", file=sys.stderr)
         return 2
 
-    failures = run_assertions(args.fixture, args.capture, expected, args.workdir)
+    if args.mode == "full":
+        if args.snapshot_dir is None:
+            print("   --snapshot-dir is required in full mode", file=sys.stderr)
+            return 2
+        failures = run_full_assertions(
+            args.fixture, args.capture, expected, args.workdir,
+            args.snapshot_dir,
+        )
+    else:
+        failures = run_fast_assertions(
+            args.fixture, args.capture, expected, args.workdir,
+        )
 
     if not failures:
         return 0

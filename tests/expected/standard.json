@@ -24,5 +24,32 @@
       "Invariants|invariants",
       "Spec|Technical"
     ]
+  },
+  "full_mode": {
+    "_comment": "Structural invariants on the handoff files produced by the real Dev → Reviewer → Tester pipeline. The fake task-service has no Symfony app, so agents honestly report 'could not execute tests because X' — we assert handoff SHAPE (sections present, rule IDs cited, outcome stated), not that implementation ran.",
+    "handoffs": {
+      "backend-dev-handoff.md": {
+        "required": true,
+        "min_length": 400,
+        "body_must_match": [
+          "^#+\\s*(files?|changes?|implementation|deliverables?)",
+          "(quality\\s*gates?|tests?\\s*(run|executed|results?|outcome)|phpstan|phpunit|could\\s*not\\s*(run|execute))"
+        ]
+      },
+      "backend-reviewer-handoff.md": {
+        "required": false,
+        "min_length": 200,
+        "body_must_match_any_of": [
+          ["\\b(BE|FE|SE|PE|OB|CA|SC|DM|AC|LO)-\\d{3}\\b", "approved|no\\s+violations?|no\\s+issues?|all\\s+checks?\\s+pass"]
+        ]
+      },
+      "tester-handoff.md": {
+        "required": false,
+        "min_length": 200,
+        "body_must_match_any_of": [
+          ["pass(ed|ing)?", "fail(ed|ing|ure)?", "could\\s*not\\s*(run|execute)", "pending\\s*human\\s*verification"]
+        ]
+      }
+    }
   }
 }

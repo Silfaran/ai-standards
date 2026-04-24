@@ -25,6 +25,17 @@ Run it when:
 
 Do NOT run on every commit — it consumes real API tokens from your account.
 
+## Two modes
+
+The harness runs in two modes with complementary coverage:
+
+| Mode | Entry point | Subagents run? | Cost per run | What it asserts | When to use |
+|---|---|---|---|---|---|
+| **Fast** (default) | `make smoke-dynamic` | No — first spawn denied | ~60-180k tokens (~$1-3) | First-spawn shape: model tier, prompt template, agent path, context bundle structure | Every time you touch an agent or command file |
+| **Full** | `make smoke-dynamic-full` | Yes — real Opus/Sonnet tiers | ~500k-1M tokens (~$5-15) | Everything fast asserts, plus structural invariants on produced handoff files (Files Created, rule IDs cited, test outcomes stated) | Before cutting a release, after reshaping the pipeline, to verify a new agent's handoff shape |
+
+Full mode only runs the `standard` fixture — `simple` and `complex` carry too little additional signal to justify 3× the token cost.
+
 ## How it works
 
 1. `tests/harness/run-smoke.sh` copies `tests/fixtures/<name>/` to a scratch directory under `/tmp`, symlinks the current ai-standards repo into it, and initializes fake git repos for each affected service so the orchestrator's pre-flight branch check passes
@@ -75,6 +86,10 @@ If a fixture still flakes after widening patterns, the legitimate fallback is to
 
 ## What the harness does NOT verify (known limitations)
 
-- **Handoff content.** The capture hook denies the first `Agent` spawn, so no subagent actually runs. The test validates the spawn metadata (model, description, prompt shape) and the context bundle, not the files the subagent would produce. Full content verification would require L2 (real subagents on Haiku) — a 3-5 day follow-up with open design decisions on flakiness tolerance.
-- **Enforcement.** `make smoke-dynamic` is manual. A non-fatal reminder is printed by `make smoke` (`scripts/smoke-tests.sh` Check 8) when structural commits accumulate since the last release tag, but CI does not block on a stale dynamic smoke — running it on every push would burn real tokens for marginal value.
-- **Review / Tester phase behaviour.** Reviewer and Tester agents are spawned later in the flow; their prompts and tier propagation are not captured because the harness halts at the first spawn.
+Updated after L2.1 (full mode) landed — several earlier limitations are now covered.
+
+- **Handoff content (fast mode only).** Fast mode denies the first `Agent` spawn, so no subagent runs. Fast mode only validates spawn metadata + context bundle. **Covered by full mode** (`make smoke-dynamic-full`): the pipeline runs, handoffs get snapshotted, structural invariants are asserted (Files Created sections, rule IDs cited by Reviewer, Tester outcomes stated).
+- **Enforcement.** `make smoke-dynamic` / `make smoke-dynamic-full` are manual. A non-fatal reminder is printed by `make smoke` (`scripts/smoke-tests.sh` Check 8) when structural commits accumulate since the last release tag, but CI does not block on a stale dynamic smoke — running it on every push would burn real tokens for marginal value.
+- **Review iteration behaviour (L2.1 caveat).** Full mode captures the FIRST invocation of each agent role, not every Reviewer → Developer → Reviewer iteration. Verifying that the orchestrator caps iterations at 3 requires multi-spawn capture logic (future work).
+- **Parallel phase ordering (complex only, L2.1 caveat).** In the `complex` flow, Backend ‖ Frontend are meant to run in parallel. Fast mode only captures the first spawn, so parallelism is not asserted. Full mode does not currently run the `complex` fixture because of token cost.
+- **Semantic quality of handoffs.** The assertions check SHAPE (sections present, patterns matched), not reasoning quality. A Backend Developer handoff that lists correct files but describes an incorrect implementation passes the smoke. Real-feature development catches that — smoke tests catch structural regressions.
