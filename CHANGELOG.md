@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.29.0](https://github.com/Silfaran/ai-standards/compare/v0.28.0...v0.29.0) (2026-04-25)
+
+
+### Added
+
+* **standards:** add pwa-offline standard (4-level adoption, SW + manifest + push) ([#67](https://github.com/Silfaran/ai-standards/issues/67)) ([cb42309](https://github.com/Silfaran/ai-standards/commit/cb42309dd8f23724198da3c5f5bca93f3bdbda8e))
+
 ## [0.28.0](https://github.com/Silfaran/ai-standards/compare/v0.27.0...v0.28.0) (2026-04-25)
 
 
