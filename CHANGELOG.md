@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.33.0](https://github.com/Silfaran/ai-standards/compare/v0.32.0...v0.33.0) (2026-04-25)
+
+
+### Added
+
+* **standards:** add attack-surface-hardening standard (CSP/HSTS/CSRF/SSRF/SBOM/DAST/etc.) ([#75](https://github.com/Silfaran/ai-standards/issues/75)) ([4b8c43b](https://github.com/Silfaran/ai-standards/commit/4b8c43bc72b7d71157b2972c82adf9af4691bd51))
+
 ## [0.32.0](https://github.com/Silfaran/ai-standards/compare/v0.31.0...v0.32.0) (2026-04-25)
 
 
