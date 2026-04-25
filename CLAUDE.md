@@ -18,6 +18,7 @@ Every service must have a `CLAUDE.md` referencing this file.
 - Frontend standards: `ai-standards/standards/frontend.md` (rules) / `frontend-reference.md` (full examples)
 - Logging standards: `ai-standards/standards/logging.md`
 - Security standards: `ai-standards/standards/security.md`
+- Attack surface hardening: `ai-standards/standards/attack-surface-hardening.md` — OWASP Top 10 coverage map + CSP / HSTS / cookie security / COOP-COEP-CORP, CSRF on cookie-auth SPAs, `SafeHttpClient` for SSRF, XXE / SSTI / command-injection / deserialization rules, username-enumeration & lockout, bot protection, open-redirect (backend), outbound-webhook signing, dependency automation (Dependabot/Renovate, SBOM, container Trivy scan, gitleaks), DAST in CI, anomaly metrics. Read whenever the project is reachable from the public internet (staging or production).
 - Authorization standards: `ai-standards/standards/authorization.md` — Voter pattern, Subject VO, tenant scoping, RBAC + ABAC hybrid model. Read when the system has more than one role beyond authenticated, has resource owners, is multi-tenant, or has different rules per action on the same resource.
 - Internationalization standards: `ai-standards/standards/i18n.md` — locale negotiation, UI strings vs content translations, fallback chain, plurals/dates/currency formatting, frontend `vue-i18n` integration. Read when the product ships in more than one language, accepts user-generated content from multi-language users, or targets users in more than one country.
 - GDPR / PII standards: `ai-standards/standards/gdpr-pii.md` — four-tier classification (Public / Internal-PII / Sensitive-PII / Derived), pii-inventory.md, column-level encryption for sensitive fields, DSAR + RTBF workflow, consent ledger, sub-processor list, DPIA template. Read when the system stores any data identifying a natural person (name, email, phone, government ID, photo, behavioural data tied to an account).
@@ -108,10 +109,11 @@ Every bullet in the reviewer checklists (`backend-review-checklist.md`, `fronten
 | `AN-*` | Analytics projections (tier model, materialized views, replicas, warehouse loaders, privacy) | `analytics-readonly-projection.md` |
 | `PW-*` | PWA & offline (service worker, cache strategies, manifest, offline reads/writes, push) | `pwa-offline.md` |
 | `DS-*` | Digital signatures (SignatureGatewayInterface, modality, templates, document hashing, retention) | `digital-signature-integration.md` |
+| `AS-*` | Attack surface hardening (CSP, HSTS, CSRF, SSRF, deserialisation, lockout, bot, outbound webhook signing, SBOM, container scan, gitleaks, DAST) | `attack-surface-hardening.md` |
 
 **Invariants of the ID scheme:**
 
-- **Format:** `<PREFIX>-<3 digits>`, e.g. `BE-015`. Regex: `^(BE|FE|SE|PE|OB|CA|SC|DM|AC|LO|AZ|IN|GD|LL|PA|FS|GS|AU|FF|AN|PW|DS)-\d{3}$`.
+- **Format:** `<PREFIX>-<3 digits>`, e.g. `BE-015`. Regex: `^(BE|FE|SE|PE|OB|CA|SC|DM|AC|LO|AZ|IN|GD|LL|PA|FS|GS|AU|FF|AN|PW|DS|AS)-\d{3}$`.
 - **Stability:** IDs are never reassigned. A rule that is deleted leaves a gap in the sequence; a new rule takes the next free integer in its prefix (not the gap).
 - **Global uniqueness:** an ID never refers to two different rules. When a rule applies to both backend and frontend (e.g. `SE-003` — no SSL verification disabled), the same ID appears in both checklists.
 - **New rules:** when a reviewer flags a missing rule (see the footer of each checklist), the orchestrator assigns the next free ID in the matching prefix. Contributors do not invent IDs.

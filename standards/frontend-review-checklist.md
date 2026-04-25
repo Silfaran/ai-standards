@@ -134,6 +134,13 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **DS-023** — Signed documents are NEVER rendered inline from the public origin — they are downloaded via a presigned URL with `Content-Disposition: attachment` (FS-010)
 - [ ] **DS-024** — Verification surface displays the system's `document_sha256` AND the provider audit trail link — copy-pasteable, comparable to a third party's hash without re-fetching from the provider
 
+## Attack surface hardening
+
+- [ ] **AS-024** — Inline scripts and styles in HTML carry the per-request CSP nonce; the build pipeline injects it (no `'unsafe-inline'`)
+- [ ] **AS-025** — Third-party scripts loaded from a CDN carry `integrity` (Subresource Integrity hash) AND `crossorigin="anonymous"` — drop the dependency if the CDN does not publish a SHA
+- [ ] **AS-026** — Frontend NEVER builds an outbound URL from a user-supplied URL parameter without `isAllowedRedirect()` (SE-020 generalised)
+- [ ] **AS-027** — CSP violations surfaced from `report-uri` are treated as defects; the dashboard for `csp_violations_total` is reviewed weekly
+
 ## Bootstrap order in `main.ts`
 
 - [ ] **FE-033** — Order: `createPinia()` → `router` → `VueQueryPlugin` → `setupInterceptors()`
@@ -237,5 +244,6 @@ For deeper context on any rule above:
 - useFlag composable, no-flash gating, sticky variants, server-side re-check → `feature-flags.md`
 - Service worker setup, cache strategies, manifest, update flow, offline reads/writes, push consent → `pwa-offline.md`
 - Pre-sign review, signing-state UX, attachment downloads, verification surface → `digital-signature-integration.md`
+- CSP nonces, SRI for CDN scripts, allowlisted redirects, CSP violation dashboard → `attack-surface-hardening.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.

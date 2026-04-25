@@ -365,6 +365,32 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **DS-019** — Metrics: `signatures_sent_total`, `signatures_completed_total`, `signatures_declined_total{decline_reason}`, `signature_provider_latency_seconds`, `signature_webhook_failures_total`, `signature_template_drift_total` — labels bounded to provider/purpose/modality/outcome
 - [ ] **DS-020** — `SIGNATURE_PROVIDER_WEBHOOK_SECRET` declared in `secrets-manifest.md` with rotation policy; integration tests behind `@group signature-real` with a daily budget — never default CI
 
+## Attack surface hardening
+
+- [ ] **AS-001** — `[critical]` Public-facing HTML responses emit `Content-Security-Policy` with no `'unsafe-inline'` or `'unsafe-eval'`; per-request nonces; `frame-ancestors 'none'`; `base-uri 'none'`; `object-src 'none'`; `report-uri /api/csp-report`. Application-emitted, not reverse-proxy
+- [ ] **AS-002** — `Strict-Transport-Security: max-age=63072000; includeSubDomains[; preload]` on every public response; HTTP→HTTPS redirect is the only response on port 80
+- [ ] **AS-003** — Cookies set by the application carry `Secure; HttpOnly; SameSite=Lax` (or `Strict` for auth); `SameSite=None` requires explicit ADR
+- [ ] **AS-004** — Public pages emit `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Resource-Policy: same-site`; `Cross-Origin-Embedder-Policy: require-corp` only after CSP is enforcing
+- [ ] **AS-005** — `[critical]` State-changing endpoints reachable from cookie-authenticated SPAs verify either a `Bearer` token or a CSRF double-submit token; the refresh endpoint ALWAYS verifies a CSRF token in addition to the cookie
+- [ ] **AS-006** — `[critical]` Outbound HTTP from server code with user-supplied URLs goes through `SafeHttpClient` (deny RFC 1918 / loopback / link-local / cloud metadata; pin resolved IP for the request; reject protocol-changing redirects; connect timeout ≤ 5s, total ≤ 30s); direct `HttpClientInterface->request()` with user input is a hard reject
+- [ ] **AS-007** — XML parsers configured with external entity loading disabled (`LIBXML_NONET`); accepting XML on an API endpoint requires an ADR
+- [ ] **AS-008** — Twig / template renderers receive a template NAME + context array; never a template STRING built from user input. `eval`, `Function(...)`, `vm.runInNewContext` forbidden with user-derived input
+- [ ] **AS-009** — `exec`/`system`/`passthru`/`popen`/backticks forbidden with user-derived input; when shell unavoidable, `Symfony\Component\Process\Process` with array-form args (no shell)
+- [ ] **AS-010** — `unserialize()` on untrusted input forbidden (BE-044 generalises); JSON-only on the wire
+- [ ] **AS-011** — Login / password-reset / magic-link endpoints respond with the SAME body and HTTP status whether the user exists or not; response time normalised to a fixed budget to prevent timing enumeration
+- [ ] **AS-012** — Per-account lockout (e.g. 5 failed attempts → 15 min) COMBINED with per-IP rate-limit (SE-009..SE-012); lockout state in Redis with TTL; emits `auth.account.locked` audit + `auth_lockouts_total` metric
+- [ ] **AS-013** — Forms driving cost (registration, password reset, contact, content publication) protected by invisible CAPTCHA OR honeypot OR proof-of-work — choice recorded per surface in `decisions.md`
+- [ ] **AS-014** — Backend redirects from `?next=` / `?return_url=` validate via `isAllowedRedirect()` against the project allowlist; failure returns 422 `error: "redirect_target_not_allowed"`
+- [ ] **AS-015** — `[critical]` Outbound webhooks send `X-Signature-256: hmac-sha256(secret, body)` + `X-Timestamp` + `X-Subscription-Id`; signing secret per-subscription, plaintext shown once at creation; receivers reject requests outside a 5-minute clock window
+- [ ] **AS-016** — Dependabot or Renovate configured at the repo level; `composer audit` / `npm audit` thresholds at `high` (already in quality-gates); `critical` advisory blocks deploy regardless of patch availability
+- [ ] **AS-017** — Every release artifact ships with a CycloneDX SBOM (`composer cyclonedx` / `@cyclonedx/cyclonedx-npm`); SBOM signed alongside the artifact
+- [ ] **AS-018** — `[critical]` Docker base images pinned to immutable digests (`@sha256:...`), never floating tags; Trivy scan via `scripts/project-checks/check-container-image.sh` fails build on HIGH/CRITICAL findings
+- [ ] **AS-019** — Final container images run as non-root (`USER 1000:1000` or app UID); read-only root filesystem; tmpfs for `/tmp`; build tools dropped via multi-stage builds
+- [ ] **AS-020** — `gitleaks` scan via `scripts/project-checks/check-secrets-leaked.sh` runs in pre-commit hook + CI on every push + nightly cron on `master` against full git history
+- [ ] **AS-021** — OWASP ZAP DAST runs against staging on every deploy; HIGH/CRITICAL findings block promotion to prod; opt-outs recorded as ADR
+- [ ] **AS-022** — Anomaly metrics emitted: `auth_failures_total{reason}`, `auth_lockouts_total`, `csp_violations_total{directive}`, `safe_http_blocked_total{reason}`, `webhook_signature_invalid_total{provider}`, `audit_authz_denied_total{reason}`, `outbound_redirect_blocked_total` — bounded labels
+- [ ] **AS-023** — Failed-login logs use a peppered hash of the username (`user_id_hash`), never the email or other PII (the log is otherwise an enumeration oracle); IP addresses follow PII classification per `gdpr-pii.md`
+
 ## Logging
 
 - [ ] **LO-002** — LoggingMiddleware wired into `command.bus`, `event.bus`, `message.bus`
@@ -482,6 +508,7 @@ For deeper context on any rule above:
 - Append-only audit table, AuditLogProjector wiring, denial trails, retention/archival → `audit-log.md`
 - Flag taxonomy, registry, FlagGatewayInterface, sticky bucketing, removal procedure → `feature-flags.md`
 - Projection tiers (T1–T4), materialized view + replica + warehouse discipline, privacy in projections → `analytics-readonly-projection.md`
+- CSP, HSTS, COOP/COEP/CORP, CSRF, SSRF, deserialisation, username enumeration, account lockout, bot protection, outbound webhook signing, SBOM, container image scanning, gitleaks, DAST → `attack-surface-hardening.md`
 - Push subscriptions, offline-write idempotency, payload PII rules → `pwa-offline.md`
 - SignatureGatewayInterface, modality choice, template versioning, document hashing, webhook idempotency, retention → `digital-signature-integration.md`
 
