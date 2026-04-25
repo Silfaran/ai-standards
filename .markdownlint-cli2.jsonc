@@ -40,7 +40,12 @@
     // with '*' bullets while hand-written sections tend to use '-'.
     // Forcing a single style across the file would require rewriting every
     // release-please commit, so we relax the consistency rule.
-    "MD004": false
+    "MD004": false,
+    // Table column style — markdownlint v0.40+ added MD060 which rejects
+    // pipe tables without padding spaces ("compact" style). Our standards
+    // mix compact and padded tables; enforcing a single style would mean
+    // refactoring ~1000 instances for zero correctness gain.
+    "MD060": false
 
     // Rules kept enabled (default: true) that catch actual problems:
     //   MD001 — heading levels increment by one
