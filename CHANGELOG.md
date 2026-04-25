@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.30.0](https://github.com/Silfaran/ai-standards/compare/v0.29.0...v0.30.0) (2026-04-25)
+
+
+### Added
+
+* **standards:** add digital-signature-integration standard (gateway, modality, templates, retention) ([#69](https://github.com/Silfaran/ai-standards/issues/69)) ([5cfee5d](https://github.com/Silfaran/ai-standards/commit/5cfee5d624490a0f4165bc754f0d92dfe40a2505))
+
 ## [0.29.0](https://github.com/Silfaran/ai-standards/compare/v0.28.0...v0.29.0) (2026-04-25)
 
 
