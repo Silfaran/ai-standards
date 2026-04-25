@@ -79,6 +79,13 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **GD-018** — Withdrawal of consent is reachable in <=2 clicks from the settings entry point and surfaced as effective immediately ("opt out applied"); the UI does NOT promise a "next batch" lag
 - [ ] **GD-019** — Analytics / observability calls (web-vitals, page.view spans) carry the hashed `user_id` only — never the email, tax id, display name in plain text
 
+## Payments & money
+
+- [ ] **PA-021** — Money values in API payloads use `{ amount_minor: <int>, currency: 'XXX' }` — no float prices, no string-formatted "12.34" on the wire
+- [ ] **PA-022** — Frontend renders money via `Intl.NumberFormat` with `style: 'currency'` and explicit locale (see IN-018) — never concatenates symbol + number, never `toFixed(2)` for display
+- [ ] **PA-023** — Card / payment-method capture uses the PSP's hosted element (Stripe Elements, Adyen Drop-in, …) — raw card numbers NEVER touch frontend state, localStorage, sessionStorage or any analytics call
+- [ ] **PA-024** — Payment confirmation pages do NOT trust client-side state for "paid" status — they re-fetch the charge from the backend (which is webhook-driven) before showing a success message
+
 ## Bootstrap order in `main.ts`
 
 - [ ] **FE-033** — Order: `createPinia()` → `router` → `VueQueryPlugin` → `setupInterceptors()`
@@ -176,5 +183,6 @@ For deeper context on any rule above:
 - Voter pattern, Subject VO, route guards, tenant scoping → `authorization.md`
 - vue-i18n setup, lazy namespaces, locale change flow, Intl APIs → `i18n.md`
 - PII in URLs/storage/forms, consent UI, withdrawal flow → `gdpr-pii.md`
+- Money serialization, Intl currency formatting, hosted card capture → `payments-and-money.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.
