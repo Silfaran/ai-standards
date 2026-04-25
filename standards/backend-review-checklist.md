@@ -296,6 +296,25 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **AU-015** — Audit entries do NOT replace operational logs and vice-versa — a single event MAY appear in both; do not collapse logging.md into audit-log.md or the reverse
 - [ ] **AU-016** — Schema changes to `audit_log` follow `data-migrations.md` (expand-contract); existing rows are NEVER mutated; new columns are nullable with a documented backfill rule
 
+## Feature flags
+
+- [ ] **FF-001** — `[critical]` Every `flags->boolean()` / `flags->variant()` call uses a key declared in `{project-docs}/feature-flags.md` (key, kind, owner, created, expected_removal, default, variants, targeting_summary, pii_in_context); a call with no registry entry is a hard reject
+- [ ] **FF-002** — Flag evaluations go through `FlagGatewayInterface` (Domain) — adapters in `src/Infrastructure/Flags/`; no provider SDK imports in handlers/services
+- [ ] **FF-003** — ONE evaluation per code path — the handler decides and delegates; downstream services do NOT re-check the same flag
+- [ ] **FF-004** — Flags are NOT used as authorization — Voters (AZ-001) own permission decisions; flags answer "is the code path delivered?" only
+- [ ] **FF-005** — Flag names are positive (`enable_foo`, `foo_v2`, `foo_kill`) — inverted-logic names (`disable_foo`) are forbidden
+- [ ] **FF-006** — Defaults are conservative: `release` flags default `false`; kill switches default to the safe state (typically "feature on" so a flag-store outage does not disable the system)
+- [ ] **FF-007** — Multivariate experiments enumerate every variant in an explicit `match` (or equivalent); unknown variants ALWAYS fall through to the safe default — never throw
+- [ ] **FF-008** — Sticky bucketing enforced on user-facing experiments — provider bucketing is deterministic on `subjectId`; the system never randomises per-request
+- [ ] **FF-009** — `[critical]` `FlagEvaluationContext.attributes` carries NO Sensitive-PII (GD-005) and NO secrets — derived booleans (`is_minor`, `is_eu_resident`) only
+- [ ] **FF-010** — Hosted flag providers that receive PII attributes are declared in `pii-inventory.md` per GD-011 (sub-processor inventory) before the integration ships
+- [ ] **FF-011** — Local dev uses an `InMemoryFlagGateway` or provider local-evaluation mode — tests NEVER call the real provider
+- [ ] **FF-012** — `release` flags carry a removal date in the registry; a `release` flag at 100% for 1+ week opens a removal PR; release flags older than 12 weeks without ramping are a hard reject
+- [ ] **FF-013** — Flag removal PR removes (a) the evaluation call sites, (b) the registry entry, (c) the dead branch tests, AND schedules the provider-side rule cleanup in the same PR description
+- [ ] **FF-014** — Span event per evaluation: `flag.key`, `flag.variant`, `flag.reason` (`targeted` / `default` / `error_fallback`), `flag.error` when error_fallback — span attributes carry NO PII
+- [ ] **FF-015** — Metrics emitted: `flag_evaluations_total{key,variant,reason}`, `flag_evaluation_errors_total{key,error_class}`, `flag_evaluation_latency_seconds{provider, histogram}` — bounded labels
+- [ ] **FF-016** — Flag toggles in production produce audit entries (`flag.toggled`, `flag.targeting_changed`) per audit-log.md — webhook-consumed for hosted providers, inline for self-hosted
+
 ## Logging
 
 - [ ] **LO-002** — LoggingMiddleware wired into `command.bus`, `event.bus`, `message.bus`
@@ -411,5 +430,6 @@ For deeper context on any rule above:
 - Bucket layout, presigned URLs, antivirus, magic-byte, video pipeline, variants, retention → `file-and-media-storage.md`
 - PostGIS conventions, tsvector + GIN, combined CTE queries, MatchScoreCalculator, label translation → `geo-search.md`
 - Append-only audit table, AuditLogProjector wiring, denial trails, retention/archival → `audit-log.md`
+- Flag taxonomy, registry, FlagGatewayInterface, sticky bucketing, removal procedure → `feature-flags.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.

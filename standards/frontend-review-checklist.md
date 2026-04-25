@@ -101,6 +101,13 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **GS-027** — A user's coordinates are NEVER inlined into HTML, NEVER stored in `localStorage` — they are fetched on demand from a private endpoint
 - [ ] **GS-028** — Result lists render the qualitative `MatchLabel` and the structured `explanations` translated via i18n — they NEVER display the raw numeric score
 
+## Feature flags
+
+- [ ] **FF-017** — Frontend flag evaluations go through a single `useFlag(key)` composable; `key` is a literal, declared in `feature-flags.md` — dynamic keys are forbidden
+- [ ] **FF-018** — Flag-gated UI never renders the gated content as a flash before the evaluation completes — the composable exposes `{ ready, isOn }` and the template waits on `ready`
+- [ ] **FF-019** — A flag-gated route always re-checks the flag on the server (handler / query) — frontend flag state is presentation-only and NEVER trusted by the backend
+- [ ] **FF-020** — User-facing experiment variants are sticky (provider bucketing on `subjectId`); a refresh does NOT change the variant the user sees
+
 ## Bootstrap order in `main.ts`
 
 - [ ] **FE-033** — Order: `createPinia()` → `router` → `VueQueryPlugin` → `setupInterceptors()`
@@ -201,5 +208,6 @@ For deeper context on any rule above:
 - Money serialization, Intl currency formatting, hosted card capture → `payments-and-money.md`
 - Presigned upload flow, signed URL hygiene, file form validation → `file-and-media-storage.md`
 - Map bbox fetching, marker clustering, debounced search, label/explanations rendering → `geo-search.md`
+- useFlag composable, no-flash gating, sticky variants, server-side re-check → `feature-flags.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.
