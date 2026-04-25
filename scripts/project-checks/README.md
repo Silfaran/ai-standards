@@ -17,6 +17,7 @@ sync with the application code:
 | `audit-actions.md` | `audit-log.md` (AU-009) | An audit entry is written with a `metadata` shape nobody documented. Read-API consumers cannot deserialise reliably |
 | Working tree + git history | `attack-surface-hardening.md` (AS-supply chain) | A credential committed by accident is exploitable for the lifetime of the leak. `check-secrets-leaked.sh` (gitleaks wrapper) catches it pre-merge |
 | Built container images | `attack-surface-hardening.md` (AS-supply chain) | A HIGH/CRITICAL CVE in a base image ships to production. `check-container-image.sh` (Trivy wrapper) blocks the build |
+| Repository queries vs migrations | `performance.md` (PE-019) | A handler queries a column the team forgot to index. `check-missing-indexes.sh` reports candidates pre-merge |
 
 Reviewer agents catch most of these; these scripts catch the rest. The
 combination is what makes drift expensive instead of inevitable.
@@ -92,6 +93,18 @@ fails the build with a list of the missing inventory entries.
 - Usage: `scripts/checks/check-container-image.sh <image-tag>` after `docker build`.
 - Honours `scripts/checks/.trivyignore` for documented exceptions.
 - Exit non-zero on any HIGH or CRITICAL finding.
+
+### `check-missing-indexes.sh`
+
+- Heuristic: extracts every column referenced after `WHERE` / `AND` / `OR` /
+  `ORDER BY` in the project's repositories, then checks each appears in some
+  `CREATE INDEX` / `CREATE UNIQUE INDEX` / `addIndex(...)` / `PRIMARY KEY`
+  declaration under `migrations/` (or `db/migrations/`).
+- Per `performance.md` PE-001 / PE-019.
+- **Defaults to report-only (exit 0).** Pass `--strict` to fail CI on findings.
+- False positives are inevitable (composite indexes whose first member is not
+  the cited column, dynamic SQL, configuration tables). The script's job is
+  to give the reviewer a starting list, not to be authoritative.
 
 ## Customising for a project
 

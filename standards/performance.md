@@ -297,3 +297,39 @@ Even without a CDN wired yet, the frontend is built so one can be added later wi
 - Every built asset has a content hash in its filename (Vite's default — do not override).
 - No runtime code assumes same-origin for static assets: asset URLs use Vite's `import.meta.env.BASE_URL` or the public path Vite injects.
 - No session/auth state is embedded in the HTML shell. The shell must be safe to cache publicly and served identically to every user.
+
+---
+
+## Automated detection
+
+Two of the most common performance defects (missing index, N+1 query) are detectable without waiting for production traffic. Both are wired in via copy-verbatim assets:
+
+### Missing-index detector (`scripts/project-checks/check-missing-indexes.sh`)
+
+Heuristic CI script that:
+
+1. Scans `src/` for every column referenced after `WHERE` / `AND` / `OR` / `ORDER BY` in repository SQL.
+2. Scans `migrations/` for every column declared in `CREATE INDEX`, `CREATE UNIQUE INDEX`, `addIndex()` (Phinx fluent), or as part of a `PRIMARY KEY`.
+3. Reports the diff — columns referenced in queries that do NOT appear in any index.
+
+The script defaults to **report-only** (exit 0). Pass `--strict` to fail CI. Project policy chooses: most projects start in report-only and tighten to `--strict` once the false-positive list (composite indexes, configuration tables) is allowlisted.
+
+False positives are inevitable — composite-index second members, dynamic SQL, configuration tables. The script's job is to give the reviewer a starting list, not to be authoritative.
+
+### N+1 detector (`scaffolds/AssertMaxQueriesTrait.php` + `scaffolds/QueryCountMiddleware.php`)
+
+DBAL middleware + PHPUnit trait that asserts an upper bound on the queries an integration test executes:
+
+```php
+public function testListBoardsDoesNotN1(): void
+{
+    $client = static::createClient();
+    $this->assertMaxQueries(5, fn() => $client->request('GET', '/api/v1/boards'));
+}
+```
+
+Wire-up: register `QueryCountMiddleware` as a `doctrine.middleware` in `services_test.yaml` (only loaded in `when@test`). The trait reads the static counter without test-boundary plumbing.
+
+The bound is project-specific — start at `observed_baseline + 1` per endpoint so a single accidental extra query fails the test. Tighten as the codebase matures.
+
+A 6-query response that legitimately needs 6 queries is fine; the goal is "1 + N becomes 1 + 1 (batched)" detection. List endpoints, dashboard endpoints, and anything that JOINs across aggregates are the most-affected.
