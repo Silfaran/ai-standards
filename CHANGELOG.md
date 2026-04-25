@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.22.0](https://github.com/Silfaran/ai-standards/compare/v0.21.0...v0.22.0) (2026-04-25)
+
+
+### Added
+
+* **standards:** add gdpr-pii standard (classification, encryption, DSAR/RTBF, consent) ([#52](https://github.com/Silfaran/ai-standards/issues/52)) ([c36d404](https://github.com/Silfaran/ai-standards/commit/c36d4042d844416e7525a26205c1ebadd9d640d2))
+
 ## [0.21.0](https://github.com/Silfaran/ai-standards/compare/v0.20.0...v0.21.0) (2026-04-25)
 
 
