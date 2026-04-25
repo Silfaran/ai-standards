@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.24.0](https://github.com/Silfaran/ai-standards/compare/v0.23.0...v0.24.0) (2026-04-25)
+
+
+### Added
+
+* **standards:** add payments-and-money standard (Money VO, ledger, webhooks, reconciliation) ([#56](https://github.com/Silfaran/ai-standards/issues/56)) ([e988b3c](https://github.com/Silfaran/ai-standards/commit/e988b3c94dfb2ef51a6a3f7ad82b3b4f73fa4706))
+
 ## [0.23.0](https://github.com/Silfaran/ai-standards/compare/v0.22.0...v0.23.0) (2026-04-25)
 
 
