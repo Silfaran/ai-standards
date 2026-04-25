@@ -25,6 +25,7 @@ Every service must have a `CLAUDE.md` referencing this file.
 - Payments & money standards: `ai-standards/standards/payments-and-money.md` — `Money` value object (integer minor units + ISO 4217), append-only double-entry ledger, deterministic webhook idempotency, signature-verify-before-parse, state machines per payment object, multi-party splits, daily reconciliation, hosted card capture on the frontend. Read whenever the system charges, refunds, holds in escrow, pays out, splits revenue, or handles subscriptions.
 - File & media storage standards: `ai-standards/standards/file-and-media-storage.md` — bucket layout (public vs private separated by name), presigned PUT/GET flow, scoped URLs with TTL ≤ 15 min, magic-byte verification, antivirus scan as state machine, video transcode pipeline + signed playback, captions as variants, retention + orphan detection, observability metrics. Read whenever the system stores user-uploaded or system-generated binary content.
 - Geo & search standards: `ai-standards/standards/geo-search.md` — `geography(Point, 4326)` storage, GiST indexes, ST_DWithin/bbox/polygon query patterns, Postgres FTS (`tsvector` + GIN + `pg_trgm`) before any dedicated search engine, combined geo+text+structured CTE queries, `MatchScoreCalculator` (pure Domain service), score → qualitative label translation, explanations transparency, frontend bbox fetching + clustering. Read whenever the system stores locations, searches by proximity, ranks candidates, or renders maps.
+- Audit log standards: `ai-standards/standards/audit-log.md` — append-only `audit_log` table with strict schema, AuditLogProjector wiring via domain events, same-tx-or-outbox synchrony, mandatory entries on success AND denial, structured per-action `metadata` (no PII), retention + archival, separation from operational logging. Read whenever the system performs an authorization-, money-, privacy-, legally-, security-, or configuration-significant action.
 - Secrets standards: `ai-standards/standards/secrets.md`
 - Performance standards: `ai-standards/standards/performance.md`
 - Caching standards: `ai-standards/standards/caching.md`
@@ -97,10 +98,11 @@ Every bullet in the reviewer checklists (`backend-review-checklist.md`, `fronten
 | `PA-*` | Payments & money (Money VO, ledger, webhook idempotency, state machines, reconciliation) | `payments-and-money.md` |
 | `FS-*` | File & media storage (buckets, presigned URLs, antivirus, magic-byte, video pipeline) | `file-and-media-storage.md` |
 | `GS-*` | Geo & search (PostGIS, FTS, MatchScoreCalculator, label translation, map rendering) | `geo-search.md` |
+| `AU-*` | Audit log (append-only table, projector wiring, denial trails, retention) | `audit-log.md` |
 
 **Invariants of the ID scheme:**
 
-- **Format:** `<PREFIX>-<3 digits>`, e.g. `BE-015`. Regex: `^(BE|FE|SE|PE|OB|CA|SC|DM|AC|LO|AZ|IN|GD|LL|PA|FS|GS)-\d{3}$`.
+- **Format:** `<PREFIX>-<3 digits>`, e.g. `BE-015`. Regex: `^(BE|FE|SE|PE|OB|CA|SC|DM|AC|LO|AZ|IN|GD|LL|PA|FS|GS|AU)-\d{3}$`.
 - **Stability:** IDs are never reassigned. A rule that is deleted leaves a gap in the sequence; a new rule takes the next free integer in its prefix (not the gap).
 - **Global uniqueness:** an ID never refers to two different rules. When a rule applies to both backend and frontend (e.g. `SE-003` — no SSL verification disabled), the same ID appears in both checklists.
 - **New rules:** when a reviewer flags a missing rule (see the footer of each checklist), the orchestrator assigns the next free ID in the matching prefix. Contributors do not invent IDs.

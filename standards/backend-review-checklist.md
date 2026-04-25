@@ -277,6 +277,25 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **GS-022** — Metrics: `search_requests_total`, `search_duration_seconds`, `search_candidates_filtered_total`, `match_label_distribution_total` — bounded labels (kind, outcome, label)
 - [ ] **GS-023** — Graduation to a dedicated search engine (Meilisearch, OpenSearch, Typesense) requires an ADR pointing at measured triggers (p95 SLO breach, index > RAM, language features Postgres lacks, vector embeddings) — premature adoption is a defect
 
+## Audit log
+
+- [ ] **AU-001** — `[critical]` `audit_log` table is append-only — no UPDATE / DELETE / TRUNCATE in any code path or migration; corrections are NEW rows
+- [ ] **AU-002** — DB role for the application has `INSERT, SELECT` on `audit_log` and `UPDATE`/`DELETE`/`TRUNCATE` REVOKED; only the migrations role retains `ALTER`
+- [ ] **AU-003** — Schema matches the canonical shape: `id`, `occurred_at`, `tenant_id`, `actor_kind` (user/service/system), `actor_id`, `actor_subject_role`, `action`, `resource_type`, `resource_id`, `outcome` (succeeded/denied/failed), `deny_reason`, `request_ip`, `request_user_agent`, `trace_id`, `span_id`, `metadata` JSONB. CHECKs enforce enums and the actor_id-vs-system rule
+- [ ] **AU-004** — Indexes present: `(tenant_id, occurred_at DESC)`, `(tenant_id, actor_id, occurred_at DESC)`, `(tenant_id, resource_type, resource_id)`, `(tenant_id, action, occurred_at DESC)`
+- [ ] **AU-005** — Domain code does NOT call the audit repository — Domain raises events; an `AuditLogProjector` (Application/Infrastructure) consumes them
+- [ ] **AU-006** — `[critical]` Audit write happens in the SAME DB transaction as the state change — same-tx projector (default) or outbox pattern. Async-via-queue WITHOUT an outbox is forbidden
+- [ ] **AU-007** — Every protected action emits an audit entry on BOTH success (`succeeded`) and denial (`denied` with `deny_reason`); failures emit `failed` with `metadata.error_class`
+- [ ] **AU-008** — Every Voter denial path (AZ-001) also produces an audit entry — silence after a denied check is a defect
+- [ ] **AU-009** — `metadata` carries structured per-action keys documented in `{project-docs}/audit-actions.md`; new shapes update that document in the same commit
+- [ ] **AU-010** — `metadata` does NOT carry Sensitive-PII (GD-005) — references only (hashed actor/resource ids); `[redacted]` placeholders for diff-of-PII fields
+- [ ] **AU-011** — `metadata` payloads do NOT exceed ~4 KB — large blobs go to object storage (FS-*) and `metadata` carries only the key
+- [ ] **AU-012** — Read API filters use indexed columns only — arbitrary JSONB queries from the API are forbidden; the audit-log read is itself audited (`audit.queried` for backoffice paths)
+- [ ] **AU-013** — `audit_log` is included in every backup with the longest retention class of any audited action; archival to object storage uses Parquet-or-similar with the same shape; the archive job emits `audit.archived`
+- [ ] **AU-014** — Metrics emitted: `audit_entries_total` (labels: tenant_class, action_class, outcome — NEVER raw tenant_id), `audit_write_failures_total`, `audit_outbox_lag_seconds` (when applicable), `audit_archive_runs_total`
+- [ ] **AU-015** — Audit entries do NOT replace operational logs and vice-versa — a single event MAY appear in both; do not collapse logging.md into audit-log.md or the reverse
+- [ ] **AU-016** — Schema changes to `audit_log` follow `data-migrations.md` (expand-contract); existing rows are NEVER mutated; new columns are nullable with a documented backfill rule
+
 ## Logging
 
 - [ ] **LO-002** — LoggingMiddleware wired into `command.bus`, `event.bus`, `message.bus`
@@ -391,5 +410,6 @@ For deeper context on any rule above:
 - Money VO, ledger discipline, webhook idempotency, state machines, reconciliation, splits → `payments-and-money.md`
 - Bucket layout, presigned URLs, antivirus, magic-byte, video pipeline, variants, retention → `file-and-media-storage.md`
 - PostGIS conventions, tsvector + GIN, combined CTE queries, MatchScoreCalculator, label translation → `geo-search.md`
+- Append-only audit table, AuditLogProjector wiring, denial trails, retention/archival → `audit-log.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.
