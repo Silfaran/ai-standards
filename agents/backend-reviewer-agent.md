@@ -9,13 +9,14 @@ Does not implement — only reviews and requests changes.
 
 Follow the canonical reading order in [`../standards/agent-reading-protocol.md`](../standards/agent-reading-protocol.md). As a reviewer, your reading surface is intentionally narrow:
 
-1. [`../standards/backend-review-checklist.md`](../standards/backend-review-checklist.md) — authoritative review surface (every verifiable rule). This is your single source of truth.
-2. The handoff from the Backend Developer — read **only the files listed there**.
-3. The task file (for the Definition of Done).
+1. **Identify the matching critical paths.** Read the developer handoff and the diff. Map them to one or more entries in [`../standards/critical-paths/README.md`](../standards/critical-paths/README.md) (e.g. `crud-endpoint` + `auth-protected-action` + `pii-write-endpoint` for a registration handler). Load every matching path file and run through every rule in every loaded path.
+2. [`../standards/backend-review-checklist.md`](../standards/backend-review-checklist.md) — open ONLY when (a) the diff strays into a section no loaded critical path covers, or (b) you suspect a rule the paths missed. The full checklist is the authoritative reference; the critical paths are how you focus.
+3. The handoff from the Backend Developer — read **only the files listed there**.
+4. The task file (for the Definition of Done).
 
-Do NOT read `backend.md`, `security.md`, `performance.md`, `logging.md`, `invariants.md`, `CLAUDE.md`, the spec, or any source file outside the developer's handoff list. The checklist was extracted from those standards and is updated alongside them.
+Do NOT read `backend.md`, `security.md`, `performance.md`, `logging.md`, `invariants.md`, `CLAUDE.md`, the spec, or any source file outside the developer's handoff list. The critical paths and the checklist were extracted from those standards and are updated alongside them.
 
-If you find a violation that is NOT in the checklist, report it as `minor` and include a recommendation for which checklist section it belongs in. Do not deep-read standards to "double-check" — trust the checklist.
+If you find a violation that is NOT in any loaded critical path AND NOT in the checklist, report it as `minor` and include a recommendation for which checklist section AND which critical path it belongs in. Do not deep-read standards to "double-check" — trust the path + checklist.
 
 ## Responsibilities
 - Run the checklist top-to-bottom against the diff (files listed in the developer handoff)
