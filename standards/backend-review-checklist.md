@@ -203,6 +203,29 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **LL-013** — Tool-use loops capped (default 5 iterations) — `LlmToolLoopExhaustedException` thrown if exceeded; tool-driven writes go through Voters (AZ-001)
 - [ ] **LL-014** — Unit tests mock `LlmGatewayInterface` and assert handlers consume the parsed shape; real-provider tests (if any) sit behind `@group llm-real` and a daily budget — never in default CI
 
+## Payments & money
+
+- [ ] **PA-001** — `[critical]` Every monetary value uses the `Money` value object (integer minor units + ISO 4217 currency) — no `float`, no `NUMERIC(x,2)` columns, no string-formatted "12.34" in storage, transport or arithmetic
+- [ ] **PA-002** — Money columns ALWAYS pair `amount_minor BIGINT` with `currency CHAR(3)`; CHECK constraint enforces ISO 4217 format; one-column shapes (`amount_eur`) are forbidden
+- [ ] **PA-003** — Currency mismatches in `Money::add/subtract` throw `CurrencyMismatchException` — no silent coercion
+- [ ] **PA-004** — Money splits use a sum-preserving algorithm (largest-remainder method); `split` MUST never lose minor units to truncation
+- [ ] **PA-005** — `[critical]` Every PSP mutation call (charge, refund, payout, subscription change) carries a deterministic `Idempotency-Key` derived from the aggregate id and attempt number — no random keys, no missing keys
+- [ ] **PA-006** — `[critical]` Webhook handlers verify the provider signature on the RAW request body BEFORE parsing JSON or persisting anything — invalid signature returns 401 + `webhook_signature_invalid` log + drop
+- [ ] **PA-007** — `[critical]` Webhook handlers check `processed_webhooks(provider, event_id)` first; duplicate events return 200 immediately; the insert into `processed_webhooks` happens in the SAME DB transaction as the state change, BEFORE returning 200
+- [ ] **PA-008** — Webhook handlers tolerate out-of-order events: state changes guard against current-state checks (`if (alreadyCompleted) return`) — never trust event arrival order
+- [ ] **PA-009** — `[critical]` Every change to a tracked balance produces an immutable `ledger_entries` row; ledger entries grouped by `transaction_id` MUST sum to zero per currency, asserted at write time
+- [ ] **PA-010** — Ledger rows are append-only — UPDATE / DELETE on `ledger_entries` is forbidden in code; corrections are NEW entries with `cause_type='adjustment'`
+- [ ] **PA-011** — Account names are stable strings; renaming an account requires reversal entries on the old name and new entries on the new name in the same transaction (no in-place rename)
+- [ ] **PA-012** — Every payment object (Charge, Subscription, Refund, Payout, Dispute) has an explicit state machine enforced by the aggregate; database `CHECK` constraint mirrors the allowed states; transitions go through aggregate methods (no direct status assignment)
+- [ ] **PA-013** — Subscriptions are webhook-driven — no polling cron synthesises subscription state; the system reads its own row, not the provider's API, in hot paths
+- [ ] **PA-014** — Refunds are first-class aggregates referencing the original Charge; the Charge's derived state (`partially_refunded` / `refunded`) is computed from the sum of its refunds — no in-place charge mutation
+- [ ] **PA-015** — Pricing lives in the database (`prices` table with `valid_from`/`valid_until`), never hardcoded in PHP — pricing logic that is genuinely a function lives in a Domain `PriceCalculatorService` that returns `Money`
+- [ ] **PA-016** — API responses serialize money as `{ "amount_minor": <int>, "currency": "XXX" }` — the serializer refuses `Money` → `float` conversions
+- [ ] **PA-017** — Reconciliation runs daily (or hourly), compares ledger account balances to provider-reported balances, raises `ReconciliationDivergenceFound` (SEV-2) on non-zero delta — "small delta, ignoring" is forbidden
+- [ ] **PA-018** — Multi-party split charges record both legs (`platform_revenue:<tenant>`, `payout_pending:<recipient>`) at capture time; payout settlement debits `payout_pending` against `psp_clearing`
+- [ ] **PA-019** — Payment-affecting handlers emit span attributes `payment.provider`, `payment.kind`, `payment.status_after` and metrics `payments_total`, `payments_amount_minor_total`, `payments_failures_total`, `webhook_duplicate_total`, `reconciliation_delta_minor` — labels bounded; no customer identifiers
+- [ ] **PA-020** — PSP webhook secret stored as `{PROVIDER}_WEBHOOK_SECRET` in `secrets-manifest.md` with rotation policy; signing helper centralised per provider; HTTP webhooks rejected with 426 on dev/staging
+
 ## Logging
 
 - [ ] **LO-002** — LoggingMiddleware wired into `command.bus`, `event.bus`, `message.bus`
@@ -314,5 +337,6 @@ For deeper context on any rule above:
 - Locale negotiation, translations storage, fallback chain, plurals/dates/currency formatting → `i18n.md`
 - PII classification, encryption at rest, DSAR export, RTBF workflow, consent ledger, sub-processors → `gdpr-pii.md`
 - LlmGatewayInterface, prompt templates, JSON-mode validation, prompt cache, PiiPromptGuard, tool use → `llm-integration.md`
+- Money VO, ledger discipline, webhook idempotency, state machines, reconciliation, splits → `payments-and-money.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.
