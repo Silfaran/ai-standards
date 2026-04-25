@@ -21,6 +21,7 @@ Every service must have a `CLAUDE.md` referencing this file.
 - Authorization standards: `ai-standards/standards/authorization.md` — Voter pattern, Subject VO, tenant scoping, RBAC + ABAC hybrid model. Read when the system has more than one role beyond authenticated, has resource owners, is multi-tenant, or has different rules per action on the same resource.
 - Internationalization standards: `ai-standards/standards/i18n.md` — locale negotiation, UI strings vs content translations, fallback chain, plurals/dates/currency formatting, frontend `vue-i18n` integration. Read when the product ships in more than one language, accepts user-generated content from multi-language users, or targets users in more than one country.
 - GDPR / PII standards: `ai-standards/standards/gdpr-pii.md` — four-tier classification (Public / Internal-PII / Sensitive-PII / Derived), pii-inventory.md, column-level encryption for sensitive fields, DSAR + RTBF workflow, consent ledger, sub-processor list, DPIA template. Read when the system stores any data identifying a natural person (name, email, phone, government ID, photo, behavioural data tied to an account).
+- LLM integration standards: `ai-standards/standards/llm-integration.md` — `LlmGatewayInterface` Domain seam, versioned prompt templates, JSON-mode + schema validation, retry/circuit-breaker, prompt-caching discipline, cost observability (`llm.cost_micro_dollars`), `PiiPromptGuard`, tool-use loop cap. Read whenever the product code calls a Large Language Model (Claude, OpenAI, Gemini, Mistral, self-hosted) at runtime — not for the ai-standards orchestrator pipeline itself.
 - Secrets standards: `ai-standards/standards/secrets.md`
 - Performance standards: `ai-standards/standards/performance.md`
 - Caching standards: `ai-standards/standards/caching.md`
@@ -89,10 +90,11 @@ Every bullet in the reviewer checklists (`backend-review-checklist.md`, `fronten
 | `AZ-*` | Authorization (Voter pattern, Subject VO, tenant scoping, route guards) | `authorization.md` |
 | `IN-*` | Internationalization (locale negotiation, translations storage, fallback chain, formatting) | `i18n.md` |
 | `GD-*` | GDPR / PII (classification, encryption, DSAR/RTBF, consent, sub-processors, DPIA) | `gdpr-pii.md` |
+| `LL-*` | LLM integration (gateway seam, prompt versioning, schema validation, cost spans, PII guard) | `llm-integration.md` |
 
 **Invariants of the ID scheme:**
 
-- **Format:** `<PREFIX>-<3 digits>`, e.g. `BE-015`. Regex: `^(BE|FE|SE|PE|OB|CA|SC|DM|AC|LO|AZ|IN|GD)-\d{3}$`.
+- **Format:** `<PREFIX>-<3 digits>`, e.g. `BE-015`. Regex: `^(BE|FE|SE|PE|OB|CA|SC|DM|AC|LO|AZ|IN|GD|LL)-\d{3}$`.
 - **Stability:** IDs are never reassigned. A rule that is deleted leaves a gap in the sequence; a new rule takes the next free integer in its prefix (not the gap).
 - **Global uniqueness:** an ID never refers to two different rules. When a rule applies to both backend and frontend (e.g. `SE-003` — no SSL verification disabled), the same ID appears in both checklists.
 - **New rules:** when a reviewer flags a missing rule (see the footer of each checklist), the orchestrator assigns the next free ID in the matching prefix. Contributors do not invent IDs.

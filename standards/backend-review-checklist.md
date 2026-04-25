@@ -186,6 +186,23 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **GD-013** — Backups copying prod data to staging or analytics MUST run a redaction pipeline first — direct restores of Sensitive-PII into non-prod environments are forbidden
 - [ ] **GD-014** — A spec that crosses a DPIA threshold (large-scale special categories, automated decisions with legal effect, LLM personalization on PII) has a completed DPIA in `{project-docs}/dpia/` before implementation merges
 
+## LLM integration
+
+- [ ] **LL-001** — `[critical]` Every LLM call goes through `LlmGatewayInterface` (Domain) — no direct SDK imports (`Anthropic\Sdk\Client`, `OpenAI\Client`, `Gemini\Client`) in handlers, services or controllers
+- [ ] **LL-002** — Prompt templates live in `src/Domain/Llm/Prompt/{Purpose}Prompt.php` as classes with `VERSION` constant, `system()`, `user(...)`, optional `jsonSchema()` — no inline string interpolation of prompts in handlers
+- [ ] **LL-003** — `LlmRequest::purpose` is bounded (a constant or enum value), never a dynamic string — the metric label cardinality must stay finite
+- [ ] **LL-004** — Structured generation calls set `jsonSchema` and read `LlmResponse->parsed` — handlers MUST NOT call `json_decode($response->content)` themselves
+- [ ] **LL-005** — Adapter validates the parsed JSON against the schema and throws `LlmInvalidResponseException` on mismatch — never silently passes malformed payloads to the handler
+- [ ] **LL-006** — Adapter retries ONLY on 408/429/5xx + transport errors with exponential jittered backoff and `max_retries=2` (override only with documented reason); NEVER retries 4xx, validation failures, or content-filter rejections
+- [ ] **LL-007** — Every provider+model pair has a circuit breaker; handlers have a graceful degradation path on `LlmCircuitOpenException`
+- [ ] **LL-008** — Handlers driving writes via LLM are idempotent (BE-051) — retry loops cannot double-insert
+- [ ] **LL-009** — `[critical]` Every LLM call emits an `llm.call` child span with `llm.provider`, `llm.model`, `llm.purpose`, `llm.prompt_version`, `llm.input_tokens`, `llm.output_tokens`, `llm.cost_micro_dollars`, `llm.finish_reason`, `llm.latency_ms` — NEVER the prompt text or response body
+- [ ] **LL-010** — Cost metrics emitted: `llm_calls_total`, `llm_input_tokens_total`, `llm_output_tokens_total`, `llm_cost_micro_dollars_total`, `llm_latency_seconds`, `llm_errors_total` — labels limited to `provider`, `model`, `purpose`, `finish_reason` / `error_class`
+- [ ] **LL-011** — Static prefixes (system prompt + injected catalogs) come FIRST in the message list with the provider's cache marker set; cache hits are observable as `llm.cache_read_tokens > 0`
+- [ ] **LL-012** — `[critical]` `PiiPromptGuard` invoked synchronously in `complete()` for any purpose that may receive PII — the guard checks `pii-inventory.md` AND the `ConsentLedger`; bypass only via inventory `processors` exemption
+- [ ] **LL-013** — Tool-use loops capped (default 5 iterations) — `LlmToolLoopExhaustedException` thrown if exceeded; tool-driven writes go through Voters (AZ-001)
+- [ ] **LL-014** — Unit tests mock `LlmGatewayInterface` and assert handlers consume the parsed shape; real-provider tests (if any) sit behind `@group llm-real` and a daily budget — never in default CI
+
 ## Logging
 
 - [ ] **LO-002** — LoggingMiddleware wired into `command.bus`, `event.bus`, `message.bus`
@@ -296,5 +313,6 @@ For deeper context on any rule above:
 - Voter pattern, Subject VO, tenant scoping, service-to-service identity → `authorization.md`
 - Locale negotiation, translations storage, fallback chain, plurals/dates/currency formatting → `i18n.md`
 - PII classification, encryption at rest, DSAR export, RTBF workflow, consent ledger, sub-processors → `gdpr-pii.md`
+- LlmGatewayInterface, prompt templates, JSON-mode validation, prompt cache, PiiPromptGuard, tool use → `llm-integration.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.
