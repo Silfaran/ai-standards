@@ -153,6 +153,22 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **SC-009** — JWT/crypto key rotation uses a two-key window (current + previous) during the rotation window; the manifest lists both env vars
 - [ ] **SC-010** — Any new secret category extends the redaction list in `logging.md` in the same commit
 
+## Internationalization
+
+- [ ] **IN-001** — Locale negotiated ONCE in middleware (URL param → user preference → `Accept-Language` → default), bound to the request as a `Locale` value object — never re-negotiated per layer
+- [ ] **IN-002** — Every locale-varying response sets `Content-Language` AND `Vary: Accept-Language` (the latter is mandatory for cacheable responses; see CA-005)
+- [ ] **IN-003** — User-facing strings come from translation files / catalogs — no hardcoded user-facing English/Spanish in handlers, controllers, exceptions surfaced to the API
+- [ ] **IN-004** — Translation functions called with STATIC keys only — `t($dynamicKey)` is forbidden (extraction tools cannot find them)
+- [ ] **IN-005** — `[critical]` Translatable entity columns follow Option A (`translations` polymorphic table) or Option B (JSONB column) — separate columns per locale (`name_es`, `name_en`) is forbidden
+- [ ] **IN-006** — Every translatable entity records its `source_locale` — the locale the original was written in, never machine-translated, final fallback
+- [ ] **IN-007** — Repositories returning translatable entities for display take `Locale` as an explicit parameter and resolve the fallback chain inside — handlers never read raw JSONB or `translations` rows
+- [ ] **IN-008** — `translations` rows record `source` (`human` / `machine` / `user`) — machine translations have a TTL or invalidation path; human edits promote them to `human`
+- [ ] **IN-009** — A missed translation emits a structured log entry with `event=i18n.missing`, `requested_locale`, `served_locale`, `key` — never silently substituted
+- [ ] **IN-010** — API error responses use a stable `error` code AND a localized `message` — clients switch on the code, never on the human text
+- [ ] **IN-011** — Plurals, dates, numbers, currency formatted via `Symfony Translator` (ICU) / `IntlDateFormatter` / `NumberFormatter` — manual `date('d/m/Y')`, `number_format()`, currency-symbol concatenation are forbidden
+- [ ] **IN-012** — System reference data (countries, currencies, locale names) read from `Symfony\Component\Intl\*` — no hardcoded country lists in source
+- [ ] **IN-013** — A new supported locale is enabled in configuration ONLY after UI string files exist for it (machine-or-human-translated, marked for review)
+
 ## Logging
 
 - [ ] **LO-002** — LoggingMiddleware wired into `command.bus`, `event.bus`, `message.bus`
@@ -261,5 +277,6 @@ For deeper context on any rule above:
 - Hard security/git invariants → `invariants.md`
 - Full code examples (controllers, scaffolds, async config) → `backend-reference.md`
 - Voter pattern, Subject VO, tenant scoping, service-to-service identity → `authorization.md`
+- Locale negotiation, translations storage, fallback chain, plurals/dates/currency formatting → `i18n.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.

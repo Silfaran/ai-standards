@@ -75,6 +75,16 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 
 - [ ] **FE-033** — Order: `createPinia()` → `router` → `VueQueryPlugin` → `setupInterceptors()`
 
+## Internationalization
+
+- [ ] **IN-014** — `vue-i18n` initialised in `main.ts` with `legacy: false`, `fallbackLocale` mirroring the backend chain, `missingWarn: import.meta.env.DEV`
+- [ ] **IN-015** — Locale message files lazy-loaded per route — never bundled all locales upfront (broken for code splitting)
+- [ ] **IN-016** — `Accept-Language` header set on the Axios instance to the active locale — backend gets the same negotiated locale the user sees
+- [ ] **IN-017** — Component templates use `$t('static.key')` / `$tc('static.key', count)` only — no `$t($dynamicKey)`, no `'Hola ' + name` concatenation, no hardcoded user-facing strings
+- [ ] **IN-018** — Plurals via `$tc()` (CLDR rules); dates/numbers/currency via `Intl.DateTimeFormat` / `Intl.NumberFormat` with explicit locale — never `toLocaleString()` without an argument
+- [ ] **IN-019** — Locale change persists via `PUT /api/v1/me/preferences` AND invalidates active queries (`queryClient.invalidateQueries()`) so server-rendered messages re-fetch
+- [ ] **IN-020** — System reference data (countries, currencies, locale names) read from `Intl.DisplayNames` — no hardcoded country lists in frontend source
+
 ## Env vars
 
 - [ ] **FE-034** — All `VITE_*_URL` values include the full path prefix (e.g. `/api`)
@@ -156,5 +166,6 @@ For deeper context on any rule above:
 - Hard security invariants → `invariants.md`
 - Full code examples (composables, stores, page tests) → `frontend-reference.md`
 - Voter pattern, Subject VO, route guards, tenant scoping → `authorization.md`
+- vue-i18n setup, lazy namespaces, locale change flow, Intl APIs → `i18n.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.

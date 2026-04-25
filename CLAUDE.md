@@ -19,6 +19,7 @@ Every service must have a `CLAUDE.md` referencing this file.
 - Logging standards: `ai-standards/standards/logging.md`
 - Security standards: `ai-standards/standards/security.md`
 - Authorization standards: `ai-standards/standards/authorization.md` — Voter pattern, Subject VO, tenant scoping, RBAC + ABAC hybrid model. Read when the system has more than one role beyond authenticated, has resource owners, is multi-tenant, or has different rules per action on the same resource.
+- Internationalization standards: `ai-standards/standards/i18n.md` — locale negotiation, UI strings vs content translations, fallback chain, plurals/dates/currency formatting, frontend `vue-i18n` integration. Read when the product ships in more than one language, accepts user-generated content from multi-language users, or targets users in more than one country.
 - Secrets standards: `ai-standards/standards/secrets.md`
 - Performance standards: `ai-standards/standards/performance.md`
 - Caching standards: `ai-standards/standards/caching.md`
@@ -85,10 +86,11 @@ Every bullet in the reviewer checklists (`backend-review-checklist.md`, `fronten
 | `AC-*` | API contracts (versioning, OpenAPI, deprecation, payload shape) | `api-contracts.md` |
 | `LO-*` | Logging (structure, redaction, middleware wiring) | `logging.md` |
 | `AZ-*` | Authorization (Voter pattern, Subject VO, tenant scoping, route guards) | `authorization.md` |
+| `IN-*` | Internationalization (locale negotiation, translations storage, fallback chain, formatting) | `i18n.md` |
 
 **Invariants of the ID scheme:**
 
-- **Format:** `<PREFIX>-<3 digits>`, e.g. `BE-015`. Regex: `^(BE|FE|SE|PE|OB|CA|SC|DM|AC|LO|AZ)-\d{3}$`.
+- **Format:** `<PREFIX>-<3 digits>`, e.g. `BE-015`. Regex: `^(BE|FE|SE|PE|OB|CA|SC|DM|AC|LO|AZ|IN)-\d{3}$`.
 - **Stability:** IDs are never reassigned. A rule that is deleted leaves a gap in the sequence; a new rule takes the next free integer in its prefix (not the gap).
 - **Global uniqueness:** an ID never refers to two different rules. When a rule applies to both backend and frontend (e.g. `SE-003` — no SSL verification disabled), the same ID appears in both checklists.
 - **New rules:** when a reviewer flags a missing rule (see the footer of each checklist), the orchestrator assigns the next free ID in the matching prefix. Contributors do not invent IDs.
