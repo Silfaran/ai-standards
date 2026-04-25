@@ -100,8 +100,8 @@ For consistency, replace placeholders in one pass with `sed`:
 ```bash
 sed -i '' \
     -e "s/{service-name}/login-service/g" \
-    -e "s/{php-version}/8.4/g" \
-    -e "s/{postgres-image}/postgres:17/g" \
+    -e "s/{php-version}/8.5/g" \
+    -e "s/{postgres-image}/postgres:18/g" \
     -e "s/{rabbitmq-image}/rabbitmq:4-management/g" \
     .github/workflows/ci.yml
 ```

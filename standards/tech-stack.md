@@ -15,22 +15,22 @@ All versions listed here are **minimums**. Services are free — and encouraged 
 
 | Layer | Technology | Minimum version | Notes |
 |---|---|---|---|
-| Backend runtime | PHP | 8.4 | Strict types, property hooks, asymmetric visibility. PHP 8.5 is welcome — verify PHP CS Fixer + PHPStan compatibility first (historically a 1–3 month lag after a new PHP minor) |
+| Backend runtime | PHP | 8.5 | Strict types, property hooks, asymmetric visibility, refined generics-via-attributes. Bumped from 8.4 once PHPStan + PHP CS Fixer confirmed compatible (the typical 1–3 month ecosystem lag) |
 | Backend framework | Symfony | 8.0 | MicroKernel, Messenger, Security. 7.4 LTS is an acceptable conservative alternative when starting a project that will not track 8.x rapid releases |
 | Backend test | PHPUnit | 13.0 | `readonly class` + `createMock()` compatibility — see backend.md §Services |
-| Backend static | PHPStan | 2.0 | Level 9 across every service |
-| Backend format | PHP CS Fixer | 3.90 | PSR-12 + custom rules. Verify compatibility when bumping PHP minor |
-| Frontend runtime | Node.js | 22 LTS | Used for build tooling and dev server |
-| Frontend framework | Vue | 3.5 | Composition API, `<script setup>` |
-| Frontend language | TypeScript | 5.6 | `strict` mode enforced |
-| Frontend bundler | Vite | 6.0 | |
+| Backend static | PHPStan | 2.1 | Level 9 across every service |
+| Backend format | PHP CS Fixer | 3.91 | PSR-12 + custom rules. Verify compatibility when bumping PHP minor |
+| Frontend runtime | Node.js | 22 LTS | Used for build tooling and dev server. 24 LTS replaces 22 in October 2026 — track and bump on its release |
+| Frontend framework | Vue | 3.6 | Composition API, `<script setup>`, refined `defineModel`, reactive props improvements |
+| Frontend language | TypeScript | 5.7 | `strict` mode enforced |
+| Frontend bundler | Vite | 7.0 | Bumped from 6.0 — verify `vite-plugin-pwa` and `@tailwindcss/vite` compatibility per project before bumping |
 | Frontend test | Vitest | 3.0 | jsdom env, `@vitest/coverage-v8` — see vitest-composable-test skill |
 | Frontend CSS | Tailwind CSS | 4.0 | Via `@tailwindcss/vite` plugin. Oxide engine — config lives in `@theme` CSS, not `tailwind.config.js` |
 | UI components | shadcn/ui (Vue) | latest | No pinned version — track upstream |
-| Database | PostgreSQL | 17 | One database per service |
-| Geo extension | PostGIS | 3.4 | Install when a service stores coordinates / does proximity search (`CREATE EXTENSION IF NOT EXISTS postgis;`). Ships as an extension to the PostgreSQL image — not a separate service |
+| Database | PostgreSQL | 18 | One database per service. Async I/O changes performance characteristics — verify with project workload before deploying |
+| Geo extension | PostGIS | 3.5 | Install when a service stores coordinates / does proximity search (`CREATE EXTENSION IF NOT EXISTS postgis;`). Ships as an extension to the PostgreSQL image — not a separate service. Use the matching combo `postgis/postgis:18-3.5` |
 | Messaging | RabbitMQ | 4.0 | Accessed via Symfony Messenger |
-| Container runtime | Docker | 27 | Compose v2 required (`docker compose`, not `docker-compose`) |
+| Container runtime | Docker | 28 | Compose v2 required (`docker compose`, not `docker-compose`) |
 
 ### Optional per-project additions
 
@@ -78,7 +78,7 @@ When upgrading any component, these are the files to touch. Keep this list accur
 ### PHP / Symfony
 
 - `{service}/Dockerfile` — `FROM php:X.Y-cli` or `php:X.Y-fpm`
-- `{service}/composer.json` — `"require": { "php": "^8.4", "symfony/*": "^8.0" }`
+- `{service}/composer.json` — `"require": { "php": "^8.5", "symfony/*": "^8.0" }`
 - `ai-standards/standards/backend-reference.md` — example Dockerfiles and composer snippets
 - `ai-standards/standards/new-service-checklist.md` — dependency examples for new services
 
@@ -90,9 +90,9 @@ When upgrading any component, these are the files to touch. Keep this list accur
 
 ### Database / Messaging / Infra
 
-- `workspace/docker-compose.yml` (root shared infra) — `image: postgres:17`, `image: rabbitmq:4-management`
+- `workspace/docker-compose.yml` (root shared infra) — `image: postgres:18`, `image: rabbitmq:4-management`
 - `ai-standards/standards/new-service-checklist.md` — any version references
-- When a service needs geo: use `postgis/postgis:17-3.4` image instead of `postgres:17` for that service's DB, or enable the extension in a migration (`CREATE EXTENSION IF NOT EXISTS postgis;`) when using the stock image
+- When a service needs geo: use `postgis/postgis:18-3.5` image instead of `postgres:18` for that service's DB, or enable the extension in a migration (`CREATE EXTENSION IF NOT EXISTS postgis;`) when using the stock image
 
 ### Frontend tooling
 
@@ -107,7 +107,7 @@ Use caret (`^`) constraints to express "minimum, open to update within the same 
 ```json
 {
   "require": {
-    "php": "^8.4",
+    "php": "^8.5",
     "symfony/framework-bundle": "^8.0",
     "symfony/serializer": "^8.0",
     "symfony/property-access": "^8.0"
@@ -125,9 +125,9 @@ Use caret (`^`) for the same reason, and set `engines.node` to the minimum LTS:
 {
   "engines": { "node": ">=22" },
   "dependencies": {
-    "vue": "^3.5.0",
-    "vite": "^6.0.0",
-    "typescript": "^5.6.0"
+    "vue": "^3.6.0",
+    "vite": "^7.0.0",
+    "typescript": "^5.7.0"
   }
 }
 ```
