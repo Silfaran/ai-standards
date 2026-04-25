@@ -205,7 +205,7 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 
 ## Payments & money
 
-- [ ] **PA-001** — `[critical]` Every monetary value uses the `Money` value object (integer minor units + ISO 4217 currency) — no `float`, no `NUMERIC(x,2)` columns, no string-formatted "12.34" in storage, transport or arithmetic
+- [ ] **PA-001** — `[critical]` Every monetary value uses the `Money` value object (integer minor units + ISO 4217 currency via the `Currency` enum) — no `float`, no `NUMERIC(x,2)` columns, no string-formatted "12.34" in storage, transport or arithmetic. Boundaries that receive a currency string call `Money::fromMinor(int, string)`; arithmetic stays inside the enum-typed VO
 - [ ] **PA-002** — Money columns ALWAYS pair `amount_minor BIGINT` with `currency CHAR(3)`; CHECK constraint enforces ISO 4217 format; one-column shapes (`amount_eur`) are forbidden
 - [ ] **PA-003** — Currency mismatches in `Money::add/subtract` throw `CurrencyMismatchException` — no silent coercion
 - [ ] **PA-004** — Money splits use a sum-preserving algorithm (largest-remainder method); `split` MUST never lose minor units to truncation
