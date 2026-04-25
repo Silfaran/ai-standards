@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.20.0](https://github.com/Silfaran/ai-standards/compare/v0.19.0...v0.20.0) (2026-04-25)
+
+
+### Added
+
+* **standards:** add authorization standard (Voter pattern + tenant scoping) ([#48](https://github.com/Silfaran/ai-standards/issues/48)) ([5ba1d84](https://github.com/Silfaran/ai-standards/commit/5ba1d84b31e96d90c24fc4da51c5a706fc546640))
+
 ## [0.19.0](https://github.com/Silfaran/ai-standards/compare/v0.18.0...v0.19.0) (2026-04-24)
 
 
