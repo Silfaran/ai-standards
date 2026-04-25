@@ -127,6 +127,13 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **PW-015** — Push consent is per category (transactional / marketing / mention-and-reply); each grant/withdrawal produces an `audit-log.md` entry; denials are remembered for 90+ days
 - [ ] **PW-016** — Push payloads are SHORT and contain NO Sensitive-PII — text references; the app fetches the full content when the user opens the notification
 
+## Digital signatures
+
+- [ ] **DS-021** — Signing UI presents the document for review BEFORE sending — the user confirms the bytes they are about to commit to (matches the audit-trail's "what was signed" record)
+- [ ] **DS-022** — Pending-signature UX shows the SigningRequest state (`sent`, `in_signing`, `completed`, `declined`, `expired`) with explicit timestamps; never a silent loading spinner that times out
+- [ ] **DS-023** — Signed documents are NEVER rendered inline from the public origin — they are downloaded via a presigned URL with `Content-Disposition: attachment` (FS-010)
+- [ ] **DS-024** — Verification surface displays the system's `document_sha256` AND the provider audit trail link — copy-pasteable, comparable to a third party's hash without re-fetching from the provider
+
 ## Bootstrap order in `main.ts`
 
 - [ ] **FE-033** — Order: `createPinia()` → `router` → `VueQueryPlugin` → `setupInterceptors()`
@@ -229,5 +236,6 @@ For deeper context on any rule above:
 - Map bbox fetching, marker clustering, debounced search, label/explanations rendering → `geo-search.md`
 - useFlag composable, no-flash gating, sticky variants, server-side re-check → `feature-flags.md`
 - Service worker setup, cache strategies, manifest, update flow, offline reads/writes, push consent → `pwa-offline.md`
+- Pre-sign review, signing-state UX, attachment downloads, verification surface → `digital-signature-integration.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.

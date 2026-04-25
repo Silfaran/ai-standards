@@ -29,6 +29,7 @@ Every service must have a `CLAUDE.md` referencing this file.
 - Feature flags standards: `ai-standards/standards/feature-flags.md` — flag taxonomy (release / operational / experiment / permission), `feature-flags.md` registry as single source of truth, `FlagGatewayInterface` Domain seam, sticky bucketing for experiments, no-PII evaluation context, conservative defaults, mandatory removal procedure for release flags, observability + audit on toggles. Read whenever the system needs to ramp a feature, hide work-in-progress, run an A/B test, or stage a rollout per tenant/jurisdiction.
 - Analytics & projections standards: `ai-standards/standards/analytics-readonly-projection.md` — four-tier projection model (T1 read-on-operational / T2 materialized view / T3 replica / T4 warehouse), schema isolation under `analytics`, refresh discipline, replica lag tolerance, warehouse loaders as infrastructure (not application code), privacy preserved across projections, mandatory Voter on every analytics endpoint, cacheability + observability per tier. Read whenever the system needs dashboards, scheduled reports, product analytics, BI tool feeds, or ML feature stores.
 - PWA & offline standards: `ai-standards/standards/pwa-offline.md` — four progressive levels (L0 plain SPA → L1 installable → L2 offline reads → L3 offline writes + push), Workbox-generated service worker, recommended cache strategies per request kind, manifest shape, update flow with explicit user consent, IndexedDB never holding Sensitive-PII, push consent per category audited, conflict policies for L3 writes. Read whenever the product is installable, needs to function on flaky networks, supports offline reads/writes, or sends push notifications.
+- Digital signature integration standards: `ai-standards/standards/digital-signature-integration.md` — `SignatureGatewayInterface` Domain seam (Signaturit / DocuSign / Adobe Sign / Yousign / etc.), modality choice (simple / advanced / qualified) per use case + jurisdiction, versioned templates owned by the system, `SigningRequest` state machine, signed-document storage in private bucket with independent `document_sha256`, signature-verify-before-parse webhooks, retention exceeds RTBF for legal documents, audit entries on every signing event. Read whenever the system needs a legally binding signature on a document.
 - Secrets standards: `ai-standards/standards/secrets.md`
 - Performance standards: `ai-standards/standards/performance.md`
 - Caching standards: `ai-standards/standards/caching.md`
@@ -105,10 +106,11 @@ Every bullet in the reviewer checklists (`backend-review-checklist.md`, `fronten
 | `FF-*` | Feature flags (registry, gateway, sticky bucketing, removal procedure, observability) | `feature-flags.md` |
 | `AN-*` | Analytics projections (tier model, materialized views, replicas, warehouse loaders, privacy) | `analytics-readonly-projection.md` |
 | `PW-*` | PWA & offline (service worker, cache strategies, manifest, offline reads/writes, push) | `pwa-offline.md` |
+| `DS-*` | Digital signatures (SignatureGatewayInterface, modality, templates, document hashing, retention) | `digital-signature-integration.md` |
 
 **Invariants of the ID scheme:**
 
-- **Format:** `<PREFIX>-<3 digits>`, e.g. `BE-015`. Regex: `^(BE|FE|SE|PE|OB|CA|SC|DM|AC|LO|AZ|IN|GD|LL|PA|FS|GS|AU|FF|AN|PW)-\d{3}$`.
+- **Format:** `<PREFIX>-<3 digits>`, e.g. `BE-015`. Regex: `^(BE|FE|SE|PE|OB|CA|SC|DM|AC|LO|AZ|IN|GD|LL|PA|FS|GS|AU|FF|AN|PW|DS)-\d{3}$`.
 - **Stability:** IDs are never reassigned. A rule that is deleted leaves a gap in the sequence; a new rule takes the next free integer in its prefix (not the gap).
 - **Global uniqueness:** an ID never refers to two different rules. When a rule applies to both backend and frontend (e.g. `SE-003` — no SSL verification disabled), the same ID appears in both checklists.
 - **New rules:** when a reviewer flags a missing rule (see the footer of each checklist), the orchestrator assigns the next free ID in the matching prefix. Contributors do not invent IDs.
