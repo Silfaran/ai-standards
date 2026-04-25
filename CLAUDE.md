@@ -18,6 +18,7 @@ Every service must have a `CLAUDE.md` referencing this file.
 - Frontend standards: `ai-standards/standards/frontend.md` (rules) / `frontend-reference.md` (full examples)
 - Logging standards: `ai-standards/standards/logging.md`
 - Security standards: `ai-standards/standards/security.md`
+- Authorization standards: `ai-standards/standards/authorization.md` — Voter pattern, Subject VO, tenant scoping, RBAC + ABAC hybrid model. Read when the system has more than one role beyond authenticated, has resource owners, is multi-tenant, or has different rules per action on the same resource.
 - Secrets standards: `ai-standards/standards/secrets.md`
 - Performance standards: `ai-standards/standards/performance.md`
 - Caching standards: `ai-standards/standards/caching.md`
@@ -83,10 +84,11 @@ Every bullet in the reviewer checklists (`backend-review-checklist.md`, `fronten
 | `DM-*` | Data migrations (expand-contract, backfills, compatibility matrix) | `data-migrations.md` |
 | `AC-*` | API contracts (versioning, OpenAPI, deprecation, payload shape) | `api-contracts.md` |
 | `LO-*` | Logging (structure, redaction, middleware wiring) | `logging.md` |
+| `AZ-*` | Authorization (Voter pattern, Subject VO, tenant scoping, route guards) | `authorization.md` |
 
 **Invariants of the ID scheme:**
 
-- **Format:** `<PREFIX>-<3 digits>`, e.g. `BE-015`. Regex: `^(BE|FE|SE|PE|OB|CA|SC|DM|AC|LO)-\d{3}$`.
+- **Format:** `<PREFIX>-<3 digits>`, e.g. `BE-015`. Regex: `^(BE|FE|SE|PE|OB|CA|SC|DM|AC|LO|AZ)-\d{3}$`.
 - **Stability:** IDs are never reassigned. A rule that is deleted leaves a gap in the sequence; a new rule takes the next free integer in its prefix (not the gap).
 - **Global uniqueness:** an ID never refers to two different rules. When a rule applies to both backend and frontend (e.g. `SE-003` — no SSL verification disabled), the same ID appears in both checklists.
 - **New rules:** when a reviewer flags a missing rule (see the footer of each checklist), the orchestrator assigns the next free ID in the matching prefix. Contributors do not invent IDs.

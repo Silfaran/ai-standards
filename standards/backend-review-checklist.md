@@ -57,6 +57,21 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **AC-001** — Every controller has OpenAPI/Swagger annotations
 - [ ] **BE-032** — `services.yaml` injects `$commandBus: '@command.bus'` and `$queryBus: '@query.bus'` by name
 
+## Authorization
+
+- [ ] **AZ-001** — `[critical]` Every protected handler calls a Voter (`{Aggregate}Voter::can{Action}()`) before any side effect — no inline `if ($subject->role === ...)` checks
+- [ ] **AZ-002** — `[critical]` Every multi-tenant repository method takes `tenantId` as the first parameter — no method that "filters by current tenant" implicitly
+- [ ] **AZ-003** — Voters live in `src/Domain/Authorization/Voter/{Aggregate}Voter.php`, return `bool` (never throw), inject NO repositories, perform NO I/O
+- [ ] **AZ-004** — `Subject` Value Object (`src/Domain/Authorization/Subject.php`) is built once in the controller from the JWT and propagated as a field of every Command/Query DTO — no global "current user" service consulted from a handler
+- [ ] **AZ-005** — Multi-tenant tables declare `tenant_id UUID NOT NULL` and every supporting index includes `tenant_id` as the leading column
+- [ ] **AZ-006** — Cross-tenant denials return 404 (preferred) or 403 — never reveal that a resource exists in another tenant
+- [ ] **AZ-007** — 403 response body never includes denial reason, role names, or resource metadata — opaque "forbidden" only
+- [ ] **AZ-008** — Authorization denials emit a span event with `authz.action`, `authz.decision=deny`, `authz.deny_reason`; metric `authz_denied_total{action, deny_reason}` increments (no subject_id label)
+- [ ] **AZ-009** — Every protected action has at least three tests: allowed path, denied-by-role, denied-by-tenant — Voter unit tests are pure (no Symfony container)
+- [ ] **AZ-010** — Service-to-service calls mint a service Subject with `tenantId='shared'` and a `service:*` role — never reuse a real user's Subject across services without the original JWT being forwarded
+- [ ] **AZ-011** — Authorization decisions are NEVER cached in Redis or any TTL'd store — Voter calls are pure and fast; cached decisions outlive role revocations
+- [ ] **AZ-012** — `Subject` is immutable (`readonly`) — no runtime role mutation (`$subject->roles[] = 'admin'`)
+
 ## Validation layering
 
 - [ ] **BE-033** — Structural validation lives in the controller
@@ -245,5 +260,6 @@ For deeper context on any rule above:
 - Logging schema, redaction, middleware wiring → `logging.md`
 - Hard security/git invariants → `invariants.md`
 - Full code examples (controllers, scaffolds, async config) → `backend-reference.md`
+- Voter pattern, Subject VO, tenant scoping, service-to-service identity → `authorization.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.
