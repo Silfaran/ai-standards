@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.23.0](https://github.com/Silfaran/ai-standards/compare/v0.22.0...v0.23.0) (2026-04-25)
+
+
+### Added
+
+* **standards:** add llm-integration standard (gateway seam, prompts, cost, PII guard) ([#54](https://github.com/Silfaran/ai-standards/issues/54)) ([b715df5](https://github.com/Silfaran/ai-standards/commit/b715df58a32c2a5f1b0b180247bcbe5fc432ab03))
+
 ## [0.22.0](https://github.com/Silfaran/ai-standards/compare/v0.21.0...v0.22.0) (2026-04-25)
 
 
