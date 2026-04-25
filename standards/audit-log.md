@@ -263,3 +263,7 @@ A non-zero `audit_write_failures_total` is a `SEV-2` incident — actions are la
 ## What the reviewer checks
 
 Audit rules are enforced during review via the backend reviewer checklist (see [`backend-review-checklist.md`](backend-review-checklist.md) → "Audit log"). The checklist is the authoritative surface — if a rule appears here and not in the checklist, file a minor and update the checklist in the same commit.
+
+## Automated drift detection
+
+`scripts/project-checks/check-audit-action-drift.sh` fails CI when the codebase emits an audit entry whose `action` (e.g. `board.delete`, `signature.sent`) has no documented `metadata` shape in `{project-docs}/audit-actions.md`. See [`quality-gates.md`](quality-gates.md) → "Drift validators (consuming projects)".
