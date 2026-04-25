@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.26.0](https://github.com/Silfaran/ai-standards/compare/v0.25.0...v0.26.0) (2026-04-25)
+
+
+### Added
+
+* **standards:** add geo-search standard (PostGIS, FTS, MatchScoreCalculator, label translation) ([#60](https://github.com/Silfaran/ai-standards/issues/60)) ([f0985a9](https://github.com/Silfaran/ai-standards/commit/f0985a9d504d178545a8256b3a940b70749aacd7))
+
 ## [0.25.0](https://github.com/Silfaran/ai-standards/compare/v0.24.0...v0.25.0) (2026-04-25)
 
 
