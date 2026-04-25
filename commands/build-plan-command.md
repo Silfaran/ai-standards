@@ -28,15 +28,18 @@ For full-stack features, Backend Developer and Frontend Developer run **in paral
 
 Before spawning any subagent, generate a **context bundle** file that distills the standards into only the rules relevant to this feature. This prevents every subagent from re-reading 4-5 full standards files (~1,000 lines each time).
 
-1. Read the plan's `Standards Scope` to determine which standards apply
-2. Read each applicable standards file and extract **only the sections relevant** to this feature type:
-   - For a frontend-only CSS feature: skip backend rules, skip DB rules, skip async messaging rules
-   - For a backend-only feature: skip frontend rules
-   - Always include: invariants (full — non-negotiable), naming conventions, git rules
-3. Include a condensed **spec digest** — the Technical Details section of the spec (the part agents actually need for implementation), not the full business description and user stories
-4. Include relevant entries from `decisions.md` (only ADRs that overlap with this feature's aggregates or services)
-5. If the feature has a frontend component, include all entries from `design-decisions.md` — these are short and all relevant to visual consistency
-6. Write the bundle to: `{workspace_root}/handoffs/{feature-name}/context-bundle.md` (workspace-root `handoffs/` directory declared in `{project-docs}/workspace.md` under the `handoffs:` key — ephemeral, never committed, lives outside any service repo)
+**Order matters: write the bundle MOST-STATIC FIRST, MOST-DYNAMIC LAST.** Anthropic's prompt cache (5-minute TTL) keys on the prefix of the prompt — content that is identical across the subagents spawned in this session reuses the cache; content that changes between subagents (or between iterations) invalidates the cache from that byte forward. Static-first ordering means the Developer's first call warms the cache for every later call.
+
+Sections in the bundle, in this order:
+
+1. **Invariants** (`invariants.md`, full — non-negotiable, identical across every project + feature)
+2. **Naming conventions + git rules** (from `CLAUDE.md` — identical across projects)
+3. **Selected standards sections** (from the plan's `Standards Scope`, extracted per feature type — skip frontend rules for a backend-only feature, skip backend rules for a frontend-only CSS feature)
+4. **`decisions.md` entries** that overlap with this feature's aggregates or services (project-level; same across the agents working on this feature)
+5. **`design-decisions.md` entries** when the feature has a frontend component (all entries — short, all relevant to visual consistency)
+6. **Spec digest** — the Technical Details section of the spec (the most feature-specific section; goes last so the prefix above remains identical across all subagents in this session)
+
+Write the bundle to: `{workspace_root}/handoffs/{feature-name}/context-bundle.md` (workspace-root `handoffs/` directory declared in `{project-docs}/workspace.md` under the `handoffs:` key — ephemeral, never committed, lives outside any service repo).
 
 The bundle replaces the individual standards file reads in **Developer / Tester / DevOps** subagent prompts. Agents still read their own agent definition file (which is short and role-specific).
 
@@ -179,16 +182,18 @@ There are two prompt templates: one for **Developer / Tester / DevOps** (full co
 
 ### Developer / Tester / DevOps prompt template
 
+The order below is **cache-friendly**: most-static reads first (agent definition, context bundle), feature-stable reads next (spec, task, references), and the dynamic-per-iteration `previous_handoff_path` last. The trailing instruction is always dynamic so it sits at the end.
+
 ```
 You are the {Agent Role} agent for the {Project Name} project.
 
 Read these files in order before doing anything else:
-1. {agent_definition_path}
-2. {context_bundle_path}
-3. {previous_handoff_path — if any}
-4. {spec_path}
-5. {task_path}
-{conditional: 6. {reference_files — only if Standards Scope says so}}
+1. {agent_definition_path}                        ← most static (per role, across features)
+2. {context_bundle_path}                          ← stable across this feature's subagents
+3. {spec_path}                                    ← stable across this feature
+4. {task_path}                                    ← stable across this feature
+{conditional: 5. {reference_files — only if Standards Scope says so}}
+6. {previous_handoff_path — if any}               ← dynamic across iterations
 
 {instruction}
 Working directory: {service_path}
@@ -199,19 +204,22 @@ When done, write your handoff to: {handoff_path}
 
 ### Reviewer prompt template (Backend Reviewer / Frontend Reviewer)
 
+Same cache-friendly ordering rule: most-static first, dynamic-per-iteration last. The reviewer's `previous_developer_handoff_path` changes every iteration of the loop — placing it after the static reads keeps the cache warm for iterations 2 and 3.
+
 ```
 You are the {Backend|Frontend} Reviewer agent for the {Project Name} project.
 
 Read these files in order before doing anything else:
-1. {agent_definition_path}
-2. {checklist_path}                       ← review-checklist.md (authoritative review surface)
-3. {previous_developer_handoff_path}      ← read ONLY the files listed in this handoff
-4. {task_path}                            ← for Definition of Done
-{conditional: 5. design-decisions.md      ← only for Frontend Reviewer when the diff touches UI}
+1. {agent_definition_path}                        ← most static (per role, across features)
+2. {critical_path_files}                          ← critical-paths/{kind}.md matching the diff (load every matching path)
+3. {checklist_path}                               ← full review-checklist.md (open only on strays)
+4. {task_path}                                    ← stable across this feature
+{conditional: 5. design-decisions.md              ← only for Frontend Reviewer when the diff touches UI}
+6. {previous_developer_handoff_path}              ← dynamic across iterations — read ONLY the files listed in this handoff
 
-Do NOT read the context bundle, individual standards files, the spec, or any source file outside the developer's handoff list. The checklist is your authoritative review surface — it contains every verifiable rule extracted from the standards.
+Do NOT read the context bundle, individual standards files, the spec, or any source file outside the developer's handoff list. The critical paths + checklist are your authoritative review surface — they contain every verifiable rule extracted from the standards.
 
-Run the checklist against the diff. For each violation, report severity (critical/major/minor), file:line, and the checklist rule that was violated. If you find a violation NOT covered by the checklist, report it as `minor` and flag it for inclusion in a future checklist update.
+Run the loaded critical paths against the diff. Open the full checklist only when the diff strays into a section no loaded path covers. For each violation, report severity (critical/major/minor), file:line, and the rule ID that was violated. If you find a violation NOT covered by any loaded path AND NOT in the checklist, report it as `minor` and flag it for inclusion in a future critical path / checklist update.
 
 This is review iteration {N} of max 3.
 
