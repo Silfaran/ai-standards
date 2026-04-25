@@ -64,6 +64,13 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **FE-031** — Navigation via named routes (`{ name: 'login' }`) — no hardcoded paths
 - [ ] **FE-032** — Route names lowercase, hyphen-separated
 
+## Authorization (route guards & UI gating)
+
+- [ ] **AZ-013** — Route guards check `meta.requiresAuth` and `meta.requiresRoles` (when set) before resolving — UI route definitions do NOT trust component-level `v-if` for access control
+- [ ] **AZ-014** — UI gating (hiding a button the user cannot use) is presentation-only — the backend ALWAYS re-checks; a 403 from the API is handled gracefully (toast + redirect, not a broken page)
+- [ ] **AZ-015** — The frontend NEVER stores roles in `localStorage` — roles live in the in-memory auth store, refreshed from the backend on app boot (per `SE-021` token-storage rule)
+- [ ] **AZ-016** — A 403 response is treated as a UX state, never silently swallowed — the user sees an explicit "no permission" message with the action that was denied
+
 ## Bootstrap order in `main.ts`
 
 - [ ] **FE-033** — Order: `createPinia()` → `router` → `VueQueryPlugin` → `setupInterceptors()`
@@ -148,5 +155,6 @@ For deeper context on any rule above:
 - XSS, env vars, redirects, token storage → `security.md` (Frontend Security section)
 - Hard security invariants → `invariants.md`
 - Full code examples (composables, stores, page tests) → `frontend-reference.md`
+- Voter pattern, Subject VO, route guards, tenant scoping → `authorization.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.
