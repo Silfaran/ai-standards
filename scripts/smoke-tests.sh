@@ -203,7 +203,48 @@ done
   && pass "all checklist bullets have valid, non-conflicting rule IDs"
 
 # -----------------------------------------------------------------------------
-# Check 8 — dynamic smoke staleness reminder (non-fatal)
+# Check 8 — cross-rule references resolve to declared IDs
+# -----------------------------------------------------------------------------
+# Several standards cite rules from other standards ("(per AZ-001)",
+# "mirror PA-006", "see GD-005"). A rename of the cited rule would silently
+# break the citation: the standard reads as if the rule still applies, but
+# the prose no longer matches the checklist. Catch the gap by extracting
+# every cited ID from standards/*.md and asserting it appears as a defined
+# bullet in one of the reviewer checklists.
+#
+# Allowed citation forms (loose by design — false positives are cheap):
+#   AZ-001        bare ID anywhere
+#   `AZ-001`      backticked
+#   (AZ-001)      parenthesised
+#   per AZ-001    "per <id>" / "see <id>" / "mirror <id>"
+section "Cross-rule references"
+declared_ids=$(grep -oE '\*\*('"$valid_prefix"')-[0-9]{3}\*\*' \
+    standards/backend-review-checklist.md standards/frontend-review-checklist.md \
+  | grep -oE "($valid_prefix)-[0-9]{3}" | sort -u)
+
+# Extract citations from standards/*.md (excluding the checklist files themselves
+# and any *-reference.md, which exist as illustration not contract).
+cited_ids=$(grep -ohE "($valid_prefix)-[0-9]{3}" standards/*.md \
+  | grep -vE '^$' | sort -u || true)
+
+# Diff: cited that are not declared.
+unknown_refs=$(comm -23 <(printf "%s\n" "$cited_ids") <(printf "%s\n" "$declared_ids") || true)
+
+if [ -z "$unknown_refs" ]; then
+  pass "every cited rule ID resolves to a declared bullet"
+else
+  fail "rule IDs cited in standards but not declared in any checklist:"
+  while IFS= read -r ref; do
+    [ -n "$ref" ] || continue
+    printf "    - %s — cited in:\n" "$ref"
+    grep -lE "(^|[^A-Z0-9])$ref([^0-9]|$)" standards/*.md \
+      | grep -vE '(backend-review-checklist|frontend-review-checklist)\.md' \
+      | sed 's/^/        /'
+  done <<< "$unknown_refs"
+fi
+
+# -----------------------------------------------------------------------------
+# Check 9 — dynamic smoke staleness reminder (non-fatal)
 # -----------------------------------------------------------------------------
 # Count commits since the most recent release tag that touched the structural
 # files exercised by `make smoke-dynamic` (agents/, build-plan-command.md,

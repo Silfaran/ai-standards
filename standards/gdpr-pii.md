@@ -279,3 +279,7 @@ The template lives at [`templates/dpia-template.md`](../templates/dpia-template.
 ## What the reviewer checks
 
 Privacy rules are enforced during review via the backend reviewer checklist (see [`backend-review-checklist.md`](backend-review-checklist.md) → "Personal data (PII) & GDPR") and the frontend reviewer checklist (see [`frontend-review-checklist.md`](frontend-review-checklist.md) → "Personal data (PII) & GDPR"). The checklists are the authoritative surface — if a rule appears here and not in the checklist, file a minor and update the checklist in the same commit.
+
+## Automated drift detection
+
+`scripts/project-checks/check-pii-inventory-drift.sh` fails CI when the codebase imports a known sub-processor SDK (Stripe, OpenAI / Anthropic, SendGrid / Twilio, Signaturit / DocuSign, Mapbox, …) without a matching entry in `{project-docs}/pii-inventory.md`. The provider list is curated per project in the script header. See [`quality-gates.md`](quality-gates.md) → "Drift validators (consuming projects)".

@@ -100,6 +100,34 @@ The root `ai-standards/Makefile` wraps the per-service gates:
 
 Running `make quality` from `ai-standards/` is the one-shot local equivalent of the CI pipeline.
 
+## Drift validators (consuming projects)
+
+Several standards (`secrets.md`, `gdpr-pii.md`, `feature-flags.md`, `audit-log.md`) declare that the codebase must stay in sync with an inventory document under `{project-docs}/`. Reviewer agents catch most drift, but a tooling layer is what makes the contract reliable instead of "remember to update the doc".
+
+The `scripts/project-checks/` directory in ai-standards ships four bash validators a consuming project copies into its own `scripts/checks/` and wires into CI:
+
+| Script | Inventory it validates | Source standard |
+|---|---|---|
+| `check-secret-drift.sh` | `secrets-manifest.md` | `secrets.md` (SC-002) |
+| `check-pii-inventory-drift.sh` | `pii-inventory.md` | `gdpr-pii.md` (GD-001, GD-011) |
+| `check-flag-drift.sh` | `feature-flags.md` | `feature-flags.md` (FF-001) |
+| `check-audit-action-drift.sh` | `audit-actions.md` | `audit-log.md` (AU-009) |
+
+Wire them via the project's `Makefile`:
+
+```makefile
+.PHONY: check-drift
+check-drift:
+	@scripts/checks/check-secret-drift.sh
+	@scripts/checks/check-pii-inventory-drift.sh
+	@scripts/checks/check-flag-drift.sh
+	@scripts/checks/check-audit-action-drift.sh
+```
+
+Run `make check-drift` as part of `make quality` (or as a separate CI job — see `scripts/project-checks/README.md`). Non-zero exit fails the build with the list of missing inventory entries.
+
+The provider list inside `check-pii-inventory-drift.sh` is curated per project — extend it as new sub-processors are introduced. Allowlists for legitimate exceptions live in `scripts/checks/secret-drift-allowlist.txt` and `scripts/checks/audit-action-drift-allowlist.txt`.
+
 ## Never bypass
 
 - Never `git commit --no-verify` to skip the hook. If the hook is broken, fix it.
@@ -117,3 +145,4 @@ Reviewer agents keep running their checklist — that catches design and archite
 - [backend.md](backend.md) / [frontend.md](frontend.md) — the rules the gates enforce.
 - [backend-review-checklist.md](backend-review-checklist.md) / [frontend-review-checklist.md](frontend-review-checklist.md) — what the reviewer agent still checks beyond the gates.
 - Skill `quality-gates-setup` — step-by-step installation in a new service.
+- [`../scripts/project-checks/README.md`](../scripts/project-checks/README.md) — drift validator usage, customisation, and CI wiring.

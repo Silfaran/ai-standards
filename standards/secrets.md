@@ -219,3 +219,7 @@ See [`new-service-checklist.md`](new-service-checklist.md) for how this integrat
 ## What the reviewer checks
 
 Secrets rules are enforced during review via the backend reviewer checklist (see [`backend-review-checklist.md`](backend-review-checklist.md) → "Secrets management"). The checklist is the authoritative surface — if a rule appears here and not in the checklist, file a minor and update the checklist in the same commit.
+
+## Automated drift detection
+
+The reviewer agent catches most secret drift. The remainder is caught by `scripts/project-checks/check-secret-drift.sh` — a CI-grade validator that fails the build when the application reads an env var (via `EnvSecret::require`, `$_ENV[...]`, `getenv(...)`) that has no row in `{project-docs}/secrets-manifest.md`. See [`quality-gates.md`](quality-gates.md) → "Drift validators (consuming projects)".
