@@ -342,6 +342,29 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **PW-020** — Endpoints accepting offline-write intents (L3) implement deterministic idempotency keys (per PA-005) and reject conflicting concurrent attempts with structured 409 responses
 - [ ] **PW-021** — Push consent grants/withdrawals produce `audit-log.md` entries (`push.consent.granted`, `push.consent.withdrawn`) per category; the consent ledger is the source for whether a send is permitted
 
+## Digital signatures
+
+- [ ] **DS-001** — `[critical]` Every signing operation goes through `SignatureGatewayInterface` (Domain) — no provider SDK imports (`Signaturit\Sdk`, `DocuSign\eSign`, `Adobe\Sign`, `Yousign\*`) in handlers/services
+- [ ] **DS-002** — Signing modality (`simple` / `advanced` / `qualified`) is declared per use case AND per jurisdiction in `{project-docs}/decisions.md`; modality NEVER silently downgrades when the provider is unavailable
+- [ ] **DS-003** — Templates are versioned in source: classes with `KEY` + `VERSION` constants; old versions retained forever; live edits to templates are forbidden
+- [ ] **DS-004** — Multi-language templates: one variant per locale under `templates/signature/{key}/{version}/{locale}/template.pdf`; signer locale (i18n.md) selects the variant
+- [ ] **DS-005** — Each template version pinned by hash in `metadata.json` AND recorded on every signing in `signed_documents.template_hash`; drift detection metric `signature_template_drift_total`
+- [ ] **DS-006** — `SigningRequest` aggregate enforces the state machine `draft → sent → in_signing → completed | declined | expired | revoked | cancelled | failed_to_send`; CHECK constraint mirrors states; aggregate methods own transitions
+- [ ] **DS-007** — Re-signing "the same document" creates a NEW `SigningRequest` aggregate — original signed documents are immutable; revocation is a NEW signed document (e.g. termination agreement)
+- [ ] **DS-008** — On completion, the system stores the signed PDF AND the provider audit-trail PDF in the private bucket (FS-002), records its own `document_sha256` independently of the provider — verification works offline if the provider goes away
+- [ ] **DS-009** — Retention exceeds the user's RTBF window for documents inside the legal floor (employment, financial, regulatory); RTBF on a still-retained signed contract refuses per `gdpr-pii.md` Section 17 carve-outs
+- [ ] **DS-010** — `[critical]` Webhook handlers verify the provider signature on the RAW request body BEFORE parsing JSON or persisting; invalid signature returns 401 + log + drop (mirrors PA-006)
+- [ ] **DS-011** — Webhook handlers check `processed_signature_webhooks(provider, event_id)`; duplicates return 200; inserts happen in the SAME DB transaction as state change (mirrors PA-007)
+- [ ] **DS-012** — Webhook handlers tolerate out-of-order events: state changes guard against current-state checks (mirrors PA-008)
+- [ ] **DS-013** — Provider declared in `pii-inventory.md` (GD-011) at integration time with the signer fields it processes and its data-residency region
+- [ ] **DS-014** — Audit entries on `signature.sent`, `signature.completed`, `signature.declined`, `signature.expired`, `signature.cancelled`, `signature.reminder.sent` per `audit-log.md`
+- [ ] **DS-015** — Signer email addresses harvested from signing flows are NEVER added to marketing lists — consent ledger says no; signing notifications are sent by the provider, not the application
+- [ ] **DS-016** — Signing initiation has a Voter check (`canInitiateSigning(subject, purpose, tenant)`) per AZ-001; verification endpoints have `canVerifySignedDocument` Voter
+- [ ] **DS-017** — Verification endpoint returns the provider audit-trail URL as a presigned URL (FS-009/FS-010) with TTL ≤ 15 minutes
+- [ ] **DS-018** — Span attributes per signing: `signature.provider`, `signature.purpose`, `signature.template_version`, `signature.modality`, `signature.signer_count`, `signature.outcome` — NEVER signer email, national ID, or contract amounts
+- [ ] **DS-019** — Metrics: `signatures_sent_total`, `signatures_completed_total`, `signatures_declined_total{decline_reason}`, `signature_provider_latency_seconds`, `signature_webhook_failures_total`, `signature_template_drift_total` — labels bounded to provider/purpose/modality/outcome
+- [ ] **DS-020** — `SIGNATURE_PROVIDER_WEBHOOK_SECRET` declared in `secrets-manifest.md` with rotation policy; integration tests behind `@group signature-real` with a daily budget — never default CI
+
 ## Logging
 
 - [ ] **LO-002** — LoggingMiddleware wired into `command.bus`, `event.bus`, `message.bus`
@@ -460,5 +483,6 @@ For deeper context on any rule above:
 - Flag taxonomy, registry, FlagGatewayInterface, sticky bucketing, removal procedure → `feature-flags.md`
 - Projection tiers (T1–T4), materialized view + replica + warehouse discipline, privacy in projections → `analytics-readonly-projection.md`
 - Push subscriptions, offline-write idempotency, payload PII rules → `pwa-offline.md`
+- SignatureGatewayInterface, modality choice, template versioning, document hashing, webhook idempotency, retention → `digital-signature-integration.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.

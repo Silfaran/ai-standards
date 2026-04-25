@@ -145,7 +145,7 @@ done
 # Check 7 — reviewer checklist rule IDs are well-formed and globally unique
 # -----------------------------------------------------------------------------
 # Every bullet in the reviewer checklists must carry a stable ID matching the
-# documented prefixes (BE|FE|SE|PE|OB|CA|SC|DM|AC|LO|AZ|IN|GD|LL|PA|FS|GS|AU|FF|AN|PW) + 3 digits. An ID that
+# documented prefixes (BE|FE|SE|PE|OB|CA|SC|DM|AC|LO|AZ|IN|GD|LL|PA|FS|GS|AU|FF|AN|PW|DS) + 3 digits. An ID that
 # maps to two different rule texts makes reviewer citations ambiguous; an
 # unknown prefix is a typo that will spread through agent usage. When the same
 # ID appears in multiple checklists, the rule text must match exactly — that
@@ -155,7 +155,7 @@ format_violations=0
 bad_prefix=0
 dupes=0
 
-valid_prefix='BE|FE|SE|PE|OB|CA|SC|DM|AC|LO|AZ|IN|GD|LL|PA|FS|GS|AU|FF|AN|PW'
+valid_prefix='BE|FE|SE|PE|OB|CA|SC|DM|AC|LO|AZ|IN|GD|LL|PA|FS|GS|AU|FF|AN|PW|DS'
 id_regex="\*\*(${valid_prefix})-[0-9]{3}\*\*"
 
 for cl in standards/backend-review-checklist.md standards/frontend-review-checklist.md; do
