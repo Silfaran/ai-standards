@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.35.1](https://github.com/Silfaran/ai-standards/compare/v0.35.0...v0.35.1) (2026-04-25)
+
+
+### Fixed
+
+* **ci:** bump markdownlint-cli2-action to v23 (Node 24) + use fail_level on reviewdog ([#81](https://github.com/Silfaran/ai-standards/issues/81)) ([7340338](https://github.com/Silfaran/ai-standards/commit/73403384e7a4a054d29b8921ea414667bea407de))
+
 ## [0.35.0](https://github.com/Silfaran/ai-standards/compare/v0.34.0...v0.35.0) (2026-04-25)
 
 
