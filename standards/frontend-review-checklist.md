@@ -108,6 +108,25 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **FF-019** — A flag-gated route always re-checks the flag on the server (handler / query) — frontend flag state is presentation-only and NEVER trusted by the backend
 - [ ] **FF-020** — User-facing experiment variants are sticky (provider bucketing on `subjectId`); a refresh does NOT change the variant the user sees
 
+## PWA & offline
+
+- [ ] **PW-001** — `[critical]` Service worker is generated at build time via `vite-plugin-pwa` (Workbox `generateSW` strategy) — hand-edited service workers are forbidden
+- [ ] **PW-002** — `navigateFallbackDenylist` excludes `/api/`, `/admin/` and any other dynamic-response route — the SW does NOT serve an HTML shell for API calls
+- [ ] **PW-003** — Cache strategies match the recommended table: app shell `cacheFirst (precache)`; versioned assets `cacheFirst (immutable)`; public CDN images `staleWhileRevalidate`; private API GET `networkFirst` with short timeout (≤ 3s); mutations + auth endpoints `networkOnly`
+- [ ] **PW-004** — Each runtime cache bucket declares explicit `maxEntries` AND `maxAgeSeconds` — no unbounded caches
+- [ ] **PW-005** — `manifest.webmanifest` declares `name`, `short_name`, `start_url` (with install attribution param), `scope`, `display`, `theme_color`, `background_color`, icons (192 + 512 + maskable), `lang` matching source locale
+- [ ] **PW-006** — Service worker registration happens AFTER the app shell renders — a SW failure does NOT block first paint
+- [ ] **PW-007** — SW update flow uses the `useServiceWorkerUpdate` composable surfacing a non-modal banner — never auto-reloads mid-flow
+- [ ] **PW-008** — `[critical]` IndexedDB / Cache Storage NEVER persists Sensitive-PII (per `gdpr-pii.md` GD-005) — the offline-cache config is validated against `pii-inventory.md` at build
+- [ ] **PW-009** — Logout flow clears SW caches AND IndexedDB stores of identified data — `clearOfflineCacheForLogout()` is the canonical helper
+- [ ] **PW-010** — Offline reads display staleness (e.g. "Last updated 12 minutes ago") — silent stale UX is forbidden
+- [ ] **PW-011** — Cached private responses respect `Cache-Control: private` from the API (CA-002) — public-cache strategies on private endpoints are forbidden
+- [ ] **PW-012** — Offline writes (L3) use intent objects with idempotency keys; sensitive operations (payments, RTBF, role grants, anything audit-log significant) are NOT eligible for offline writes
+- [ ] **PW-013** — Conflict policy declared per L3 mutation in the spec (`last-writer-wins` / `merge per field` / `manual reconciliation`) — ad-hoc resolution is forbidden
+- [ ] **PW-014** — `[critical]` `Notification.requestPermission()` is called only in response to a user gesture AND only after an in-app pre-prompt explaining the categories — first-load prompts are forbidden
+- [ ] **PW-015** — Push consent is per category (transactional / marketing / mention-and-reply); each grant/withdrawal produces an `audit-log.md` entry; denials are remembered for 90+ days
+- [ ] **PW-016** — Push payloads are SHORT and contain NO Sensitive-PII — text references; the app fetches the full content when the user opens the notification
+
 ## Bootstrap order in `main.ts`
 
 - [ ] **FE-033** — Order: `createPinia()` → `router` → `VueQueryPlugin` → `setupInterceptors()`
@@ -209,5 +228,6 @@ For deeper context on any rule above:
 - Presigned upload flow, signed URL hygiene, file form validation → `file-and-media-storage.md`
 - Map bbox fetching, marker clustering, debounced search, label/explanations rendering → `geo-search.md`
 - useFlag composable, no-flash gating, sticky variants, server-side re-check → `feature-flags.md`
+- Service worker setup, cache strategies, manifest, update flow, offline reads/writes, push consent → `pwa-offline.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.
