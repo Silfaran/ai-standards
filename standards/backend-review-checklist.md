@@ -226,6 +226,31 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **PA-019** — Payment-affecting handlers emit span attributes `payment.provider`, `payment.kind`, `payment.status_after` and metrics `payments_total`, `payments_amount_minor_total`, `payments_failures_total`, `webhook_duplicate_total`, `reconciliation_delta_minor` — labels bounded; no customer identifiers
 - [ ] **PA-020** — PSP webhook secret stored as `{PROVIDER}_WEBHOOK_SECRET` in `secrets-manifest.md` with rotation policy; signing helper centralised per provider; HTTP webhooks rejected with 426 on dev/staging
 
+## File & media storage
+
+- [ ] **FS-001** — `[critical]` Binary content lives in object storage, NEVER in a database column (`bytea` for avatars, contracts, videos is forbidden)
+- [ ] **FS-002** — Buckets are either fully public OR fully private — never mixed via "smart" prefix policies. Per-environment naming: `{project}-public-{env}`, `{project}-private-{env}`
+- [ ] **FS-003** — Public buckets disallow anonymous PUT — uploads ALWAYS go through presigned URLs minted by the backend
+- [ ] **FS-004** — Object keys contain the owner identifier (user/tenant/contract) — keys like `uploads/abc.jpg` with no scoping are a defect
+- [ ] **FS-005** — User-supplied filenames are NEVER used raw at the leaf — system renames to `{aggregate_id}.{ext}` or moves the original name to object metadata
+- [ ] **FS-006** — `[critical]` Presigned URLs are scoped (single key, single method, content-type whitelist, max-bytes); TTL ≤ 15 minutes for browser-handed URLs (background batch ≤ 1 h with documented justification)
+- [ ] **FS-007** — Quotas (per-user + per-tenant) enforced at presign time — without it, the only enforcement is the bill
+- [ ] **FS-008** — Upload aggregate transitions: `pending → uploaded → scanning → available | quarantined | scan_failed | mime_mismatch`. Handlers serving downloads check `status = available` — never serve `pending`/`scanning`/`quarantined`
+- [ ] **FS-009** — `[critical]` Voter (AZ-001) runs BEFORE minting any private-bucket presigned GET URL — handing the URL to the wrong subject bypasses every later check
+- [ ] **FS-010** — `Content-Disposition: attachment` forced on sensitive private downloads (DNI, contract) — never inline rendering of user-controlled bytes from the same origin
+- [ ] **FS-011** — Magic-byte verification runs after upload — the client `Content-Type` is NEVER trusted; mismatch transitions Upload to `mime_mismatch`, deletes the object, alerts
+- [ ] **FS-012** — Antivirus scan (ClamAV / VirusTotal / cloud-native) runs async on every private-bucket upload; result delivered via domain event consumed by the Upload aggregate; periodic re-scans scheduled
+- [ ] **FS-013** — Variants (thumbnails, transcodes, captions) tracked in `upload_variants(upload_id, variant_kind, bucket, key)`; deleting the original cascades; variants live in a bucket with shorter retention
+- [ ] **FS-014** — Video sources live in a separate bucket with a lifecycle rule deleting them N days after `Video.status = available` (override only via documented ADR)
+- [ ] **FS-015** — Video playback URLs are signed by default (CDN signed cookies for HLS, signed URL for MP4); public video requires explicit ADR
+- [ ] **FS-016** — Captions are first-class variants per locale (`captions_{locale}.vtt`); auto-generated captions flagged `source='machine'` (see i18n.md), promotable to `human`
+- [ ] **FS-017** — Soft-delete: Upload transitions to `deleted` + `deleted_at`; nightly job deletes the object N days later (default 7) — RTBF (`gdpr-pii.md`) deletes immediately
+- [ ] **FS-018** — Orphan detection: nightly job lists buckets, compares to `uploads` rows; orphan keys deleted after 30-day grace; orphan rows trigger an incident
+- [ ] **FS-019** — Span attributes per call: `storage.bucket`, `storage.operation`, `storage.object_size_bytes`, `storage.error_class` — NEVER the presigned URL or full key
+- [ ] **FS-020** — Metrics: `storage_operations_total`, `storage_bytes_uploaded_total`, `storage_bytes_downloaded_total`, `storage_objects_quarantined_total`, `video_transcode_duration_seconds`, `video_transcode_failures_total` — bounded labels (bucket, operation, outcome, mime_class, failure_class)
+- [ ] **FS-021** — Bucket names are env-config, never hardcoded in source — same code, different bucket per environment
+- [ ] **FS-022** — Presigned URLs are NEVER logged at any level — they are short-lived capabilities
+
 ## Logging
 
 - [ ] **LO-002** — LoggingMiddleware wired into `command.bus`, `event.bus`, `message.bus`
@@ -338,5 +363,6 @@ For deeper context on any rule above:
 - PII classification, encryption at rest, DSAR export, RTBF workflow, consent ledger, sub-processors → `gdpr-pii.md`
 - LlmGatewayInterface, prompt templates, JSON-mode validation, prompt cache, PiiPromptGuard, tool use → `llm-integration.md`
 - Money VO, ledger discipline, webhook idempotency, state machines, reconciliation, splits → `payments-and-money.md`
+- Bucket layout, presigned URLs, antivirus, magic-byte, video pipeline, variants, retention → `file-and-media-storage.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.

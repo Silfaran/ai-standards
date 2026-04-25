@@ -86,6 +86,13 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **PA-023** — Card / payment-method capture uses the PSP's hosted element (Stripe Elements, Adyen Drop-in, …) — raw card numbers NEVER touch frontend state, localStorage, sessionStorage or any analytics call
 - [ ] **PA-024** — Payment confirmation pages do NOT trust client-side state for "paid" status — they re-fetch the charge from the backend (which is webhook-driven) before showing a success message
 
+## File & media storage
+
+- [ ] **FS-023** — Uploads use the presigned PUT flow: `POST /uploads` → upload directly to bucket → `POST /uploads/:key/finalize` — NEVER stream bytes through the application API
+- [ ] **FS-024** — A presigned URL is consumed once and forgotten — never stored in localStorage, sessionStorage, or a Pinia store
+- [ ] **FS-025** — Image / video tags pointing at private content fetch a fresh signed URL on render — no cached URLs reused after expiry
+- [ ] **FS-026** — Forms accepting file uploads enforce client-side `accept`, max-size and visible error states — the backend validation is authoritative, the frontend prevents wasted bandwidth
+
 ## Bootstrap order in `main.ts`
 
 - [ ] **FE-033** — Order: `createPinia()` → `router` → `VueQueryPlugin` → `setupInterceptors()`
@@ -184,5 +191,6 @@ For deeper context on any rule above:
 - vue-i18n setup, lazy namespaces, locale change flow, Intl APIs → `i18n.md`
 - PII in URLs/storage/forms, consent UI, withdrawal flow → `gdpr-pii.md`
 - Money serialization, Intl currency formatting, hosted card capture → `payments-and-money.md`
+- Presigned upload flow, signed URL hygiene, file form validation → `file-and-media-storage.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.
