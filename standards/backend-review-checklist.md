@@ -169,6 +169,23 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **IN-012** — System reference data (countries, currencies, locale names) read from `Symfony\Component\Intl\*` — no hardcoded country lists in source
 - [ ] **IN-013** — A new supported locale is enabled in configuration ONLY after UI string files exist for it (machine-or-human-translated, marked for review)
 
+## Personal data (PII) & GDPR
+
+- [ ] **GD-001** — `[critical]` Every new column whose content is PII has a row in `{project-docs}/pii-inventory.md` (field, tier, legal_basis, purpose, retention, processors, dsar_export, rtbf_action) — no inventory row = hard reject
+- [ ] **GD-002** — `[critical]` Sensitive-PII columns are encrypted at rest via `SensitivePiiCipher` (libsodium AEAD; key from `secrets.md` `PII_ENCRYPTION_KEY`); column type is `BYTEA` — plaintext `text` columns for sensitive fields are forbidden
+- [ ] **GD-003** — Sensitive-PII NEVER appears in list-endpoint projections; detail endpoints return masked values (`****1234`) unless an explicit Voter rule grants "view sensitive" permission
+- [ ] **GD-004** — Every read of a decrypted Sensitive-PII value emits `event=pii.access` with `field`, `subject_id`, `actor_id`, `purpose`, `trace_id` — the value itself is NEVER logged
+- [ ] **GD-005** — PII fields NEVER appear in URLs, query strings, headers (other than `Authorization`), error messages, span attributes, metric labels, or log lines (Internal-PII allowed only as the hashed `user_id`)
+- [ ] **GD-006** — A new PII field added to the inventory triggers a same-commit update of the redaction list in `logging.md`
+- [ ] **GD-007** — Hash-based deduplication uses a peppered hash (`PII_DEDUP_PEPPER` from secrets manifest) — never `md5(email)` raw
+- [ ] **GD-008** — Repository methods enforce projection (`SELECT id, display_name`) instead of `SELECT *` for endpoints that don't need PII columns
+- [ ] **GD-009** — `DsarExportService` test fixture exercises every inventory row with `dsar_export=yes` — a new field omitted from the export is a defect
+- [ ] **GD-010** — `ForgetUserCommand` reads the inventory at runtime (`rtbf_action`) — no hardcoded delete/anonymize lists per service
+- [ ] **GD-011** — Every external sub-processor introduced (Stripe, SendGrid, OpenAI, Twilio, …) has an inventory entry naming the affected fields and the processor's region — hardcoded SDK instantiation without inventory entry is a hard reject
+- [ ] **GD-012** — Consent-gated processing queries the `ConsentLedger` aggregate before the first byte of work — no "we'll honour the next batch" deferred consent
+- [ ] **GD-013** — Backups copying prod data to staging or analytics MUST run a redaction pipeline first — direct restores of Sensitive-PII into non-prod environments are forbidden
+- [ ] **GD-014** — A spec that crosses a DPIA threshold (large-scale special categories, automated decisions with legal effect, LLM personalization on PII) has a completed DPIA in `{project-docs}/dpia/` before implementation merges
+
 ## Logging
 
 - [ ] **LO-002** — LoggingMiddleware wired into `command.bus`, `event.bus`, `message.bus`
@@ -278,5 +295,6 @@ For deeper context on any rule above:
 - Full code examples (controllers, scaffolds, async config) → `backend-reference.md`
 - Voter pattern, Subject VO, tenant scoping, service-to-service identity → `authorization.md`
 - Locale negotiation, translations storage, fallback chain, plurals/dates/currency formatting → `i18n.md`
+- PII classification, encryption at rest, DSAR export, RTBF workflow, consent ledger, sub-processors → `gdpr-pii.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.
