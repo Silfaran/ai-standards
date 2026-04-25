@@ -37,6 +37,8 @@ The patterns are PSP-agnostic — they apply to Stripe, Adyen, Mollie, Paddle, R
 
 Every monetary amount the system reads, writes, transports or displays is a `Money` value object. There is no other shape for money.
 
+> **Scaffolds:** [`scaffolds/Money.php`](../scaffolds/Money.php), [`scaffolds/Currency.php`](../scaffolds/Currency.php) (enum), [`scaffolds/CurrencyMismatchException.php`](../scaffolds/CurrencyMismatchException.php). Copy verbatim into `src/Domain/Money/`. The `Currency` enum is curated to ~19 commonly used codes (EUR, USD, GBP, CHF, JPY, CNY, CAD, AUD, NZD, SEK, NOK, DKK, PLN, CZK, MXN, BRL, ARS, COP, CLP) — extend per project on first use of an unlisted currency, with the case + `decimals()` adjustment if non-2-decimal.
+
 ```php
 namespace App\Domain\Money;
 

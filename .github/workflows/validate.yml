@@ -14,7 +14,7 @@ jobs:
     name: Internal markdown links
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Verify every relative link in every .md file points to a file that exists.
       # `--offline` skips HTTP(S) — we only care about framework-internal coherence
@@ -34,7 +34,7 @@ jobs:
     name: Content format checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Every SKILL.md must declare `name`, `description`, `paths` in its frontmatter.
       # Agents rely on the `paths` glob for auto-loading; a missing field silently disables the skill.
@@ -57,7 +57,7 @@ jobs:
     name: Lint GitHub Actions templates
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # actionlint lints every *.yml under .github/workflows AND any workflow
       # templates we ship under templates/ci/.
@@ -73,16 +73,16 @@ jobs:
     name: Markdown lint (basic consistency)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       # Config and globs live in `.markdownlint-cli2.jsonc` at repo root;
       # the action auto-discovers it.
-      - uses: DavidAnson/markdownlint-cli2-action@v18
+      - uses: DavidAnson/markdownlint-cli2-action@v20
 
   smoke:
     name: Static smoke tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Catch framework regressions that lychee + markdownlint cannot:
       # missing agent model tier, dangling agent references in commands,
