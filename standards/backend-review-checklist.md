@@ -315,6 +315,25 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **FF-015** — Metrics emitted: `flag_evaluations_total{key,variant,reason}`, `flag_evaluation_errors_total{key,error_class}`, `flag_evaluation_latency_seconds{provider, histogram}` — bounded labels
 - [ ] **FF-016** — Flag toggles in production produce audit entries (`flag.toggled`, `flag.targeting_changed`) per audit-log.md — webhook-consumed for hosted providers, inline for self-hosted
 
+## Analytics & projections
+
+- [ ] **AN-001** — Pick the projection tier explicitly per use case: T1 (read on operational), T2 (Postgres materialized view), T3 (read replica), T4 (warehouse). New surfaces start at T1 unless measurement requires higher
+- [ ] **AN-002** — Every materialized view lives in a dedicated `analytics` schema — never under the operational schema; the application's DB role has SELECT-ONLY on the schema
+- [ ] **AN-003** — Every materialized view has at least one UNIQUE INDEX so `REFRESH MATERIALIZED VIEW CONCURRENTLY` is possible; user-facing views refresh `CONCURRENTLY`; non-concurrent only for low-traffic admin reports
+- [ ] **AN-004** — Refresh cadence and owner declared in `{project-docs}/analytics-projections.md`; refresh job logs duration, tracks `last_refresh_at`, alerts when staleness > 2× cadence
+- [ ] **AN-005** — `[critical]` Analytics endpoints run the same Voter as any other read (AZ-001); the fact that data is summary stats does NOT relax authorization; cross-tenant aggregation requires explicit `platform_operator` role
+- [ ] **AN-006** — T1 analytics SELECTs include pagination and indexes per PE-001 / PE-003; an unbounded LIST query against operational tables is a deferred outage
+- [ ] **AN-007** — Read-replica access uses a separate connection injected by name (`@doctrine.dbal.replica_connection`) — handlers do NOT decide per-query which connection to use; the replica's DB role is SELECT-only at the database level
+- [ ] **AN-008** — Replica consumers have a documented max lag tolerance and the system surfaces `replica_lag_seconds`; lag exceeding tolerance is SEV-3 with documented fallback (primary or refuse)
+- [ ] **AN-009** — Application code does NOT contain warehouse SDK imports (BigQuery, Snowflake, ClickHouse) — warehouse loading is an infrastructure pipeline (CDC, ETL, event consumer), not application code
+- [ ] **AN-010** — `[critical]` Warehouse / replica / view contains NO Sensitive-PII not declared in `pii-inventory.md`; warehouse loaders REJECT unknown PII fields; PII tier is preserved across the projection (Sensitive stays Sensitive)
+- [ ] **AN-011** — DSAR exports include warehouse/projection data OR the architecture documents the exclusion (e.g. anonymized aggregate with k-anonymity ≥ 20); RTBF propagates to projections via the privacy event bus
+- [ ] **AN-012** — Cross-tenant projection queries are explicitly multi-tenant in SQL; the Voter authorizes the cross-tenant access; the platform query is itself audited (`audit-log.md`)
+- [ ] **AN-013** — Projection-backed responses follow `caching.md`: public counts cacheable with `Vary: Accept-Language`; per-tenant `private`; per-user with ETag based on projection `last_refresh_at`. Cache key includes the projection version
+- [ ] **AN-014** — Span attributes per analytics read: `analytics.tier`, `analytics.projection`, `analytics.staleness_seconds` — staleness exceeding tolerance is surfaced in the UI, never silently served
+- [ ] **AN-015** — Metrics: `analytics_refresh_duration_seconds`, `analytics_refresh_failures_total`, `replica_lag_seconds`, `warehouse_load_duration_seconds`, `warehouse_load_rows_processed_total` — labels bounded to view / pipeline / entity_type
+- [ ] **AN-016** — Tier graduations (T1→T2, T2→T3, T2/T3→T4) are recorded as ADRs in `{project-docs}/decisions.md` with the trigger that fired and the new pipeline owner
+
 ## Logging
 
 - [ ] **LO-002** — LoggingMiddleware wired into `command.bus`, `event.bus`, `message.bus`
@@ -431,5 +450,6 @@ For deeper context on any rule above:
 - PostGIS conventions, tsvector + GIN, combined CTE queries, MatchScoreCalculator, label translation → `geo-search.md`
 - Append-only audit table, AuditLogProjector wiring, denial trails, retention/archival → `audit-log.md`
 - Flag taxonomy, registry, FlagGatewayInterface, sticky bucketing, removal procedure → `feature-flags.md`
+- Projection tiers (T1–T4), materialized view + replica + warehouse discipline, privacy in projections → `analytics-readonly-projection.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.
