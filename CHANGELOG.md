@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.28.0](https://github.com/Silfaran/ai-standards/compare/v0.27.0...v0.28.0) (2026-04-25)
+
+
+### Added
+
+* **standards:** add analytics-readonly-projection standard (T1-T4 tier model, privacy preserved) ([#65](https://github.com/Silfaran/ai-standards/issues/65)) ([570274c](https://github.com/Silfaran/ai-standards/commit/570274c8e09ff2511d8e6ae94c22b28ac7343398))
+
 ## [0.27.0](https://github.com/Silfaran/ai-standards/compare/v0.26.0...v0.27.0) (2026-04-25)
 
 
