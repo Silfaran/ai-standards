@@ -30,6 +30,7 @@ The reviewer NEVER skips a rule that appears in a loaded path. The path narrows 
 | [`signature-feature.md`](signature-feature.md) | Initiates, observes, or verifies a legally binding digital signature | ~35 |
 | [`geo-search-feature.md`](geo-search-feature.md) | Performs proximity search, ranked matching, or renders a map | ~35 |
 | [`pwa-surface.md`](pwa-surface.md) | Configures the service worker, manifest, offline behaviour, or push notifications | ~25 |
+| [`public-facing-deploy.md`](public-facing-deploy.md) | Touches the perimeter of a public deploy — CSP, HSTS, CSRF/SSRF, container build, dependency automation, secrets scanning, DAST | ~30 |
 
 ## Compositional usage
 

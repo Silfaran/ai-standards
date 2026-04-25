@@ -15,6 +15,8 @@ sync with the application code:
 | `pii-inventory.md` | `gdpr-pii.md` (GD-001, GD-011) | A new SDK (Stripe, OpenAI, …) is instantiated without declaring the sub-processor. RGPD audit cannot reconstruct the data flow |
 | `feature-flags.md` | `feature-flags.md` (FF-001) | A `flags->boolean('foo_v2')` call exists with no registry entry. Flag becomes immortal config debt |
 | `audit-actions.md` | `audit-log.md` (AU-009) | An audit entry is written with a `metadata` shape nobody documented. Read-API consumers cannot deserialise reliably |
+| Working tree + git history | `attack-surface-hardening.md` (AS-supply chain) | A credential committed by accident is exploitable for the lifetime of the leak. `check-secrets-leaked.sh` (gitleaks wrapper) catches it pre-merge |
+| Built container images | `attack-surface-hardening.md` (AS-supply chain) | A HIGH/CRITICAL CVE in a base image ships to production. `check-container-image.sh` (Trivy wrapper) blocks the build |
 
 Reviewer agents catch most of these; these scripts catch the rest. The
 combination is what makes drift expensive instead of inevitable.
@@ -74,6 +76,22 @@ fails the build with a list of the missing inventory entries.
 - For each action, asserts a row exists in `{project-docs}/audit-actions.md`
   documenting its `metadata` shape.
 - Exit non-zero with the missing actions.
+
+### `check-secrets-leaked.sh`
+
+- Wraps [gitleaks](https://github.com/gitleaks/gitleaks) to scan the working
+  tree (default) or full git history (`--history`, run nightly) for accidentally
+  committed credentials.
+- Honours `scripts/checks/.gitleaks.toml` as the project's allowlist.
+- Exit non-zero on any finding; remediation requires rotation per `secrets.md`.
+
+### `check-container-image.sh`
+
+- Wraps [Trivy](https://aquasecurity.github.io/trivy/) to scan a built image
+  for HIGH and CRITICAL vulnerabilities (CVE, secrets, misconfig).
+- Usage: `scripts/checks/check-container-image.sh <image-tag>` after `docker build`.
+- Honours `scripts/checks/.trivyignore` for documented exceptions.
+- Exit non-zero on any HIGH or CRITICAL finding.
 
 ## Customising for a project
 
