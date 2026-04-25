@@ -76,7 +76,7 @@ EOSQL
 
 When scaffolding a new service that needs a database:
 1. Add a `CREATE DATABASE {service_name};` line to the init script
-2. Set the service's `DATABASE_URL` in `.env` to point to its own database (e.g. `postgresql://workspace:workspace@workspace-postgres:5432/{service_name}?serverVersion=17`)
+2. Set the service's `DATABASE_URL` in `.env` to point to its own database (e.g. `postgresql://workspace:workspace@workspace-postgres:5432/{service_name}?serverVersion=18`)
 3. Use the container name `workspace-postgres` as hostname (not `postgres`) — this is the name visible on `workspace-network`
 
 **Note:** the init script only runs on first container startup (when the data volume is empty). If the volume already exists, stop the container, delete the volume (`docker volume rm workspace_postgres-data`), and restart.

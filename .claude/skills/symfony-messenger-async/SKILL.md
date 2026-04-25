@@ -175,7 +175,7 @@ final class SendEmailEvent implements ApplicationMessageInterface
 **Dockerfile:**
 
 ```dockerfile
-FROM php:8.4-cli   # NOT php-fpm — no HTTP server needed
+FROM php:8.5-cli   # NOT php-fpm — no HTTP server needed
 
 RUN pecl install amqp && docker-php-ext-enable amqp
 

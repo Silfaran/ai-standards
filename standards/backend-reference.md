@@ -263,7 +263,7 @@ Services that only consume messages (no HTTP layer):
 **Dockerfile:**
 
 ```dockerfile
-FROM php:8.4-cli   # NOT php-fpm — no HTTP server needed
+FROM php:8.5-cli   # NOT php-fpm — no HTTP server needed
 
 # No pdo_pgsql, no pgsql if no database
 # Install amqp extension for RabbitMQ
@@ -316,7 +316,7 @@ The service connects to RabbitMQ and Mailpit via `workspace-network` (started by
         <ini name="error_reporting" value="-1" />
         <env name="APP_ENV" value="test" force="true" />
         <env name="KERNEL_CLASS" value="App\Kernel" force="true" />
-        <env name="DATABASE_URL" value="postgresql://workspace:workspace@postgres:5432/workspace?serverVersion=17" force="true" />
+        <env name="DATABASE_URL" value="postgresql://workspace:workspace@postgres:5432/workspace?serverVersion=18" force="true" />
     </php>
 
     <testsuites>
