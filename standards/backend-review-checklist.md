@@ -334,6 +334,14 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **AN-015** — Metrics: `analytics_refresh_duration_seconds`, `analytics_refresh_failures_total`, `replica_lag_seconds`, `warehouse_load_duration_seconds`, `warehouse_load_rows_processed_total` — labels bounded to view / pipeline / entity_type
 - [ ] **AN-016** — Tier graduations (T1→T2, T2→T3, T2/T3→T4) are recorded as ADRs in `{project-docs}/decisions.md` with the trigger that fired and the new pipeline owner
 
+## PWA & push (server-side)
+
+- [ ] **PW-017** — Push subscriptions stored per user-device with category attribution; subscriptions returning 410 from the push provider are auto-pruned; subscriptions inactive 30+ days are re-validated
+- [ ] **PW-018** — Push send endpoints rate-limit per user per category to prevent fatigue; rate limits documented per category
+- [ ] **PW-019** — Push payloads constructed server-side never include Sensitive-PII (GD-005) — references only; the user opens the app for the full content
+- [ ] **PW-020** — Endpoints accepting offline-write intents (L3) implement deterministic idempotency keys (per PA-005) and reject conflicting concurrent attempts with structured 409 responses
+- [ ] **PW-021** — Push consent grants/withdrawals produce `audit-log.md` entries (`push.consent.granted`, `push.consent.withdrawn`) per category; the consent ledger is the source for whether a send is permitted
+
 ## Logging
 
 - [ ] **LO-002** — LoggingMiddleware wired into `command.bus`, `event.bus`, `message.bus`
@@ -451,5 +459,6 @@ For deeper context on any rule above:
 - Append-only audit table, AuditLogProjector wiring, denial trails, retention/archival → `audit-log.md`
 - Flag taxonomy, registry, FlagGatewayInterface, sticky bucketing, removal procedure → `feature-flags.md`
 - Projection tiers (T1–T4), materialized view + replica + warehouse discipline, privacy in projections → `analytics-readonly-projection.md`
+- Push subscriptions, offline-write idempotency, payload PII rules → `pwa-offline.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.
