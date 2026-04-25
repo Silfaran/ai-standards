@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.34.0](https://github.com/Silfaran/ai-standards/compare/v0.33.0...v0.34.0) (2026-04-25)
+
+
+### Added
+
+* **tech-stack:** bump minimums to 2026-04 versions (PHP 8.5, Vite 7, PostgreSQL 18, Docker 28, Vue 3.6, TS 5.7, PostGIS 3.5) ([#77](https://github.com/Silfaran/ai-standards/issues/77)) ([1bc0632](https://github.com/Silfaran/ai-standards/commit/1bc063219c8b8d3bb8f9ce63733bc3956e480d06))
+
 ## [0.33.0](https://github.com/Silfaran/ai-standards/compare/v0.32.0...v0.33.0) (2026-04-25)
 
 
