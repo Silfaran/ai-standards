@@ -50,7 +50,12 @@ Each agent adds only the files below to the Mode B list. Reference files (`*-ref
 
 ### Reviewer exception
 
-Both reviewer agents read **only** their checklist in both modes — never the full standards. The checklists are the authoritative review surface, extracted from the standards and updated alongside them. If a reviewer sees a violation not covered by the checklist, it is reported as `minor` with a recommendation for which checklist section should cover it.
+Both reviewer agents follow a two-step focusing protocol in both modes:
+
+1. **Identify matching critical paths** in [`critical-paths/README.md`](critical-paths/README.md) from the diff and the developer handoff. Load every matching path file (e.g. `crud-endpoint.md` + `auth-protected-action.md` + `pii-write-endpoint.md`). Run through every rule in every loaded path.
+2. Open the **full reviewer checklist** (`backend-review-checklist.md` / `frontend-review-checklist.md`) only when the diff strays into a section no loaded path covers, OR when a violation outside the loaded paths is suspected.
+
+The full checklists remain the authoritative review surface and the source from which the critical paths are extracted. The reviewers NEVER read the underlying standards (`backend.md`, `security.md`, etc.) — those are for Developers. If a reviewer sees a violation not covered by any loaded path AND not by the full checklist, it is reported as `minor` with a recommendation for which checklist section AND which critical path should cover it.
 
 ### Skills complement this protocol
 

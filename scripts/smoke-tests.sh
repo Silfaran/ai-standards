@@ -244,7 +244,35 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# Check 9 — dynamic smoke staleness reminder (non-fatal)
+# Check 9 — critical-path rule IDs resolve to declared bullets
+# -----------------------------------------------------------------------------
+# standards/critical-paths/*.md curate subsets of the reviewer checklists
+# per feature kind. Every rule ID cited there must exist as a declared bullet
+# in one of the reviewer checklists; a typo or a removed rule would silently
+# misroute reviewer attention. The check reuses the declared_ids set computed
+# above (Check 8) and asserts critical-path citations are a subset of it.
+section "Critical-path rule IDs"
+if [ -d standards/critical-paths ]; then
+  cp_cited=$(grep -ohE "($valid_prefix)-[0-9]{3}" standards/critical-paths/*.md 2>/dev/null \
+    | grep -vE '^$' | sort -u || true)
+  cp_unknown=$(comm -23 <(printf "%s\n" "$cp_cited") <(printf "%s\n" "$declared_ids") || true)
+  if [ -z "$cp_unknown" ]; then
+    pass "every rule ID cited in critical-paths/ resolves to a declared bullet"
+  else
+    fail "rule IDs cited in critical-paths/ but not declared in any checklist:"
+    while IFS= read -r ref; do
+      [ -n "$ref" ] || continue
+      printf "    - %s — cited in:\n" "$ref"
+      grep -lE "(^|[^A-Z0-9])$ref([^0-9]|$)" standards/critical-paths/*.md \
+        | sed 's/^/        /'
+    done <<< "$cp_unknown"
+  fi
+else
+  printf "  (skipped — no standards/critical-paths/ directory)\n"
+fi
+
+# -----------------------------------------------------------------------------
+# Check 10 — dynamic smoke staleness reminder (non-fatal)
 # -----------------------------------------------------------------------------
 # Count commits since the most recent release tag that touched the structural
 # files exercised by `make smoke-dynamic` (agents/, build-plan-command.md,
