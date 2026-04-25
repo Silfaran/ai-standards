@@ -110,6 +110,8 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **PE-003** — All multi-row repository methods accept `int $limit = 20, int $offset = 0` — no unbounded list queries
 - [ ] **PE-004** — No queries inside loops (N+1) — use `IN (...)` batch queries
 - [ ] **PE-005** — `SELECT` only the columns the response needs (no `SELECT *` in API-facing queries)
+- [ ] **PE-018** — Integration tests on list / dashboard / cross-aggregate endpoints assert a query upper bound via `AssertMaxQueriesTrait::assertMaxQueries(N, fn() => ...)` — catches N+1 in CI before production. Bound starts at `observed_baseline + 1` per endpoint
+- [ ] **PE-019** — `scripts/project-checks/check-missing-indexes.sh` runs in CI (report-only or `--strict` per project policy); findings are triaged before merge — false positives allowlisted, true positives get a `CREATE INDEX CONCURRENTLY` migration
 - [ ] **SE-005** — No raw SQL string interpolation — placeholders only
 
 ## API responses
