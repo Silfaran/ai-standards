@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.35.0](https://github.com/Silfaran/ai-standards/compare/v0.34.0...v0.35.0) (2026-04-25)
+
+
+### Added
+
+* **scaffolds:** canonical patterns for the 13 generalist standards + Currency enum ([#79](https://github.com/Silfaran/ai-standards/issues/79)) ([276c2ae](https://github.com/Silfaran/ai-standards/commit/276c2ae103e9f8b478bfbd17f08337ae1505ecec))
+
 ## [0.34.0](https://github.com/Silfaran/ai-standards/compare/v0.33.0...v0.34.0) (2026-04-25)
 
 
