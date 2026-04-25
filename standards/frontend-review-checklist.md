@@ -71,6 +71,14 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **AZ-015** — The frontend NEVER stores roles in `localStorage` — roles live in the in-memory auth store, refreshed from the backend on app boot (per `SE-021` token-storage rule)
 - [ ] **AZ-016** — A 403 response is treated as a UX state, never silently swallowed — the user sees an explicit "no permission" message with the action that was denied
 
+## Personal data (PII) & GDPR
+
+- [ ] **GD-015** — PII fields (email, phone, tax id) NEVER appear in URL paths, query strings, hash fragments, or `localStorage` — anything browser-cached is a leak surface
+- [ ] **GD-016** — Forms that collect Sensitive-PII (government id, payment instrument, biometrics, health) use `autocomplete="off"` AND submit over a single TLS request — no multi-step localStorage drafts
+- [ ] **GD-017** — Consent UI presents one consent per purpose (marketing, analytics, ML personalization) — no "by using this site you agree to everything" dark patterns
+- [ ] **GD-018** — Withdrawal of consent is reachable in <=2 clicks from the settings entry point and surfaced as effective immediately ("opt out applied"); the UI does NOT promise a "next batch" lag
+- [ ] **GD-019** — Analytics / observability calls (web-vitals, page.view spans) carry the hashed `user_id` only — never the email, tax id, display name in plain text
+
 ## Bootstrap order in `main.ts`
 
 - [ ] **FE-033** — Order: `createPinia()` → `router` → `VueQueryPlugin` → `setupInterceptors()`
@@ -167,5 +175,6 @@ For deeper context on any rule above:
 - Full code examples (composables, stores, page tests) → `frontend-reference.md`
 - Voter pattern, Subject VO, route guards, tenant scoping → `authorization.md`
 - vue-i18n setup, lazy namespaces, locale change flow, Intl APIs → `i18n.md`
+- PII in URLs/storage/forms, consent UI, withdrawal flow → `gdpr-pii.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.
