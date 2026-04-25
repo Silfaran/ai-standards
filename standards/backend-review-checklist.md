@@ -251,6 +251,32 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **FS-021** — Bucket names are env-config, never hardcoded in source — same code, different bucket per environment
 - [ ] **FS-022** — Presigned URLs are NEVER logged at any level — they are short-lived capabilities
 
+## Geo & search
+
+- [ ] **GS-001** — `[critical]` Locations stored as `geography(Point, 4326)` with explicit SRID — two `numeric` columns for `lat`, `lon` are forbidden
+- [ ] **GS-002** — Every queried geography column has a GiST index that includes `tenant_id` as the leading equality predicate (verified with `EXPLAIN`)
+- [ ] **GS-003** — A row has either `location_point + service_radius_meters` OR `service_area`, never both — `CHECK` constraint enforces it
+- [ ] **GS-004** — Geocoding lives behind `GeocoderGatewayInterface` (Domain); persisted points record `geocoded_at` + `geocoder_source`; `manual` source is never re-geocoded automatically
+- [ ] **GS-005** — `ST_DWithin` (not `ST_Distance` in WHERE) is the radius predicate — uses the GiST index. `ST_Distance` only in SELECT/ORDER BY
+- [ ] **GS-006** — KNN operator `<->` is NOT used on `geography` columns (it is a `geometry` operator and silently drops to planar math)
+- [ ] **GS-007** — Bounding-box queries use `&&` against `ST_MakeEnvelope` and bound the max bbox area at the API boundary; viewports exceeding the limit return 422
+- [ ] **GS-008** — Combined geo + text + structured queries are a single CTE chain ordered by selectivity (geography first for "near me"); no sequential round-trips
+- [ ] **GS-009** — `EXPLAIN (ANALYZE, BUFFERS)` is mandatory in PR description for any new search query — `Seq Scan` on a non-trivial table is a defect
+- [ ] **GS-010** — `tsvector` columns are `GENERATED ALWAYS AS (...) STORED` with a GIN index — application code does not maintain them
+- [ ] **GS-011** — Multi-language content has one `tsvector` per locale with the matching language config (`spanish`, `english`, …); search picks the index by negotiated locale (i18n.md)
+- [ ] **GS-012** — User input goes through `plainto_tsquery` / `phraseto_tsquery` — never `to_tsquery` directly on user-typed text
+- [ ] **GS-013** — Typo tolerance via `pg_trgm`'s `%` operator + `similarity()` ordering with a documented per-use-case threshold
+- [ ] **GS-014** — `MatchScoreCalculator` is a Domain service, pure (no DB / LLM / I/O), inputs pre-loaded by the orchestrating Application service
+- [ ] **GS-015** — Score weights are CONFIG (`{project-docs}/match-weights.md`), never hardcoded in PHP; weight changes are version-tagged for cache invalidation
+- [ ] **GS-016** — `[critical]` API responses NEVER serialize the raw numeric score — they expose qualitative `MatchLabel` enum values plus structured `explanations`
+- [ ] **GS-017** — Score → label mapping is centralised (`MatchLabelResolver`); thresholds change as a UX decision, not as a hotfix
+- [ ] **GS-018** — Search endpoints are paginated per `api-contracts.md` AC-002/AC-003; per-page bounded
+- [ ] **GS-019** — Public-without-auth searches cache at the CDN with `Vary: Accept-Language`; per-user searches use a key including the subject id; the score-weights version is part of the cache key
+- [ ] **GS-020** — A user's exact coordinates are PII (GD-005) — never logged, never inlined into HTML; map endpoints validate the requesting subject before returning
+- [ ] **GS-021** — Span attributes per search: `search.kind`, `search.candidates_pre_filter`, `search.candidates_post_filter`, `search.results_returned`, `search.score_weights_version` (when match), `search.duration_ms` — NEVER the query text or coordinates
+- [ ] **GS-022** — Metrics: `search_requests_total`, `search_duration_seconds`, `search_candidates_filtered_total`, `match_label_distribution_total` — bounded labels (kind, outcome, label)
+- [ ] **GS-023** — Graduation to a dedicated search engine (Meilisearch, OpenSearch, Typesense) requires an ADR pointing at measured triggers (p95 SLO breach, index > RAM, language features Postgres lacks, vector embeddings) — premature adoption is a defect
+
 ## Logging
 
 - [ ] **LO-002** — LoggingMiddleware wired into `command.bus`, `event.bus`, `message.bus`
@@ -364,5 +390,6 @@ For deeper context on any rule above:
 - LlmGatewayInterface, prompt templates, JSON-mode validation, prompt cache, PiiPromptGuard, tool use → `llm-integration.md`
 - Money VO, ledger discipline, webhook idempotency, state machines, reconciliation, splits → `payments-and-money.md`
 - Bucket layout, presigned URLs, antivirus, magic-byte, video pipeline, variants, retention → `file-and-media-storage.md`
+- PostGIS conventions, tsvector + GIN, combined CTE queries, MatchScoreCalculator, label translation → `geo-search.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.

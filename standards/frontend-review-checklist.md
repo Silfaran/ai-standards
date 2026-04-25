@@ -93,6 +93,14 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **FS-025** — Image / video tags pointing at private content fetch a fresh signed URL on render — no cached URLs reused after expiry
 - [ ] **FS-026** — Forms accepting file uploads enforce client-side `accept`, max-size and visible error states — the backend validation is authoritative, the frontend prevents wasted bandwidth
 
+## Geo & search
+
+- [ ] **GS-024** — Map components fetch a bounding-box query bounded to the project's max area; pan/zoom triggers a debounced re-fetch — never "fetch everything"
+- [ ] **GS-025** — Markers are clustered at the rendering layer when count exceeds 50 in the viewport (`leaflet.markercluster` or equivalent)
+- [ ] **GS-026** — Search inputs are debounced (default 250 ms) — each keystroke does NOT issue a request
+- [ ] **GS-027** — A user's coordinates are NEVER inlined into HTML, NEVER stored in `localStorage` — they are fetched on demand from a private endpoint
+- [ ] **GS-028** — Result lists render the qualitative `MatchLabel` and the structured `explanations` translated via i18n — they NEVER display the raw numeric score
+
 ## Bootstrap order in `main.ts`
 
 - [ ] **FE-033** — Order: `createPinia()` → `router` → `VueQueryPlugin` → `setupInterceptors()`
@@ -192,5 +200,6 @@ For deeper context on any rule above:
 - PII in URLs/storage/forms, consent UI, withdrawal flow → `gdpr-pii.md`
 - Money serialization, Intl currency formatting, hosted card capture → `payments-and-money.md`
 - Presigned upload flow, signed URL hygiene, file form validation → `file-and-media-storage.md`
+- Map bbox fetching, marker clustering, debounced search, label/explanations rendering → `geo-search.md`
 
 If you find a rule violation that is NOT in this checklist, add it as `minor` in your review and include the file/line where the missing rule should live — the orchestrator will assign the next free ID in the matching prefix.
