@@ -25,14 +25,16 @@ The `init-project` command (or a manual one-time copy) places these scripts
 under the project's `scripts/checks/` directory. The project's `Makefile`
 exposes them:
 
-```makefile
+```text
 .PHONY: check-drift
 check-drift:
-	@scripts/checks/check-secret-drift.sh
-	@scripts/checks/check-pii-inventory-drift.sh
-	@scripts/checks/check-flag-drift.sh
-	@scripts/checks/check-audit-action-drift.sh
+    @scripts/checks/check-secret-drift.sh
+    @scripts/checks/check-pii-inventory-drift.sh
+    @scripts/checks/check-flag-drift.sh
+    @scripts/checks/check-audit-action-drift.sh
 ```
+
+(Real Makefiles require literal tab indentation; replace the leading 4 spaces in your project's Makefile with a tab character before commit.)
 
 CI runs `make check-drift` as part of the validate workflow. A non-zero exit
 fails the build with a list of the missing inventory entries.

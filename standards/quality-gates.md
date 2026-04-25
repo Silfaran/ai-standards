@@ -113,15 +113,15 @@ The `scripts/project-checks/` directory in ai-standards ships four bash validato
 | `check-flag-drift.sh` | `feature-flags.md` | `feature-flags.md` (FF-001) |
 | `check-audit-action-drift.sh` | `audit-actions.md` | `audit-log.md` (AU-009) |
 
-Wire them via the project's `Makefile`:
+Wire them via the project's `Makefile` (real Makefiles require literal tab indentation; the snippet below uses spaces for the lint pass):
 
-```makefile
+```text
 .PHONY: check-drift
 check-drift:
-	@scripts/checks/check-secret-drift.sh
-	@scripts/checks/check-pii-inventory-drift.sh
-	@scripts/checks/check-flag-drift.sh
-	@scripts/checks/check-audit-action-drift.sh
+    @scripts/checks/check-secret-drift.sh
+    @scripts/checks/check-pii-inventory-drift.sh
+    @scripts/checks/check-flag-drift.sh
+    @scripts/checks/check-audit-action-drift.sh
 ```
 
 Run `make check-drift` as part of `make quality` (or as a separate CI job — see `scripts/project-checks/README.md`). Non-zero exit fails the build with the list of missing inventory entries.
