@@ -316,7 +316,17 @@ The service connects to RabbitMQ and Mailpit via `workspace-network` (started by
         <ini name="error_reporting" value="-1" />
         <env name="APP_ENV" value="test" force="true" />
         <env name="KERNEL_CLASS" value="App\Kernel" force="true" />
-        <env name="DATABASE_URL" value="postgresql://workspace:workspace@postgres:5432/workspace?serverVersion=18" force="true" />
+        <!-- DATABASE_URL: the value below is the LOCAL Docker default (consumed when
+             no env var is set, e.g. inside `docker compose exec`). CI must NOT
+             inherit this value — it points to the Docker compose service hostname,
+             unreachable on a plain GitHub Actions runner. CI exports its own
+             DATABASE_URL via the workflow `env:` block pointing at its postgres
+             service container. Do NOT add `force="true"` here, or CI will resolve
+             a hostname that does not exist (`could not translate host name`). -->
+        <env name="DATABASE_URL" value="postgresql://workspace:workspace@trades-postgres:5432/{service}_test?serverVersion=18" />
+        <!-- Async transport ALWAYS in-memory in tests — `force="true"` is correct
+             here because we want tests to ignore whatever runtime is configured. -->
+        <env name="MESSENGER_TRANSPORT_DSN" value="in-memory://" force="true" />
     </php>
 
     <testsuites>
@@ -336,7 +346,39 @@ The service connects to RabbitMQ and Mailpit via `workspace-network` (started by
 </phpunit>
 ```
 
-Use `<env>` tags, not `<server>` — `<server>` does not work reliably in Docker containers.
+Two rules that catch teams every time:
+
+- Use `<env>` tags, not `<server>` — `<server>` does not work reliably in Docker containers.
+- **Never add `force="true"` to `DATABASE_URL` (or any value that legitimately differs between local Docker and CI).** The Docker service hostname (`trades-postgres`, `postgres`, `db`, ...) does not resolve on a GitHub Actions runner. CI workflows already export `DATABASE_URL` via the `env:` block pointing at the runner's `services.postgres` container on `localhost:5432` — `force="true"` would overwrite that and the integration suite would fail with `could not translate host name`. Keep the `force="true"` only on values that are correct EVERYWHERE (e.g. `APP_ENV=test`, `MESSENGER_TRANSPORT_DSN=in-memory://`).
+
+### `tests/bootstrap.php`
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use Symfony\Component\Dotenv\Dotenv;
+
+require dirname(__DIR__).'/vendor/autoload.php';
+
+// Skip bootEnv when no .env file is present (CI passes env vars directly via the
+// workflow `env:` block; Symfony Dotenv would throw `PathException` otherwise
+// because .env is gitignored per the secrets policy — only .env.example is
+// committed). Locally, .env exists and is loaded normally.
+if (file_exists(dirname(__DIR__).'/.env')) {
+    (new Dotenv())->bootEnv(dirname(__DIR__).'/.env');
+}
+```
+
+The `file_exists` guard is mandatory. Without it CI fails before the first test runs:
+
+```
+Error in bootstrap script: Symfony\Component\Dotenv\Exception\PathException:
+Unable to read the "/home/runner/work/{service}/{service}/.env" environment file.
+```
+
+This is a recurring trap — every service that copies `bootstrap.php` from another scaffold inherits the bug. Always copy the version with the guard.
 
 ---
 
