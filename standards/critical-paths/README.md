@@ -30,6 +30,7 @@ The reviewer NEVER skips a rule that appears in a loaded path. The path narrows 
 | [`signature-feature.md`](signature-feature.md) | Initiates, observes, or verifies a legally binding digital signature | ~35 |
 | [`geo-search-feature.md`](geo-search-feature.md) | Performs proximity search, ranked matching, or renders a map | ~35 |
 | [`pwa-surface.md`](pwa-surface.md) | Configures the service worker, manifest, offline behaviour, or push notifications | ~25 |
+| [`async-handler.md`](async-handler.md) | Adds or modifies a Symfony Messenger handler on an async transport (domain-event consumer, application-message handler, async write command per ADR-009) — covers idempotency, DLQ wiring, failure subscriber, retry, worker resource discipline | ~28 |
 | [`public-facing-deploy.md`](public-facing-deploy.md) | Touches the perimeter of a public deploy — CSP, HSTS, CSRF/SSRF, container build, dependency automation, secrets scanning, DAST | ~30 |
 
 ## Compositional usage

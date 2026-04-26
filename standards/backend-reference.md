@@ -179,6 +179,7 @@ Separate dead letter queues per type allow targeted monitoring and reprocessing.
 - **Retry delay:** 5 minutes (300,000 ms), constant (multiplier: 1)
 - **After max retries:** message moved to the dead letter transport
 - **Dead letter queues are NOT retried automatically**
+- **`failure_transport` precedence — transport-level wins over framework-level.** Symfony Messenger lets you declare a global `framework.messenger.failure_transport: events_dead` AND a per-transport `transports.<name>.failure_transport: <name>_dead`. The per-transport setting **fully overrides** the global one for that transport — they do not stack. A service that mixes the two (e.g. global `events_dead` + per-transport `dispatch_dead` on a new `async_dispatch`) is correct, but visually surprising; add an inline YAML comment when introducing a per-transport override so the next reader does not assume both DLQs receive a copy of the failure.
 
 ```yaml
 framework:
