@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.36.2](https://github.com/Silfaran/ai-standards/compare/v0.36.1...v0.36.2) (2026-04-26)
+
+
+### Fixed
+
+* **backend-reference:** make PHPUnit example CI-compatible (no force on DATABASE_URL, .env-guarded bootstrap) ([#87](https://github.com/Silfaran/ai-standards/issues/87)) ([2825c10](https://github.com/Silfaran/ai-standards/commit/2825c10b32355bb3961645599faa104a6d63a6ac))
+
 ## [0.36.1](https://github.com/Silfaran/ai-standards/compare/v0.36.0...v0.36.1) (2026-04-25)
 
 
