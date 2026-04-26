@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.37.0](https://github.com/Silfaran/ai-standards/compare/v0.36.2...v0.37.0) (2026-04-26)
+
+
+### Added
+
+* **standards:** add async-handler critical path + BE-069/070/071/072 ([#89](https://github.com/Silfaran/ai-standards/issues/89)) ([131eae7](https://github.com/Silfaran/ai-standards/commit/131eae7cb0bc2b80c43be84cb77a68836d55197b))
+
 ## [0.36.2](https://github.com/Silfaran/ai-standards/compare/v0.36.1...v0.36.2) (2026-04-26)
 
 
