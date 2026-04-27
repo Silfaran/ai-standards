@@ -176,6 +176,7 @@ orchestrator during `/update-specs` — it will skip retirement but still update
 | `/refine-specs` | After create-specs, to produce the technical spec and plan | — |
 | `/build-plan` | After refine-specs, to implement the full feature | `/update-specs` (automatic, last step) |
 | `/update-specs` | Rarely by hand — see "When to run this manually" in [`commands/update-specs-command.md`](commands/update-specs-command.md) | — |
+| `/check-web <url>` | Manual on-demand audit of a deployed UI — find symptoms (5xx, 4xx, console errors, axe violations, deprecations), group them by inferred root cause, emit paste-ready `/create-specs` prompts. Read-only navigation, never submits forms or triggers destructive actions. Requires `npm install` once in [`scripts/check-web/`](scripts/check-web/). | Web Auditor agent |
 
 ---
 
