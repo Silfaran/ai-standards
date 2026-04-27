@@ -5,9 +5,9 @@ Each agent definition references this file instead of repeating the list.
 
 When you extend an agent, add only the **role-specific** files it needs — do not redefine the common core.
 
-## Two Invocation Modes
+## Three Invocation Modes
 
-Every agent runs in one of two modes. Know which one you are in.
+Every agent runs in one of three modes. Know which one you are in.
 
 ### Mode A — `build-plan` subagent (default)
 
@@ -34,6 +34,22 @@ No context bundle exists. Read the full file set:
 7. **Role-specific standards** (see table below).
 8. **The spec, task, and any handoff** for the feature you are working on.
 
+### Mode C — Manual audit (Web Auditor only)
+
+Spawned exclusively by `/check-web`. No context bundle, no spec/plan/task files prepared upfront. The orchestrator runs the Playwright walker first and produces a `raw-findings.json`; the agent reads that JSON as its primary input.
+
+Read, in order:
+
+1. **The agent's own definition** (`agents/web-auditor-agent.md`).
+2. **`raw-findings.json`** for this audit — the walker's output. This is the equivalent of the context bundle in Mode A.
+3. **`{project-docs}/web-flows.md`** if it exists — the agent's own append-only memo of confirmed expected behaviors. **Read this BEFORE specs**, never after.
+4. **`{project-docs}/specs/INDEX.md`** — feature topology, used to map symptoms to features.
+5. **Individual specs and source files** — on demand only, when a finding is not covered by `web-flows.md` and the agent needs to disambiguate "real bug, expected, or auditor misinterpreted".
+
+The agent does NOT pre-load the full standards or specs directory. Discovery stays blind; consultation happens only on miss. This is what differentiates the auditor from the Tester (the Tester knows the spec; the auditor consults the spec).
+
+The agent appends new entries to `{project-docs}/web-flows.md` only after confirming an interpretation against a spec — never speculatively. Each entry cites spec file + section + commit SHA. Append-only: stale entries are superseded, never edited or deleted.
+
 ## Role-specific Additions
 
 Each agent adds only the files below to the Mode B list. Reference files (`*-reference.md`) are **on demand** — load them the first time a pattern appears, not by default.
@@ -47,6 +63,7 @@ Each agent adds only the files below to the Mode B list. Reference files (`*-ref
 | Frontend Reviewer | [`frontend-review-checklist.md`](frontend-review-checklist.md) **only** — see rule below | `design-decisions.md` when diff touches UI |
 | Tester | [`backend.md`](backend.md) or [`frontend.md`](frontend.md) (pick by test surface), [`security.md`](security.md) | [`logging.md`](logging.md) (covered by `messenger-logging-middleware` skill), [`backend-reference.md`](backend-reference.md) or [`frontend-reference.md`](frontend-reference.md) for first-time test patterns |
 | DevOps | [`tech-stack.md`](tech-stack.md) (already in common core), [`secrets.md`](secrets.md), [`quality-gates.md`](quality-gates.md), root `docker-compose.yml`, service compose files | [`backend-reference.md`](backend-reference.md) for consumer-worker patterns, [`new-service-checklist.md`](new-service-checklist.md) when scaffolding a new service |
+| Web Auditor | Mode C only — runs against `raw-findings.json` from the walker. No standards file. | `{project-docs}/web-flows.md`, `{project-docs}/specs/INDEX.md`, individual specs (only on miss in `web-flows.md`), source files (only to deduplicate findings) |
 
 ### Reviewer exception
 

@@ -1,0 +1,14 @@
+{
+  "name": "ai-standards-check-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Playwright walker for /check-web. Captures console, network, page errors and axe violations across a deployed UI.",
+  "scripts": {
+    "postinstall": "playwright install chromium"
+  },
+  "dependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "playwright": "^1.50.0"
+  }
+}
