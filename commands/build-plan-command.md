@@ -122,13 +122,17 @@ For single-service features. Use the appropriate Developer/Reviewer type (Backen
 
 1. **Sign-off** — show summary, wait for developer confirmation (see Step 0)
 2. Read the plan file and task file. Read the `## Complexity` line from the plan to determine the execution flow.
-3. **Pre-flight branch check** — for every affected service repository, verify HEAD is on `master`. For each repo NOT on master:
+3. **Pre-flight branch check** — for every affected repository, verify HEAD is on `master`. The set of affected repositories includes:
+   - Every service repo touched by the plan.
+   - **The docs repo (`{project-docs}/`)** — included automatically because every feature touches `INDEX.md` (status flip) and the spec's `## As-built notes` (Step 9), and most features also touch `pii-inventory.md` and `lessons-learned/*.md`.
+
+   For each repo NOT on master:
    - Show the developer: repo name, current branch, commits ahead of master.
    - Ask:
      > "Repo `{repo}` is on `{branch}` (not master). Choose: **(a)** merge `{branch}` into master here and continue from a clean master, **(b)** keep working on `{branch}` for this feature (no new branch will be created), **(c)** abort `/build-plan`."
    - Do not proceed until every affected repo has been resolved. Never silently branch from a non-master HEAD.
 
-4. **Create feature branch** — from `master`, create `feature/{aggregate}/{feature-name}` in every affected service repository. If the branch already exists, check it out. Do not proceed until the branch is created in all affected repos.
+4. **Create feature branch** — from `master`, create `feature/{aggregate}/{feature-name}` in every affected repository (services + `{project-docs}/`). If the branch already exists, check it out. Do not proceed until the branch is created in all affected repos.
 5. **Generate context bundle** (see Step 0.5) — write to `{workspace_root}/handoffs/{feature-name}/context-bundle.md`
 6. Execute each phase using the subagent prompt template below, following the flow matching the plan's complexity:
    - **Before each spawn**: read the `## Model` line from the agent definition file and pass its tier as the `model` argument of `Agent`. This is mandatory — the workspace `settings.json` hook rejects `Agent` invocations without `model`.
@@ -165,14 +169,34 @@ For single-service features. Use the appropriate Developer/Reviewer type (Backen
     After the action, verify each affected service responds correctly (e.g. `curl -s -o /dev/null -w "%{http_code}" http://localhost:{port}/api/...` returns a non-502 status). If a service fails to start, investigate logs (`docker compose logs`) and fix before committing.
 
 12. **Commit all changes** — stage and commit in every affected repo with a descriptive message. Do not push yet. The merge prompt in Step 14 handles push and master integration.
+
+    **Affected repos include `{project-docs}/`** (typically `trades-docs/`, `red-profesionales-docs/`, …) whenever the feature touched any of: the spec file, `INDEX.md`, `pii-inventory.md`, `lessons-learned/*.md`, or any other workspace doc. Treat the docs repo with the same pre-flight, branch, commit, push, PR rules as a service repo. The pre-flight check in Step 3 must include it; the branch created in Step 4 is also `feature/{aggregate}/{feature-name}`.
 13. Verify all Definition of Done conditions are met
-14. **Post-feature merge prompt** — once the feature is committed and DoD is met, ask the developer:
-    > "Feature `{feature-name}` is committed on `feature/{aggregate}/{feature-name}` in: {repo list}. Merge into `master` now? Choose: **(a)** yes — for each affected repo: `git checkout master`, `git merge --no-ff feature/...`, `git push origin master`, `git checkout master` (stay on master), and delete the local feature branch; **(b)** no — leave branches as-is for manual review."
-    - If **(a)**: execute the merge in every affected repo. After every repo is merged and pushed, verify HEAD is on `master` in all of them. Report any merge conflicts immediately and stop — do not auto-resolve.
-    - If **(b)**: skip to Step 15 with a reminder of the unmerged branches.
+14. **Post-feature merge prompt** — once every affected repo is committed locally and DoD is met, ask the developer:
+    > "Feature `{feature-name}` is committed on `feature/{aggregate}/{feature-name}` in: {repo list}. Open PRs and merge them now? Choose: **(a)** yes — for each affected repo: push the feature branch, open a PR via `gh pr create`, then merge with `gh pr merge --merge` (or `--auto` if branch protection requires checks); **(b)** no — leave branches as-is for manual review."
+
+    - If **(a)** — execute the **PR-first** flow in this exact order:
+
+      1. **Push the feature branch** in every affected repo: `git push -u origin feature/{aggregate}/{feature-name}`. Direct push to `master` is forbidden by sandbox and by `invariants.md`; the branch always lands on `origin` first as a feature branch.
+      2. **Open one PR per repo** with `gh pr create --base master --head feature/{aggregate}/{feature-name} --title {conventional-commit-prefix}: {feature summary} --body {body}`. The body MUST include:
+          - A `## Summary` section with a 3–6 bullet recap of what changed, citing rule IDs / ADRs that gated the design.
+          - A `## Cross-service merge ordering` section when more than one service repo is in the PR set, naming the producer-first → consumer-second sequence (per `data-migrations.md`). Cite the companion PR numbers (e.g. "merge `identity-service#4` BEFORE `comms-service#3`").
+          - A `## Test plan` checklist enumerating the gates that already passed locally (PHPUnit count, PHPStan level, CS-Fixer, migration apply, Mailpit smoke).
+          - A trailing `🤖 Generated with [Claude Code](https://claude.com/claude-code)` line.
+      3. **Merge the PRs** with `gh pr merge {N} --merge` (or `--auto` if the repo's branch protection requires CI checks). Honour the cross-service ordering: producer first, consumer second, docs last (or in parallel with either, since docs PRs almost never have CI gates that depend on service PRs).
+          - **Docs repo (`{project-docs}/`):** typically has no GitHub Actions; merge directly with `gh pr merge {N} --merge`.
+          - **Service repos with CI:** prefer `gh pr merge {N} --merge --auto` so the merge fires once `quality gates` reports `SUCCESS`. The orchestrator does NOT poll — `--auto` is fire-and-forget. If branch protection has been disabled the merge is immediate.
+      4. **Sync local `master`** in every affected repo: `git checkout master && git pull origin master && git branch -d feature/{aggregate}/{feature-name}`. Verify HEAD is on `master` and the working tree is clean. Only fail-loud if the local feature branch refuses to delete (it shouldn't — the PR merge should have integrated every commit).
+
+      If a PR cannot be merged because checks are still running and `--auto` is rejected by the repo's settings, do NOT poll inside the orchestrator. Report the open PR URLs to the developer, mark the local branches as "merge pending CI", and stop. The developer merges manually when checks pass.
+
+      Report any merge conflict immediately and stop — do not auto-resolve. The developer rebases the feature branch by hand.
+    - If **(b)**: skip to Step 15 with a reminder of the unmerged branches and the open PR URLs (or the un-pushed local branches if the developer also declined the push).
 15. Report final status to the developer, including:
-    - Per repo: final branch (`master` if merged, `feature/...` if not), last commit hash
-    - If unmerged: reminder of which branches need attention
+    - Per repo: final branch (`master` if merged, `feature/...` if not), last commit hash, and the PR URL (so the developer can revisit the merge later).
+    - If unmerged: reminder of which branches need attention.
+
+> **Why PR-first, not local-merge-and-push:** the workspace's sandbox rejects `git push origin master` directly (and `invariants.md` forbids it explicitly). GitHub branch-protection rules on the typical service repo also reject non-PR pushes. A PR-first flow respects both layers — branches land on `origin`, the PR carries the test plan and cross-service ordering, and `gh pr merge --auto` honours any CI gate the repo declares without the orchestrator polling. Earlier versions of this command described a `git push origin master` flow that worked locally but always failed in practice the first time CI was wired up; the PR-first flow is the version that survives contact with branch protection.
 
 ---
 
