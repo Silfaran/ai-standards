@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.38.0](https://github.com/Silfaran/ai-standards/compare/v0.37.0...v0.38.0) (2026-04-27)
+
+
+### Added
+
+* **audit:** add /check-web manual UI auditor (Web Auditor agent + Playwright walker) ([#91](https://github.com/Silfaran/ai-standards/issues/91)) ([18597d1](https://github.com/Silfaran/ai-standards/commit/18597d1e2d690cab97b5a6f7fe3b9acc51767d59))
+
 ## [0.37.0](https://github.com/Silfaran/ai-standards/compare/v0.36.2...v0.37.0) (2026-04-26)
 
 
