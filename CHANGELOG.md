@@ -6,6 +6,14 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.39.0](https://github.com/Silfaran/ai-standards/compare/v0.38.0...v0.39.0) (2026-04-27)
+
+
+### Added
+
+* **commands:** switch post-feature merge to PR-first flow ([6be1261](https://github.com/Silfaran/ai-standards/commit/6be12618b60097de0626a8d7e77bc23bbb4523c4))
+* **commands:** switch post-feature merge to PR-first flow ([e3d5466](https://github.com/Silfaran/ai-standards/commit/e3d54668c3b4e2479d5f8e046893e4a5325e4365))
+
 ## [0.38.0](https://github.com/Silfaran/ai-standards/compare/v0.37.0...v0.38.0) (2026-04-27)
 
 
