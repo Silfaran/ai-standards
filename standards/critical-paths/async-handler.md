@@ -28,6 +28,7 @@ Trigger on any of:
 - BE-007 Services expose one public `execute` method
 - BE-009 Doctrine / MessageBus → Application
 - BE-010 Services declared `readonly class`
+- BE-065 Service classes end with `Service` (Domain + Application; no `XxxChecker`/`XxxPadder`/`XxxValidator`)
 - BE-022 Domain has zero Symfony / Doctrine imports
 - BE-069 Domain exception factories accept primitives or Domain types only — never Symfony / Doctrine types as parameters
 - BE-023 Aggregates use `static create()` / `static from()`

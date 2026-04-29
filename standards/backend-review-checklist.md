@@ -477,7 +477,7 @@ The reviewer must NOT re-read the full standards — this checklist is the autho
 - [ ] **BE-062** — API payload fields snake_case
 - [ ] **BE-063** — Tables/columns snake_case
 - [ ] **BE-064** — `CreateXxxCommand` / `CreateXxxCommandHandler`, `GetXxxQuery` / `GetXxxQueryHandler`, `XxxCreatedEvent`, `DbalXxxRepository`, `XxxRepositoryInterface`, `XxxNotFoundException`
-- [ ] **BE-065** — Every application service class name ends with `Service` (e.g. `UserFinderService`) — no generic names like `XxxManager`, `XxxHelper`, `XxxUtil`
+- [ ] **BE-065** — `[critical]` Every service class name ends with `Service` — Domain AND Application services alike (e.g. `UserFinderService`, `CommonPasswordCheckerService`, `ResendVerificationConstantTimePadderService`). No generic names (`XxxManager`, `XxxHelper`, `XxxUtil`) and no role-suffixed names that drop the `Service` token (`XxxChecker`, `XxxValidator`, `XxxCalculator`, `XxxPadder`, `XxxResolver`, `XxxBuilder`) — those role tokens go INSIDE the name (`XxxValidatorService`, `XxxCalculatorService`). The location under `src/Domain/Service/` or `src/Application/Service/` is not enough on its own; the suffix is what makes the role unambiguous at every call site. Source: `backend.md` §Naming services
 - [ ] **BE-066** — PHPUnit method names match the project's PHP-CS-Fixer config — `testDescriptiveCamelCase` under the default `php_unit_method_casing` rule, `test_descriptive_snake_case` only when that rule is disabled
 
 ## PHP / PHPStan idioms
