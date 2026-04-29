@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.39.1](https://github.com/Silfaran/ai-standards/compare/v0.39.0...v0.39.1) (2026-04-29)
+
+
+### Fixed
+
+* **standards:** expand BE-065 to cover Domain services ([be93c45](https://github.com/Silfaran/ai-standards/commit/be93c45d2432877d602cd701970d977dd2c2ae7e))
+
 ## [0.39.0](https://github.com/Silfaran/ai-standards/compare/v0.38.0...v0.39.0) (2026-04-27)
 
 
