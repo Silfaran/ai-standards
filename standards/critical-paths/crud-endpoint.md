@@ -68,6 +68,7 @@ Use when the diff adds a controller + handler + repository (and optionally a fro
 - BE-061 Classes PascalCase, methods camelCase
 - BE-062 API payload fields snake_case
 - BE-064 `CreateXxxCommand` / `Handler` naming
+- BE-065 Service classes end with `Service` (Domain + Application; no `XxxChecker`/`XxxPadder`/`XxxValidator`)
 - BE-055 Integration test per controller
 - BE-057 Tests assert HTTP + DB state
 - BE-067 Definition of Done items checked
