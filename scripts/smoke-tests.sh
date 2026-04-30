@@ -272,7 +272,129 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# Check 10 — dynamic smoke staleness reminder (non-fatal)
+# Check 10 — per-phase bundle paths cited consistently
+# -----------------------------------------------------------------------------
+# v0.40.0 split the single context-bundle into dev-bundle.md (Developer /
+# Dev+Tester / DevOps) and tester-bundle.md (Tester). The orchestrator picks
+# which bundle each role gets. A typo or a half-finished rename would silently
+# misroute one role to the wrong bundle — Tester loaded with implementation
+# rules (token waste) or Developer missing implementation rules (incorrect
+# code). Catch the gap by asserting both filenames appear in both files that
+# define the contract, with enough occurrences to indicate active use.
+section "Per-phase bundle path coherence"
+bundle_fail=0
+for bundle in dev-bundle.md tester-bundle.md; do
+  bp_count=$(grep -cF "$bundle" commands/build-plan-command.md)
+  ap_count=$(grep -cF "$bundle" standards/agent-reading-protocol.md)
+  if [ "$bp_count" -lt 2 ]; then
+    fail "$bundle cited fewer than 2× in commands/build-plan-command.md (got $bp_count) — bundle may be half-removed"
+    bundle_fail=1
+  fi
+  if [ "$ap_count" -lt 1 ]; then
+    fail "$bundle not cited in standards/agent-reading-protocol.md — Mode A description out of sync"
+    bundle_fail=1
+  fi
+done
+[ $bundle_fail -eq 0 ] && pass "dev-bundle.md and tester-bundle.md cited in build-plan-command.md and agent-reading-protocol.md"
+
+# -----------------------------------------------------------------------------
+# Check 11 — DoD-checker phase wired into build-plan flows
+# -----------------------------------------------------------------------------
+# v0.40.0 introduced agents/dod-checker-agent.md (Haiku) as a mechanical gate
+# between Dev and Reviewer. The agent file is covered by Check 1 (model tier)
+# and Check 2 (path resolves from commands/). What checks 1+2 do NOT catch:
+# someone removing the DoD-checker phase from the flow diagrams in
+# build-plan-command.md while leaving the agent file in place. The orchestrator
+# would silently skip the gate and burn Reviewer tokens on incomplete work
+# again. Assert the phase name appears in the prose AND that the per-phase
+# files table declares its model as Haiku.
+section "DoD-checker phase wiring"
+dod_fail=0
+flow_mentions=$(grep -cE "DoD-checker|dod-checker" commands/build-plan-command.md)
+if [ "$flow_mentions" -lt 5 ]; then
+  fail "DoD-checker mentioned only ${flow_mentions}× in commands/build-plan-command.md — flows likely incomplete (expected ≥5: standard flow, complex flow, prompt template, files-per-phase row × 2)"
+  dod_fail=1
+fi
+if ! grep -qE '\| *DoD-checker[^|]*\| *`agents/dod-checker-agent\.md` *\| *`?haiku`?' commands/build-plan-command.md; then
+  fail "DoD-checker row in 'Files per phase' table missing or wrong model tier (must be haiku)"
+  dod_fail=1
+fi
+[ $dod_fail -eq 0 ] && pass "DoD-checker phase wired into flows + Haiku tier declared"
+
+# -----------------------------------------------------------------------------
+# Check 12 — reviewer fast-mode declared coherently in BE + FE
+# -----------------------------------------------------------------------------
+# v0.40.0 added a "## Fast re-review mode" opt-in to both reviewer agents that
+# trims iteration ≥2 cost when the diff is mechanical. The two reviewer files
+# are independently maintained. Drift between them = one side faster, the
+# other slower, for no semantic reason. Assert both files declare the section
+# header AND the corresponding "## Re-review mode" output marker.
+section "Reviewer fast-mode coherence"
+fast_fail=0
+for f in agents/backend-reviewer-agent.md agents/frontend-reviewer-agent.md; do
+  if ! grep -qF "## Fast re-review mode" "$f"; then
+    fail "$f: missing '## Fast re-review mode' section"
+    fast_fail=1
+  fi
+  if ! grep -qF "## Re-review mode" "$f"; then
+    fail "$f: missing '## Re-review mode' output marker"
+    fast_fail=1
+  fi
+done
+[ $fast_fail -eq 0 ] && pass "fast re-review mode declared in both reviewer agents"
+
+# -----------------------------------------------------------------------------
+# Check 13 — Dev → Tester quality-gate trust contract
+# -----------------------------------------------------------------------------
+# v0.40.0 introduced a multi-file contract: Devs produce '## Quality-Gate
+# Results' + '## DoD coverage' sections in their handoff; Tester reads them
+# and skips re-running gates that already report clean ('## Quality-gate
+# re-execution policy'). A silent rename of any of these section names breaks
+# the contract — Tester would fall back to running everything from scratch
+# (correct fallback, but the optimisation is silently dead). Assert the four
+# sections exist where they need to.
+section "Quality-gate trust contract"
+qg_fail=0
+if ! grep -qF "## Quality-gate re-execution policy" agents/tester-agent.md; then
+  fail "agents/tester-agent.md: missing '## Quality-gate re-execution policy' section"
+  qg_fail=1
+fi
+for f in agents/backend-developer-agent.md agents/frontend-developer-agent.md; do
+  if ! grep -qF "## Quality-Gate Results" "$f"; then
+    fail "$f: missing '## Quality-Gate Results' section reference"
+    qg_fail=1
+  fi
+  if ! grep -qF "## DoD coverage" "$f"; then
+    fail "$f: missing '## DoD coverage' section reference"
+    qg_fail=1
+  fi
+done
+[ $qg_fail -eq 0 ] && pass "Dev/Tester contract intact (Quality-Gate Results, DoD coverage, re-execution policy)"
+
+# -----------------------------------------------------------------------------
+# Check 14 — three invocation modes declared in the reading protocol
+# -----------------------------------------------------------------------------
+# The reading protocol moved from two modes to three when /check-web added
+# Mode C. A silent regression to "Two Invocation Modes" or removal of any
+# mode header would leave Mode A / B / C wiring without a top-level contract.
+# Trivial cost, catches a class of regression that no other check sees.
+section "Three invocation modes"
+modes_fail=0
+protocol="standards/agent-reading-protocol.md"
+if ! grep -qF "Three Invocation Modes" "$protocol"; then
+  fail "$protocol: 'Three Invocation Modes' header missing"
+  modes_fail=1
+fi
+for mode_header in "### Mode A" "### Mode B" "### Mode C"; do
+  if ! grep -qF "$mode_header" "$protocol"; then
+    fail "$protocol: '$mode_header' section missing"
+    modes_fail=1
+  fi
+done
+[ $modes_fail -eq 0 ] && pass "Mode A + Mode B + Mode C declared with 'Three Invocation Modes' top header"
+
+# -----------------------------------------------------------------------------
+# Check 15 — dynamic smoke staleness reminder (non-fatal)
 # -----------------------------------------------------------------------------
 # Count commits since the most recent release tag that touched the structural
 # files exercised by `make smoke-dynamic` (agents/, build-plan-command.md,
