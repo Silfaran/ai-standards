@@ -11,15 +11,22 @@ Every agent runs in one of three modes. Know which one you are in.
 
 ### Mode A — `build-plan` subagent (default)
 
-The orchestrator has already prepared a **context bundle** (`{workspace_root}/handoffs/{feature}/context-bundle.md`, workspace-root `handoffs/` directory declared in `{project-docs}/workspace.md` under the `handoffs:` key) that distills every rule relevant to the feature from `invariants.md`, `CLAUDE.md`, and the role-specific standards.
+The orchestrator has already prepared **per-phase bundles** under `{workspace_root}/handoffs/{feature}/` (workspace-root `handoffs/` directory declared in `{project-docs}/workspace.md` under the `handoffs:` key):
+
+- `dev-bundle.md` — full implementation surface, consumed by Developer / Dev+Tester / DevOps. Distills every rule relevant to the feature from `invariants.md`, `CLAUDE.md`, and the role-specific standards.
+- `tester-bundle.md` — reduced surface (no implementation rules), consumed by the Tester. Keeps invariants, naming, logging/redaction, GDPR/PII, attack-surface-hardening, and the spec digest.
+
+The orchestrator names the correct bundle path in each subagent's prompt — read whichever bundle is named, not the other one.
 
 Read, in order:
 
-1. **The context bundle** — it replaces `invariants.md`, `CLAUDE.md`, and the standards files.
+1. **The bundle named in the prompt** (`dev-bundle.md` or `tester-bundle.md`) — it replaces `invariants.md`, `CLAUDE.md`, and the standards files.
 2. **The role-specific handoffs** the orchestrator names in your prompt.
 3. **The spec, task and plan** files the orchestrator names in your prompt.
 
 Do **not** re-read individual standards files in this mode. The bundle is the contract.
+
+> **Reviewers and the DoD-checker do NOT receive a bundle.** Reviewers read the static review checklist plus the matching critical paths. The DoD-checker reads only the task DoD and the developer handoff's `## DoD coverage` section. See [`../commands/build-plan-command.md`](../commands/build-plan-command.md) for the full reading surface per phase.
 
 ### Mode B — Standalone (manual invocation, rare)
 
@@ -61,6 +68,7 @@ Each agent adds only the files below to the Mode B list. Reference files (`*-ref
 | Frontend Developer | [`frontend.md`](frontend.md), [`security.md`](security.md), [`performance.md`](performance.md), [`observability.md`](observability.md), [`api-contracts.md`](api-contracts.md), `design-decisions.md` | [`caching.md`](caching.md) when wiring HTTP cache headers or consuming cached endpoints, [`secrets.md`](secrets.md) when adding a new `VITE_*` variable or consuming a backend-minted short-lived token, [`authorization.md`](authorization.md) when adding a route guard, role-gated UI, or handling 403 responses, [`i18n.md`](i18n.md) when rendering user-facing text, formatting dates/numbers/currency, or wiring vue-i18n, [`gdpr-pii.md`](gdpr-pii.md) when collecting PII via forms, building a consent UI, or handling a withdrawal flow, [`payments-and-money.md`](payments-and-money.md) when rendering money, capturing payment methods, or handling a payment confirmation page, [`file-and-media-storage.md`](file-and-media-storage.md) when wiring an upload form, rendering signed-URL images/videos, or showing upload progress, [`geo-search.md`](geo-search.md) when rendering a map, debouncing a search input, or displaying ranked match results, [`feature-flags.md`](feature-flags.md) when gating UI behind a flag, rendering experiment variants, or wiring a `useFlag` composable, [`pwa-offline.md`](pwa-offline.md) when configuring the service worker, manifest, offline reads/writes, push consent, or update flow, [`digital-signature-integration.md`](digital-signature-integration.md) when rendering a pre-sign document review, signing-state UX, or a verification surface, [`attack-surface-hardening.md`](attack-surface-hardening.md) when wiring CSP nonces, SRI on CDN scripts, allowlisted redirects, or the CSP-violation dashboard, [`frontend-reference.md`](frontend-reference.md), [`quality-gates.md`](quality-gates.md) |
 | Backend Reviewer | [`backend-review-checklist.md`](backend-review-checklist.md) **only** — see rule below | — |
 | Frontend Reviewer | [`frontend-review-checklist.md`](frontend-review-checklist.md) **only** — see rule below | `design-decisions.md` when diff touches UI |
+| DoD Checker | The task file's `## Definition of Done` and the developer handoff's `## DoD coverage` section **only** — see [`dod-checker-agent.md`](../agents/dod-checker-agent.md). No standards file. | — |
 | Tester | [`backend.md`](backend.md) or [`frontend.md`](frontend.md) (pick by test surface), [`security.md`](security.md) | [`logging.md`](logging.md) (covered by `messenger-logging-middleware` skill), [`backend-reference.md`](backend-reference.md) or [`frontend-reference.md`](frontend-reference.md) for first-time test patterns |
 | DevOps | [`tech-stack.md`](tech-stack.md) (already in common core), [`secrets.md`](secrets.md), [`quality-gates.md`](quality-gates.md), root `docker-compose.yml`, service compose files | [`backend-reference.md`](backend-reference.md) for consumer-worker patterns, [`new-service-checklist.md`](new-service-checklist.md) when scaffolding a new service |
 | Web Auditor | Mode C only — runs against `raw-findings.json` from the walker. No standards file. | `{project-docs}/web-flows.md`, `{project-docs}/specs/INDEX.md`, individual specs (only on miss in `web-flows.md`), source files (only to deduplicate findings) |
