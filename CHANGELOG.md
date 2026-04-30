@@ -6,6 +6,23 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.40.0](https://github.com/Silfaran/ai-standards/compare/v0.39.1...v0.40.0) (2026-04-30)
+
+
+### Added
+
+* **agents:** add DoD-checker agent for mechanical task-DoD verification ([2052099](https://github.com/Silfaran/ai-standards/commit/20520992bb748adb2c46b49bed96da7f6e021904))
+
+
+### Changed
+
+* **build-plan:** add DoD verification gate to developer agents ([dfe9713](https://github.com/Silfaran/ai-standards/commit/dfe971302a1a4d786d8f49e0bbce0118c59479c2))
+* **build-plan:** add fast re-review mode to reviewer agents ([69dc1c8](https://github.com/Silfaran/ai-standards/commit/69dc1c85d67a1c77c8d0b7ec92c076b583dc8604))
+* **build-plan:** join two consecutive blockquotes (MD028) ([63d942d](https://github.com/Silfaran/ai-standards/commit/63d942dbeb0c9da8ee64fa8119ce1380f95e04b0))
+* **build-plan:** split bundle per phase + wire DoD-checker into flows ([d8a57ab](https://github.com/Silfaran/ai-standards/commit/d8a57abe79ee9c66da49ce92495a91799dee7631))
+* **build-plan:** structural token-overhead reduction (5 changes) ([87a69c9](https://github.com/Silfaran/ai-standards/commit/87a69c97acc5c6218e5ff3d67358def0af934bca))
+* **build-plan:** trust developer quality gates in Tester ([ae20b7e](https://github.com/Silfaran/ai-standards/commit/ae20b7ee1cb116d54f92cfd7bcf71c64102d9039))
+
 ## [0.39.1](https://github.com/Silfaran/ai-standards/compare/v0.39.0...v0.39.1) (2026-04-29)
 
 
