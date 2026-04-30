@@ -59,7 +59,7 @@ Path: `{workspace_root}/handoffs/{feature-name}/tester-bundle.md`. Consumer: Tes
 The dev bundle replaces the individual standards file reads in **Developer / Dev+Tester / DevOps** subagent prompts. The tester bundle replaces them in the **Tester** subagent prompt. Agents still read their own agent definition file (which is short and role-specific).
 
 > **Reviewer agents do NOT receive any bundle.** They receive the static review checklist (`backend-review-checklist.md` or `frontend-review-checklist.md`) plus the previous handoff's file list. Checklists are derived from the standards and contain only verifiable rules — see "Reviewer prompt template" below.
-
+>
 > **DoD-checker does NOT receive any bundle.** It reads only the task file's `## Definition of Done` and the developer handoff's `## DoD coverage` section — see `agents/dod-checker-agent.md`.
 
 ---
