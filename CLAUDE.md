@@ -127,7 +127,7 @@ The `smoke` CI job validates format, uniqueness and prefix legality on every pus
 - Specs, plans and tasks live in the path defined in `{project-docs}/workspace.md` (resolve `{project-docs}` from `ai-standards/.workspace-config-path`)
 - `{project-name}-docs/specs/INDEX.md` is the quick-reference index — always read this before deep-reading full specs
 - Specs are version-controlled — every spec update must be committed
-- When running as a `build-plan` subagent, read the **context bundle** (`{workspace_root}/handoffs/{feature}/context-bundle.md`, path defined in `{project-docs}/workspace.md` under the `handoffs:` key) instead of individual standards files — it contains the distilled rules relevant to the current feature
+- When running as a `build-plan` subagent, read the **per-phase bundle** named in your prompt (`dev-bundle.md` for Developer / Dev+Tester / DevOps, `tester-bundle.md` for the Tester — both under `{workspace_root}/handoffs/{feature}/`, path defined in `{project-docs}/workspace.md` under the `handoffs:` key) instead of individual standards files. The bundle contains the distilled rules relevant to the current feature; Reviewers and the DoD-checker do not receive a bundle (see [`commands/build-plan-command.md`](commands/build-plan-command.md))
 
 ### Commit convention
 

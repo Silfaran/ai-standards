@@ -12,7 +12,7 @@ Two layers of self-checks keep ai-standards internally coherent:
 The dynamic smoke exercises the `/build-plan` orchestrator against a minimal fixture project and verifies invariants that static checks cannot catch:
 
 - The orchestrator reads the `## Model` line from each agent definition and passes the correct tier to the `Agent` tool
-- The orchestrator generates a `context-bundle.md` with the expected sections before spawning subagents
+- The orchestrator generates `dev-bundle.md` and `tester-bundle.md` with the expected sections before spawning subagents
 - The spawn sequence matches the flow declared in `commands/build-plan-command.md` for the plan's `## Complexity`
 
 Run it when:
@@ -82,7 +82,7 @@ The LLM orchestrator paraphrases prose across runs — the same spec can produce
 
 Two defenses are stacked:
 
-**1. Regex-based assertions.** `prompt_template_sections` and `context_bundle.required_sections` are treated as regex (`re.search`), not literal substrings. Write patterns that tolerate paraphrase — e.g. `"Spec|Technical"` to accept either heading — while still catching real regressions (the section disappearing altogether, or the orchestrator skipping the spec-digest step).
+**1. Regex-based assertions.** `prompt_template_sections` and `context_bundle.required_sections` are treated as regex (`re.search`), not literal substrings. The `context_bundle.path` field points to the dev bundle (`dev-bundle.md`) — the tester bundle is asserted via `required_handoff_files` only (existence check, not section-pattern check, because its sections are the dev bundle minus implementation rules). Write patterns that tolerate paraphrase — e.g. `"Spec|Technical"` to accept either heading — while still catching real regressions (the section disappearing altogether, or the orchestrator skipping the spec-digest step).
 
 **2. Automatic retries.** Every fixture runs up to `SMOKE_MAX_ATTEMPTS` times. A single attempt passing is sufficient — the first pass short-circuits the loop. Defaults:
 

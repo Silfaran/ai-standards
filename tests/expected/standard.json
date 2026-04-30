@@ -1,5 +1,5 @@
 {
-  "_comment": "Expected invariants for the `standard` fixture. The fixture's plan declares `## Complexity: standard`, which per commands/build-plan-command.md maps to: Backend Developer → Reviewer (loop) → Tester. The first Agent spawn must be the Backend Developer running on the `opus` tier (per agents/backend-developer-agent.md `## Model`). Update the corresponding line below when build-plan's flow table or the agent's model tier changes — a mismatch here is the smoke test's signal.",
+  "_comment": "Expected invariants for the `standard` fixture. The fixture's plan declares `## Complexity: standard`, which per commands/build-plan-command.md maps to: Backend Developer → DoD-checker → Reviewer (loop) → Tester. The first Agent spawn must be the Backend Developer running on the `opus` tier (per agents/backend-developer-agent.md `## Model`). The Developer consumes dev-bundle.md; the Tester consumes tester-bundle.md (both must exist before agents spawn). Update the corresponding line below when build-plan's flow table or the agent's model tier changes — a mismatch here is the smoke test's signal.",
   "fixture": "standard",
   "complexity": "standard",
   "expected_first_spawn": {
@@ -16,10 +16,11 @@
     ]
   },
   "required_handoff_files": [
-    "handoffs/board-set-title/context-bundle.md"
+    "handoffs/board-set-title/dev-bundle.md",
+    "handoffs/board-set-title/tester-bundle.md"
   ],
   "context_bundle": {
-    "path": "handoffs/board-set-title/context-bundle.md",
+    "path": "handoffs/board-set-title/dev-bundle.md",
     "required_sections": [
       "Invariants|invariants",
       "Spec|Technical"
@@ -33,7 +34,15 @@
         "min_length": 400,
         "body_must_match": [
           "^#+\\s*(files?|changes?|implementation|deliverables?)",
-          "(quality\\s*gates?|tests?\\s*(run|executed|results?|outcome)|phpstan|phpunit|could\\s*not\\s*(run|execute))"
+          "(quality\\s*gates?|tests?\\s*(run|executed|results?|outcome)|phpstan|phpunit|could\\s*not\\s*(run|execute))",
+          "DoD\\s+coverage|Definition\\s+of\\s+Done"
+        ]
+      },
+      "backend-dod-checker-handoff.md": {
+        "required": false,
+        "min_length": 100,
+        "body_must_match_any_of": [
+          ["APPROVED", "BLOCKED"]
         ]
       },
       "backend-reviewer-handoff.md": {

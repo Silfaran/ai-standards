@@ -16,10 +16,11 @@
     ]
   },
   "required_handoff_files": [
-    "handoffs/board-title-length-validator/context-bundle.md"
+    "handoffs/board-title-length-validator/dev-bundle.md",
+    "handoffs/board-title-length-validator/tester-bundle.md"
   ],
   "context_bundle": {
-    "path": "handoffs/board-title-length-validator/context-bundle.md",
+    "path": "handoffs/board-title-length-validator/dev-bundle.md",
     "required_sections": [
       "Invariants|invariants",
       "Spec|Technical"

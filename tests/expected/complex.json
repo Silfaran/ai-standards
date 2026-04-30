@@ -16,10 +16,11 @@
     ]
   },
   "required_handoff_files": [
-    "handoffs/board-activity-feed/context-bundle.md"
+    "handoffs/board-activity-feed/dev-bundle.md",
+    "handoffs/board-activity-feed/tester-bundle.md"
   ],
   "context_bundle": {
-    "path": "handoffs/board-activity-feed/context-bundle.md",
+    "path": "handoffs/board-activity-feed/dev-bundle.md",
     "required_sections": [
       "Invariants|invariants",
       "Spec|Technical"

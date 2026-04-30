@@ -48,17 +48,39 @@ Mandatory when applicable:
 
 Save screenshots under the handoff folder (`{workspace_root}/handoffs/{feature}/screenshots/`, where `{workspace_root}` is declared in `{project-docs}/workspace.md` under the `handoffs:` key) and reference each file in the Tester handoff with the viewport + theme combination it proves. If Playwright MCP is unavailable in the current session, only then fall back to "requires human verification" — and say so explicitly, including the reason.
 
+## Quality-gate re-execution policy
+
+The Developer's last iteration already ran every quality gate against the production code and recorded the result in `## Quality-Gate Results` of the developer handoff. Re-running those exact same gates from scratch is duplicate work — it produces no new signal and consumes tokens proportional to the size of the suite.
+
+**Trust the developer handoff's gate results when ALL of the following hold:**
+
+1. The handoff is from the developer's most recent iteration (read the iteration counter from the handoff filename or the `## Iteration` header — `iter 2`, `iter 3`, etc.). If the handoff predates the most recent code change, re-run from scratch.
+2. The `## Quality-Gate Results` section reports clean for every gate (`0 errors` for the static analyser, `0 fixable` for the formatter, all suites green, `0 vulnerabilities` for the dependency audit).
+3. The Reviewer's most recent handoff did NOT request changes that touched production code without the Developer running another iteration afterwards.
+
+**When trust applies, run only:**
+
+- The subset of tests YOU added (`phpunit --filter <ClassName>` for backend, `vitest run <file>` for frontend). This is the new signal you bring to the pipeline.
+- Stability tests for non-deterministic assertions (timing, randomness, concurrency, statistical thresholds): run 3× consecutively. Flag any run that diverges.
+- A single smoke run of the full suite at the end (`phpunit` / `vitest run`) — to confirm your additions did not break sibling tests. NOT three full re-runs, NOT phpunit-with-coverage, NOT a full test-integration matrix.
+- Re-run static analyser, formatter, or dependency audit ONLY if writing your tests required touching `src/` (improbable — tests live in `tests/` and the Tester does not modify production code per § Limitations). If you DID touch `src/`, you have stepped outside the Tester role; flag the situation in the handoff and run the full gate set.
+
+**When trust does NOT apply, run the full gate set from scratch** and treat the developer's claim as untrustworthy. Cite the failing condition in your handoff.
+
+Reasoning: every gate already passed against this exact code tree once. Re-running them re-confirms a known-true fact. The Tester's value-add is the test layer the Developer did not write — focus token spend there.
+
 ## Testing Process
 
 Runs once, after all developers and reviewers have completed their work:
 
 1. Read the spec to identify domain rules and invariants (password rules, business constraints, etc.)
-2. Write unit tests in `tests/Unit/` that encode those rules as assertions
-3. Write integration tests in `tests/Integration/` for all scenarios in the task file
-4. Ensure Docker containers are running for each backend service (see "Running Tests" above)
-5. Execute all tests (unit + integration) — all must pass
-6. If tests fail, identify which developer needs to fix them (max 3 loops before escalating)
-7. Verify all Definition of Done conditions related to testing
+2. Read the developer handoff's `## Quality-Gate Results` and `## DoD coverage` sections — these drive the trust-gates decision (above) and tell you which DoD items are still `⚠️ Tester scope` and need your verification.
+3. Write unit tests in `tests/Unit/` that encode the spec's rules as assertions
+4. Write integration tests in `tests/Integration/` for all scenarios in the task file
+5. Ensure Docker containers are running for each backend service (see "Running Tests" above)
+6. Apply the **Quality-gate re-execution policy** above — trust the developer's gates when the conditions hold; run only your additions plus a single smoke run of the full suite
+7. If tests fail, identify which developer needs to fix them (max 3 loops before escalating)
+8. Verify all Definition of Done conditions related to testing — including any `⚠️ Tester scope` items the Developer flagged for browser/Playwright verification
 
 ## Output
 - Unit test files + integration test files

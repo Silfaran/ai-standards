@@ -45,6 +45,30 @@ This agent runs in a loop with the Backend Developer. Maximum 3 iterations:
 
 Never approve code that fails PHPStan level 9 or PHP CS Fixer — these are hard blockers regardless of iteration count.
 
+## Fast re-review mode (iteration ≥ 2)
+
+When this is iteration ≥ 2 AND the developer's iteration handoff §1 (`## Review feedback addressed` or equivalent) lists ≤ 5 files modified:
+
+1. Re-load only the critical-path file(s) whose rules touched the iter-1 findings.
+2. Skip re-walking critical paths whose rules were already PASS in iter 1 AND the iter-2 diff does not touch them.
+3. The hard-rejections re-check is mandatory but each row's "STILL PASS" justification can be a one-liner unless the iter-2 diff touched the rule's surface.
+4. Target: ~30-40k tokens for a focused re-review of ≤ 5 files.
+
+Use full-walk mode (no fast path) if any of the following hold:
+
+- The iter-2 diff touches > 5 files, OR
+- Any iter-2 file is in a layer the iter-1 review did not cover (e.g. iter-1 covered Application + Infrastructure, iter-2 modified a Domain Service), OR
+- The iter-1 findings were structural / architectural (wrong layering, missing seam, broken contract) — not "missing test" or "missing comment" or "rename variable".
+
+When you switch to fast mode, state it explicitly in the handoff:
+
+```
+## Re-review mode
+fast — iter-2 diff = {N} files, iter-1 findings were mechanical, critical paths re-loaded: {list}
+```
+
+This makes the cost choice auditable. Reviewers in fast mode that miss a regression are caught by the next phase (Tester) or the human; the bound on cost is real, the bound on safety is "fast mode is opt-in only when the iter-2 diff is mechanical".
+
 ## Tools
 Read, Glob, Grep, Bash, AskUserQuestion
 

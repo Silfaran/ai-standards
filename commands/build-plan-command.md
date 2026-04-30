@@ -24,28 +24,43 @@ For full-stack features, Backend Developer and Frontend Developer run **in paral
 
 ---
 
-## Step 0.5 — Generate context bundle (after sign-off, before agents)
+## Step 0.5 — Generate per-phase bundles (after sign-off, before agents)
 
-Before spawning any subagent, generate a **context bundle** file that distills the standards into only the rules relevant to this feature. This prevents every subagent from re-reading 4-5 full standards files (~1,000 lines each time).
+Before spawning any subagent, generate **two bundle files** that distill the standards into only the rules relevant to this feature. This prevents every subagent from re-reading 4-5 full standards files (~1,000 lines each time).
 
-**Order matters: write the bundle MOST-STATIC FIRST, MOST-DYNAMIC LAST.** Anthropic's prompt cache (5-minute TTL) keys on the prefix of the prompt — content that is identical across the subagents spawned in this session reuses the cache; content that changes between subagents (or between iterations) invalidates the cache from that byte forward. Static-first ordering means the Developer's first call warms the cache for every later call.
+**Why two bundles, not one:** the Developer needs the full implementation surface (Domain Service patterns, controller wiring, services.yaml examples, scaffold details). The Tester does not — the Tester does not modify `src/`, only `tests/`. Loading 200+ lines of implementation rules into every Tester run is duplicate context the Tester will never act on. Splitting the bundle keeps the Developer's surface intact and trims the Tester's by 30-40%.
 
-Sections in the bundle, in this order:
+**Order matters: write each bundle MOST-STATIC FIRST, MOST-DYNAMIC LAST.** Anthropic's prompt cache (5-minute TTL) keys on the prefix of the prompt — content that is identical across the subagents spawned in this session reuses the cache; content that changes between subagents (or between iterations) invalidates the cache from that byte forward. Static-first ordering means the Developer's first call warms the cache for every later call.
+
+### Sections in the dev bundle
+
+Path: `{workspace_root}/handoffs/{feature-name}/dev-bundle.md`. Consumers: Developer, Dev+Tester, DevOps. Target size: **200-400 lines**.
 
 1. **Invariants** (`invariants.md`, full — non-negotiable, identical across every project + feature)
 2. **Naming conventions + git rules** (from `CLAUDE.md` — identical across projects)
-3. **Selected standards sections** (from the plan's `Standards Scope`, extracted per feature type — skip frontend rules for a backend-only feature, skip backend rules for a frontend-only CSS feature)
+3. **Selected standards sections** (from the plan's `Standards Scope`, extracted per feature type — skip frontend rules for a backend-only feature, skip backend rules for a frontend-only CSS feature). Include the full implementation surface: layering rules (Domain / Application / Infrastructure), service patterns, controller patterns, services.yaml wiring examples, console-command details, scaffold details.
 4. **`decisions.md` entries** that overlap with this feature's aggregates or services (project-level; same across the agents working on this feature)
 5. **`design-decisions.md` entries** when the feature has a frontend component (all entries — short, all relevant to visual consistency)
 6. **Spec digest** — the Technical Details section of the spec (the most feature-specific section; goes last so the prefix above remains identical across all subagents in this session)
 
-Write the bundle to: `{workspace_root}/handoffs/{feature-name}/context-bundle.md` (workspace-root `handoffs/` directory declared in `{project-docs}/workspace.md` under the `handoffs:` key — ephemeral, never committed, lives outside any service repo).
+### Sections in the tester bundle
 
-The bundle replaces the individual standards file reads in **Developer / Tester / DevOps** subagent prompts. Agents still read their own agent definition file (which is short and role-specific).
+Path: `{workspace_root}/handoffs/{feature-name}/tester-bundle.md`. Consumer: Tester. Target size: **150-200 lines**.
 
-> **Reviewer agents do NOT receive the context bundle.** They receive the static review checklist (`backend-review-checklist.md` or `frontend-review-checklist.md`) plus the previous handoff's file list. Checklists are derived from the standards and contain only verifiable rules — see "Reviewer prompt template" below.
+1. **Invariants** (`invariants.md`, full — same prefix as the dev bundle so cache reuse works across roles)
+2. **Naming + git rules** (from `CLAUDE.md`, compacted — keep the canonical names + branch naming, drop the prose around the convention table)
+3. **Logging + redaction rules** (full — the Tester writes assertions about which fields appear in which log lines)
+4. **GDPR / PII rules** (full — the Tester writes assertions that PII is not persisted/logged where it shouldn't be)
+5. **Attack-surface-hardening rules** (full when the project is internet-reachable — the Tester writes assertions for CSRF, lockout, rate-limit, redirect-allowlist, header presence)
+6. **Spec digest** — the Technical Details section AND the Definition of Done section of the spec
+7. **Lessons-learned filtered to test design** — entries marked `[Tester]` or otherwise about test patterns / fixture design / flaky-test workarounds. **Drop** entries exclusive to Domain Service / Controller / Application Service implementation
+8. **DROP from this bundle:** layering rules (Domain / Application / Infrastructure), service patterns, controller patterns, services.yaml wiring examples, console-command details, scaffold details. The Tester does not modify `src/`; those rules do not apply.
 
-Target size: **200-400 lines** (vs ~1,000+ lines from reading all standards separately).
+The dev bundle replaces the individual standards file reads in **Developer / Dev+Tester / DevOps** subagent prompts. The tester bundle replaces them in the **Tester** subagent prompt. Agents still read their own agent definition file (which is short and role-specific).
+
+> **Reviewer agents do NOT receive any bundle.** They receive the static review checklist (`backend-review-checklist.md` or `frontend-review-checklist.md`) plus the previous handoff's file list. Checklists are derived from the standards and contain only verifiable rules — see "Reviewer prompt template" below.
+>
+> **DoD-checker does NOT receive any bundle.** It reads only the task file's `## Definition of Done` and the developer handoff's `## DoD coverage` section — see `agents/dod-checker-agent.md`.
 
 ---
 
@@ -54,11 +69,21 @@ Target size: **200-400 lines** (vs ~1,000+ lines from reading all standards sepa
 Each phase is spawned with `Agent(subagent_type: "general-purpose", model: "{tier}")`.
 The subagent starts with a clean context — it does **not** inherit this conversation's history.
 
+The pipeline includes a **DoD-checker** phase between the Developer and the Reviewer in the `standard` and `complex` flows. It is a Haiku-tier mechanical gate that confirms every `## Definition of Done` checkbox has an artefact on disk. Its only verdict is `APPROVED` or `BLOCKED`:
+- `APPROVED` → orchestrator invokes the Reviewer normally.
+- `BLOCKED` → orchestrator returns to the Developer with the gap list. **This iteration does NOT count against the Reviewer's max-3 loop budget** — the DoD-checker is not a Reviewer.
+
+The `simple` flow does NOT have a DoD-checker — the Dev+Tester agent runs the DoD verification gate internally and writes the same `## DoD coverage` section, which is consumed downstream (by `update-specs` and human review) without an intermediate verifier. See `agents/dod-checker-agent.md` for the agent definition.
+
 **`model` is required — never omit it.** Before each spawn, read the `## Model` section of the phase's agent definition file (e.g. `agents/backend-developer-agent.md`) and pass its tier (`opus` or `sonnet`) as the `model` argument. The workspace `settings.json` contains a `PreToolUse` hook that rejects any `Agent` invocation without an explicit `model` — if you see a tool error saying the model is missing, re-read the agent definition and retry. See also `CLAUDE.md` → "Agent model tiering" for the classification rules.
 
 The prompt passed to each subagent must be **self-contained** and include:
 - The absolute path to the agent definition file (which tells the agent what other files to read)
-- The absolute path to the **context bundle** (replaces individual standards + decisions + spec digest)
+- The absolute path to the appropriate **bundle** for the agent's role:
+  - Developer / Dev+Tester / DevOps → `dev-bundle.md`
+  - Tester → `tester-bundle.md`
+  - Reviewer → no bundle (uses static checklist)
+  - DoD-checker → no bundle (uses task DoD + dev handoff `## DoD coverage` only)
 - The absolute path to the full spec file (for reference if needed)
 - The absolute path to the task file
 - The absolute path to the previous handoff (if any)
@@ -75,13 +100,14 @@ The plan file includes a `## Complexity` classification (`simple`, `standard`, o
 
 ```
 [Sign-off]
-  → Generate context bundle
-    → Developer + Tester (single agent)          ← implements, writes tests, runs tests
+  → Generate per-phase bundles (dev + tester)
+    → Developer + Tester (single agent)          ← implements, writes tests, runs tests, runs DoD gate internally
       → Reviewer (optional — only if flagged)    ← lightweight review, 1 iteration max
         → update-specs → Done
 ```
 
-- **One agent** does implementation AND testing in a single session. The prompt instructs it to implement the feature, then write and run tests, then run linters.
+- **One agent** does implementation AND testing in a single session. The prompt instructs it to implement the feature, then write and run tests, then run linters, then run the DoD verification gate internally.
+- **No DoD-checker phase.** The Dev+Tester agent runs the DoD verification gate inside its own session (see `agents/{role}-developer-agent.md` § "Definition-of-Done verification gate") and writes the `## DoD coverage` section directly. Adding an external Haiku verifier on top would not pay back for `simple` complexity — the gate already ran inline.
 - **Reviewer is optional.** Only spawn if the developer handoff includes an `## Open Questions` section with items. If no open questions, skip directly to update-specs.
 - This flow typically uses **1-2 subagents** instead of 3-4.
 
@@ -89,32 +115,39 @@ The plan file includes a `## Complexity` classification (`simple`, `standard`, o
 
 ```
 [Sign-off]
-  → Generate context bundle
+  → Generate per-phase bundles (dev + tester)
     → Developer
-      → Reviewer (loop if needed, max 3)
-        → Tester [unit + integration + run]
-          → update-specs → Done
+      → DoD-checker         ← Haiku, mechanical task-DoD verification
+        → Reviewer (loop if needed, max 3)
+          → Tester [unit + integration + run]
+            → update-specs → Done
 ```
 
 For single-service features. Use the appropriate Developer/Reviewer type (Backend or Frontend) based on the affected service.
+
+If the DoD-checker returns `BLOCKED`, the orchestrator routes back to the Developer with the gap list and re-spawns the Developer for another iteration. The Reviewer is NOT invoked. The DoD-checker bounce does NOT count against the Reviewer's max-3 loop.
 
 ### Complex flow (Complexity: complex)
 
 ```
 [Sign-off]
-  → Generate context bundle
-    → DevOps (only if new infra is needed)           ← sequential: both devs may depend on it
-      → Backend Developer ‖ Frontend Developer       ← PARALLEL: both read the same spec
-        → Backend Reviewer ‖ Frontend Reviewer       ← PARALLEL: independent codebases
-          → Tester [unit + integration + run]        ← sequential: needs both sides complete
-            → update-specs → Done
+  → Generate per-phase bundles (dev + tester)
+    → DevOps (only if new infra is needed)             ← sequential: both devs may depend on it
+      → Backend Developer ‖ Frontend Developer         ← PARALLEL: both read the same spec
+        → DoD-checker (backend) ‖ DoD-checker (frontend) ← PARALLEL: one per side, mechanical
+          → Backend Reviewer ‖ Frontend Reviewer       ← PARALLEL: independent codebases
+            → Tester [unit + integration + run]        ← sequential: needs both sides complete
+              → update-specs → Done
 ```
 
 **Feedback loops (per side, independent):**
+- DoD-checker (backend) BLOCKED → Backend Developer → DoD-checker (backend) again
 - Backend Reviewer → Backend Developer → Backend Reviewer (max 3 iterations)
-- Frontend Reviewer → Frontend Developer → Frontend Reviewer (max 3 iterations)
+- Same pair of loops on the frontend side, independent.
 
 **If max iterations reached without approval:** stop that side, report the final review report to the developer, and wait for a decision (see Failure Handling).
+
+The DoD-checker on each side runs against the matching developer handoff (`backend-dev-handoff.md` / `frontend-dev-handoff.md`) and writes its own handoff (`backend-dod-checker-handoff.md` / `frontend-dod-checker-handoff.md`). A `BLOCKED` verdict on one side does NOT block the other side — the sides remain independent through the loop.
 
 ---
 
@@ -133,7 +166,7 @@ For single-service features. Use the appropriate Developer/Reviewer type (Backen
    - Do not proceed until every affected repo has been resolved. Never silently branch from a non-master HEAD.
 
 4. **Create feature branch** — from `master`, create `feature/{aggregate}/{feature-name}` in every affected repository (services + `{project-docs}/`). If the branch already exists, check it out. Do not proceed until the branch is created in all affected repos.
-5. **Generate context bundle** (see Step 0.5) — write to `{workspace_root}/handoffs/{feature-name}/context-bundle.md`
+5. **Generate per-phase bundles** (see Step 0.5) — write `{workspace_root}/handoffs/{feature-name}/dev-bundle.md` (for Developer / Dev+Tester / DevOps) and `{workspace_root}/handoffs/{feature-name}/tester-bundle.md` (for the Tester)
 6. Execute each phase using the subagent prompt template below, following the flow matching the plan's complexity:
    - **Before each spawn**: read the `## Model` line from the agent definition file and pass its tier as the `model` argument of `Agent`. This is mandatory — the workspace `settings.json` hook rejects `Agent` invocations without `model`.
    - **Sequential phases**: spawn and wait for the result before proceeding
@@ -202,18 +235,22 @@ For single-service features. Use the appropriate Developer/Reviewer type (Backen
 
 ## Subagent prompt template
 
-There are two prompt templates: one for **Developer / Tester / DevOps** (full context bundle) and one for **Reviewer** (static checklist, no bundle). Replace placeholders with absolute paths.
+There are two prompt templates: one for **Developer / Tester / DevOps** (uses the appropriate bundle — `dev-bundle.md` or `tester-bundle.md`) and one for **Reviewer** (static checklist, no bundle). The DoD-checker has its own minimal prompt — see its agent definition. Replace placeholders with absolute paths.
 
 ### Developer / Tester / DevOps prompt template
 
-The order below is **cache-friendly**: most-static reads first (agent definition, context bundle), feature-stable reads next (spec, task, references), and the dynamic-per-iteration `previous_handoff_path` last. The trailing instruction is always dynamic so it sits at the end.
+The order below is **cache-friendly**: most-static reads first (agent definition, bundle), feature-stable reads next (spec, task, references), and the dynamic-per-iteration `previous_handoff_path` last. The trailing instruction is always dynamic so it sits at the end.
+
+The `{bundle_path}` placeholder resolves to:
+- `dev-bundle.md` for Developer / Dev+Tester / DevOps
+- `tester-bundle.md` for the Tester
 
 ```
 You are the {Agent Role} agent for the {Project Name} project.
 
 Read these files in order before doing anything else:
 1. {agent_definition_path}                        ← most static (per role, across features)
-2. {context_bundle_path}                          ← stable across this feature's subagents
+2. {bundle_path}                                  ← dev-bundle.md or tester-bundle.md depending on role; stable across this feature's subagents
 3. {spec_path}                                    ← stable across this feature
 4. {task_path}                                    ← stable across this feature
 {conditional: 5. {reference_files — only if Standards Scope says so}}
@@ -241,7 +278,7 @@ Read these files in order before doing anything else:
 {conditional: 5. design-decisions.md              ← only for Frontend Reviewer when the diff touches UI}
 6. {previous_developer_handoff_path}              ← dynamic across iterations — read ONLY the files listed in this handoff
 
-Do NOT read the context bundle, individual standards files, the spec, or any source file outside the developer's handoff list. The critical paths + checklist are your authoritative review surface — they contain every verifiable rule extracted from the standards.
+Do NOT read the dev/tester bundle, individual standards files, the spec, or any source file outside the developer's handoff list. The critical paths + checklist are your authoritative review surface — they contain every verifiable rule extracted from the standards.
 
 Run the loaded critical paths against the diff. Open the full checklist only when the diff strays into a section no loaded path covers. For each violation, report severity (critical/major/minor), file:line, and the rule ID that was violated. If you find a violation NOT covered by any loaded path AND NOT in the checklist, report it as `minor` and flag it for inclusion in a future critical path / checklist update.
 
@@ -250,19 +287,21 @@ This is review iteration {N} of max 3.
 When done, write your handoff to: {handoff_path}
 ```
 
-> **Why reviewers do not get the context bundle:** the bundle is for implementation (rules + examples + design context). Review is verification — a closed list of checks against a diff. The checklist is shorter, denser, and unambiguous. Re-deriving rules from prose every iteration wastes tokens and produces inconsistent reviews.
+> **Why reviewers do not get a bundle:** the bundles (dev + tester) are for implementation and test design (rules + examples + design context). Review is verification — a closed list of checks against a diff. The checklist is shorter, denser, and unambiguous. Re-deriving rules from prose every iteration wastes tokens and produces inconsistent reviews.
 
 ### Files per phase
 
 | Phase | Agent Definition | Model | Context bundle | Handoff reads | Handoff writes |
 |---|---|---|---|---|---|
-| DevOps | `agents/devops-agent.md` | `opus` | Yes | plan file | `devops-handoff.md` |
-| Backend Dev | `agents/backend-developer-agent.md` | `opus` | Yes | `devops-handoff.md` (if exists) | `backend-dev-handoff.md` |
-| Frontend Dev | `agents/frontend-developer-agent.md` | `opus` | Yes | `devops-handoff.md` (if exists) | `frontend-dev-handoff.md` |
-| Backend Reviewer | `agents/backend-reviewer-agent.md` | `sonnet` | **No** — uses `standards/backend-review-checklist.md` | `backend-dev-handoff.md` | `backend-reviewer-handoff.md` |
-| Frontend Reviewer | `agents/frontend-reviewer-agent.md` | `sonnet` | **No** — uses `standards/frontend-review-checklist.md` (+ `design-decisions.md` if UI diff) | `frontend-dev-handoff.md` | `frontend-reviewer-handoff.md` |
-| Tester | `agents/tester-agent.md` | `sonnet` | Yes | `backend-reviewer-handoff.md`, `frontend-reviewer-handoff.md` | `tester-handoff.md` |
-| Dev+Tester (simple) | `agents/{role}-developer-agent.md` | `opus` | Yes | `devops-handoff.md` (if exists) | `dev-tester-handoff.md` |
+| DevOps | `agents/devops-agent.md` | `opus` | Dev bundle | plan file | `devops-handoff.md` |
+| Backend Dev | `agents/backend-developer-agent.md` | `opus` | Dev bundle | `devops-handoff.md` (if exists) | `backend-dev-handoff.md` |
+| Frontend Dev | `agents/frontend-developer-agent.md` | `opus` | Dev bundle | `devops-handoff.md` (if exists) | `frontend-dev-handoff.md` |
+| DoD-checker (backend) | `agents/dod-checker-agent.md` | `haiku` | **No** — only task DoD + dev handoff `## DoD coverage` | `backend-dev-handoff.md` (only `## DoD coverage`) | `backend-dod-checker-handoff.md` |
+| DoD-checker (frontend) | `agents/dod-checker-agent.md` | `haiku` | **No** — only task DoD + dev handoff `## DoD coverage` | `frontend-dev-handoff.md` (only `## DoD coverage`) | `frontend-dod-checker-handoff.md` |
+| Backend Reviewer | `agents/backend-reviewer-agent.md` | `sonnet` | **No** — uses `standards/backend-review-checklist.md` | `backend-dev-handoff.md` (after DoD-checker APPROVED) | `backend-reviewer-handoff.md` |
+| Frontend Reviewer | `agents/frontend-reviewer-agent.md` | `sonnet` | **No** — uses `standards/frontend-review-checklist.md` (+ `design-decisions.md` if UI diff) | `frontend-dev-handoff.md` (after DoD-checker APPROVED) | `frontend-reviewer-handoff.md` |
+| Tester | `agents/tester-agent.md` | `sonnet` | Tester bundle | `backend-reviewer-handoff.md`, `frontend-reviewer-handoff.md` | `tester-handoff.md` |
+| Dev+Tester (simple) | `agents/{role}-developer-agent.md` | `opus` | Dev bundle | `devops-handoff.md` (if exists) | `dev-tester-handoff.md` |
 
 The `Model` column is a quick reference — always source of truth is the `## Model` line in the agent definition file. If they diverge, the agent file wins and this table needs an update.
 
@@ -280,12 +319,13 @@ The `Model` column is a quick reference — always source of truth is the `## Mo
 | Phase | Instruction |
 |---|---|
 | DevOps | Configure infrastructure as described in the plan. Verify `docker build .` succeeds. |
-| Backend Dev | Implement the backend for the {feature} feature as described in the spec. After implementation, ensure the Docker container is running (`docker compose up -d {service}` in the service directory), then run `docker compose exec {service} php vendor/bin/phpunit` and verify all tests pass. Also run PHPStan and PHP-CS-Fixer inside the container. All must pass before writing the handoff. |
-| Frontend Dev | Implement the frontend for the {feature} feature as described in the spec. After implementation, run `npm run test`, `npx vue-tsc --noEmit`, `npm run lint` and `npm run format:check`. All must pass before writing the handoff. **Do NOT open a browser or invoke Playwright MCP** — browser verification is the Tester's sole scope (see below). Injecting a Dev-side browser smoke wastes tokens by duplicating work the Tester will redo for the same DoD items. |
-| Backend Reviewer | Review the backend code listed in the handoff. This is review iteration {N} of max 3. |
-| Frontend Reviewer | Review the frontend code listed in the handoff. This is review iteration {N} of max 3. |
+| Backend Dev | Implement the backend for the {feature} feature as described in the spec. After implementation, ensure the Docker container is running (`docker compose up -d {service}` in the service directory), then run `docker compose exec {service} php vendor/bin/phpunit` and verify all tests pass. Also run PHPStan and PHP-CS-Fixer inside the container. All must pass before writing the handoff. **After implementation and tests, run the Definition-of-Done verification gate** (see agent definition § "Definition-of-Done verification gate") — block writing the handoff if any DoD checkbox is `✗`. The handoff MUST include `## Quality-Gate Results` (one line per gate with the tool's verbatim summary) and `## DoD coverage` (verbatim task DoD with `✓`/`✗`/`⚠️` marks). |
+| Frontend Dev | Implement the frontend for the {feature} feature as described in the spec. After implementation, run `npm run test`, `npx vue-tsc --noEmit`, `npm run lint` and `npm run format:check`. All must pass before writing the handoff. **Do NOT open a browser or invoke Playwright MCP** — browser verification is the Tester's sole scope (see below). Injecting a Dev-side browser smoke wastes tokens by duplicating work the Tester will redo for the same DoD items. **After implementation and tests, run the Definition-of-Done verification gate** (see agent definition § "Definition-of-Done verification gate") — block writing the handoff if any DoD checkbox is `✗`. The handoff MUST include `## Quality-Gate Results` (one line per gate with the tool's verbatim summary) and `## DoD coverage` (verbatim task DoD with `✓`/`✗`/`⚠️` marks). |
+| DoD-checker | Verify every `## Definition of Done` checkbox in the task file against the Developer's `## DoD coverage` section in `{dev_handoff_path}`. For each `✓` row, run a single `grep`/`ls`/`Read` spot-check at the cited path and downgrade to `✗` if the artefact is missing. Output verdict APPROVED (zero `✗`) or BLOCKED (one or more `✗`) with the gap list. Do NOT read the spec, the bundle, the reviewer checklists, the critical paths, or any source file outside the developer's `## Files Created` / `## Files Modified` lookup table. |
+| Backend Reviewer | Review the backend code listed in the handoff. This is review iteration {N} of max 3. The DoD-checker has already verified that every `## Definition of Done` checkbox has an artefact on disk — do NOT re-walk the DoD; focus on rule compliance against the loaded critical paths. |
+| Frontend Reviewer | Review the frontend code listed in the handoff. This is review iteration {N} of max 3. The DoD-checker has already verified that every `## Definition of Done` checkbox has an artefact on disk — do NOT re-walk the DoD; focus on rule compliance against the loaded critical paths. |
 | Tester | Ensure all Docker containers are running for each backend service. Run all test suites and linters. **Browser-level verification is the Tester's sole scope in the pipeline** (no Dev-side browser smoke). Decide whether to drive Playwright MCP based on the task file's DoD: if the DoD lists visual or interactive items (gradients, rendered error copy, light/dark parity, viewport-size checks, end-to-end regression scenarios that cannot be faithfully simulated in jsdom), run Playwright — resize to every target viewport, toggle dark mode, drive forms, and save screenshots to `{workspace_root}/handoffs/{feature}/screenshots/`. If the DoD has no such items (pure logic changes fully covered by jsdom unit tests), skip Playwright entirely. Fall back to "requires human verification" ONLY if the Playwright MCP is unavailable in-session, and state the reason explicitly. If any test fails, identify which developer needs to fix it. |
-| Dev+Tester (simple) | Implement the {feature} feature as described in the spec. After implementation, write unit tests as specified in the task file. For backend: ensure Docker is running (`docker compose up -d`), then run tests via `docker compose exec`. For frontend: run `npm run test`. Run linters. All must pass before writing the handoff. When the DoD lists visual or interactive items, switch into Tester mode and follow the Tester row's Playwright guidance — do not skip and do not run a second Dev-phase browser smoke. |
+| Dev+Tester (simple) | Implement the {feature} feature as described in the spec. After implementation, write unit tests as specified in the task file. For backend: ensure Docker is running (`docker compose up -d`), then run tests via `docker compose exec`. For frontend: run `npm run test`. Run linters. All must pass before writing the handoff. **After implementation and tests, run the Definition-of-Done verification gate** (see the developer agent definition § "Definition-of-Done verification gate") — block writing the handoff if any DoD checkbox is `✗`. The handoff MUST include `## Quality-Gate Results` and `## DoD coverage` (verbatim task DoD with `✓`/`✗`/`⚠️` marks). When the DoD lists visual or interactive items, switch into Tester mode and follow the Tester row's Playwright guidance — do not skip and do not run a second Dev-phase browser smoke. |
 
 ### Docker pre-flight for subagent prompts
 
@@ -307,6 +347,12 @@ When running in parallel with other agents, never stop or restart other services
 - Stop immediately — do not continue to the next phase
 - Report the failure to the developer with a clear description
 - Wait for the developer to decide: retry, skip, or abort
+
+**DoD-checker returns `BLOCKED`:**
+- Do NOT invoke the Reviewer for this iteration
+- Re-spawn the Developer (same side) with a prompt that includes the DoD-checker handoff's `## Gaps` section verbatim, instructing the Developer to address each `✗` row and re-run the DoD verification gate before producing the next handoff
+- The DoD-checker bounce does NOT count against the Reviewer's max-3 loop budget — the loop budget is for rule-compliance iterations, not for unfinished-work gates
+- If the SAME `✗` rows appear in three consecutive Developer iterations, stop and report to the human developer — at that point the gap is not an oversight, it is a misunderstanding the human needs to resolve
 
 **Max review iterations reached without approval:**
 - Stop the affected side (backend or frontend)
