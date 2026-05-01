@@ -4,12 +4,20 @@ Use when the diff adds or modifies a Symfony Messenger handler reachable on an *
 
 ## When to load this path
 
-Trigger on any of:
-- A new class implements `App\Domain\Event\DomainEventInterface`, an `ApplicationMessageInterface`, or an `AsyncCommandInterface`.
-- A new `#[AsMessageHandler(bus: '<async-bus>')]` handler.
-- A new `WorkerMessageFailedEvent` subscriber.
-- A new transport / queue / exchange / routing rule in `config/packages/messenger.yaml`.
-- A new long-running worker in any `docker-compose.yml`.
+**PRIMARY trigger** (load this path as core when):
+- A new class implements `App\Domain\Event\DomainEventInterface`, an `ApplicationMessageInterface`, or an `AsyncCommandInterface`
+- A new `#[AsMessageHandler(bus: '<async-bus>')]` handler
+- A new `WorkerMessageFailedEvent` subscriber
+
+**SECONDARY trigger** (load only when no primary path covers the diff already):
+- A new transport / queue / exchange / routing rule in `config/packages/messenger.yaml`
+- A new long-running worker in any `docker-compose.yml`
+- A modification to the retry strategy / DLQ config of an existing transport
+
+**DO NOT load when**:
+- The diff only modifies tests
+- The diff only modifies `*.md`
+- The handler is fully synchronous (`#[AsMessageHandler(bus: 'command.bus')]` without async transport — use `crud-endpoint.md` instead)
 
 ## Backend
 
@@ -69,6 +77,26 @@ Trigger on any of:
 - BE-056 Unit tests for domain rules (state machine transitions, idempotency-key formula, failure-reason mapping)
 - BE-060 In test env, every async transport is `'in-memory://'` — `async_events`, `async_dispatch`, every per-feature transport, AND every paired `*_dead` failure transport
 - BE-067 Definition of Done items checked
+
+## Coverage map vs full checklist
+
+This path covers these sections of `backend-review-checklist.md`:
+
+- §Architecture & Domain purity — BE-004..BE-024 + BE-069 (Domain layering, aggregates, VOs, exception factories)
+- §Message contracts — BE-043 + BE-046 + AC-008 (messageName, FQCN, breaking changes)
+- §Transports & wiring — BE-044, BE-045, BE-047 + LO-002 (Symfony serializer, default_bus, composer sync, LoggingMiddleware)
+- §Resilience — BE-048..BE-051 + BE-072 (retry, DLQ, idempotency, UnrecoverableMessageHandlingException wrapping)
+- §Failure subscriber — BE-070, BE-071, BE-052 (idempotency-key recompute clock, sync state transition, error log shape)
+- §Workers — BE-053, BE-054 (consume bounds, no blanket DLQ replay)
+- §Logging / PII — LO-001, LO-007 (sensitive fields, SENSITIVE_FIELDS extension)
+- §Testing presence — BE-056, BE-060, BE-067
+
+This path does NOT cover. Load the corresponding checklist section ONLY when the diff touches:
+
+- `tests/` directory (beyond the testing-presence stubs above) → load §Testing
+- The CRUD shape of a synchronous Application service that publishes the message → load `crud-endpoint.md` (path)
+- Migration adding the projection/state table the handler writes to → load §Migrations (DM-*)
+- Caching of the materialised projection → load §Caching
 
 ## What this path does NOT cover
 

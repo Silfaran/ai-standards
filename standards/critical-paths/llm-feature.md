@@ -2,6 +2,24 @@
 
 Use when the diff calls a Large Language Model at runtime (Claude / OpenAI / Gemini / Mistral / self-hosted): classification, generation, translation, embedding, tool-use orchestration. Always combine with [`auth-protected-action.md`](auth-protected-action.md) when the call is gated by user permission.
 
+## When to load this path
+
+**PRIMARY trigger** (load this path as core when):
+- A new class implements `LlmGatewayInterface` or a new prompt template class with `VERSION` constant
+- A new handler invokes `$llmGateway->complete(...)` (or equivalent)
+- A new entry in `pii-inventory.md` for an LLM provider (sub-processor)
+- A new tool-use loop or `ToolDefinition` registered
+
+**SECONDARY trigger** (load only when no primary path covers the diff already):
+- A bumped `VERSION` constant on an existing prompt template
+- A new circuit-breaker / retry config for an existing LLM gateway
+- New observability / cost metrics specific to LLM calls
+
+**DO NOT load when**:
+- The diff only modifies tests
+- The diff only modifies `*.md`
+- The "LLM" reference is to an offline batch job in `scripts/` that does NOT run in product code at runtime (out of scope)
+
 ## Backend
 
 ### Gateway seam
@@ -41,6 +59,22 @@ Use when the diff calls a Large Language Model at runtime (Claude / OpenAI / Gem
 - BE-001 Quality gates green
 - SC-001 No secrets committed (provider API key is in `secrets-manifest.md`)
 - LO-001 No unredacted sensitive fields in logs
+
+## Coverage map vs full checklist
+
+This path covers these sections of `backend-review-checklist.md`:
+
+- §LLM integration — LL-001..LL-014 (Gateway seam, prompt versions, JSON schema, retries, circuit breaker, cost spans, PII guard, tool use)
+- §Sub-processor inventory — GD-011 (provider declared in `pii-inventory.md`)
+- §Hard blockers — BE-001, SC-001, LO-001
+
+This path does NOT cover. Load the corresponding checklist section ONLY when the diff touches:
+
+- `tests/` directory (especially `@group llm-real`) → load §Testing
+- The Application/Domain service orchestrating the call → load `crud-endpoint.md` (path)
+- Storing LLM output as user-facing data → load `pii-write-endpoint.md` (path)
+- Outbound webhook for async LLM jobs → load `async-handler.md` (path)
+- Frontend rendering of LLM output (streaming, formatting) → load §Frontend UX states
 
 ## What this path does NOT cover
 

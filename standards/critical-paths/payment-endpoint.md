@@ -2,6 +2,25 @@
 
 Use when the diff charges, refunds, holds in escrow, pays out, splits revenue, manages subscriptions, or handles webhooks from a Payment Service Provider. Always combine with [`auth-protected-action.md`](auth-protected-action.md) for the user-facing actions.
 
+## When to load this path
+
+**PRIMARY trigger** (load this path as core when):
+- A new endpoint that creates a Charge / Refund / Payout / Subscription / Dispute aggregate
+- A new PSP webhook handler (signature-verify-before-parse)
+- A new column / table for `ledger_entries` or any monetary amount
+- A new use of the `Money` VO in Domain code
+- A new entry in `prices` table or any pricing-config write
+
+**SECONDARY trigger** (load only when no primary path covers the diff already):
+- A new daily reconciliation job
+- A new `{PROVIDER}_WEBHOOK_SECRET` row in `secrets-manifest.md`
+- A frontend page rendering money or capturing a payment method
+
+**DO NOT load when**:
+- The diff only modifies tests
+- The diff only modifies `*.md`
+- The amount is non-monetary (e.g. quantity, count) — `Money` VO does not apply
+
 ## Backend
 
 ### Money modeling
@@ -56,6 +75,23 @@ Use when the diff charges, refunds, holds in escrow, pays out, splits revenue, m
 - PA-022 Render via `Intl.NumberFormat` `style: 'currency'` + explicit locale
 - PA-023 Card capture uses PSP hosted element; raw card numbers NEVER touch frontend state
 - PA-024 Payment confirmation pages re-fetch backend (webhook-driven) before showing success
+
+## Coverage map vs full checklist
+
+This path covers these sections of `backend-review-checklist.md` / `frontend-review-checklist.md`:
+
+- §Payments / Money — PA-001..PA-024 (Money VO, ledger, webhooks, state machines, reconciliation, frontend money rendering)
+- §Authorization (carried over) — AZ-001
+- §Audit (carried over) — AU-006, AU-007
+- §Hard blockers — BE-001, SC-001, LO-001
+- §Frontend Payments — PA-021..PA-024
+
+This path does NOT cover. Load the corresponding checklist section ONLY when the diff touches:
+
+- `tests/` directory → load §Testing
+- The CRUD shape of the payment endpoint (controller, validation, OpenAPI) → load `crud-endpoint.md` (path)
+- New encrypted column for payment instrument tokens → load §Secrets (SC-*) + §Database
+- Refund frontend UX flows beyond PA-024 → load §Frontend UX states
 
 ## What this path does NOT cover
 
