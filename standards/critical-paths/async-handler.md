@@ -82,6 +82,7 @@ Use when the diff adds or modifies a Symfony Messenger handler reachable on an *
 
 This path covers these sections of `backend-review-checklist.md`:
 
+- §Hard blockers — BE-001, BE-002, BE-003, SE-001, SC-001, LO-001, DM-001 (DM-001 only when the handler persists)
 - §Architecture & Domain purity — BE-004, BE-005, BE-007, BE-009, BE-010, BE-022, BE-023, BE-024, BE-065, BE-069 (Domain layering, aggregates, VOs, exception factories — BE-006/BE-008/BE-011..BE-021 are NOT loaded; consult §Architecture if the diff touches them)
 - §Message contracts — BE-043 + BE-046 + AC-008 (messageName, FQCN, breaking changes)
 - §Transports & wiring — BE-044, BE-045, BE-047 + LO-002 (Symfony serializer, default_bus, composer sync, LoggingMiddleware)
