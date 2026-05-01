@@ -49,7 +49,7 @@
         "required": false,
         "min_length": 200,
         "body_must_match_any_of": [
-          ["\\b(BE|FE|SE|PE|OB|CA|SC|DM|AC|LO)-\\d{3}\\b", "approved|no\\s+violations?|no\\s+issues?|all\\s+checks?\\s+pass"]
+          ["\\b(BE|FE|SE|PE|OB|CA|SC|DM|AC|LO|AZ|IN|GD|LL|PA|FS|GS|AU|FF|AN|PW|DS|AS)-\\d{3}\\b", "approved|no\\s+violations?|no\\s+issues?|all\\s+checks?\\s+pass"]
         ]
       },
       "tester-handoff.md": {

@@ -293,9 +293,24 @@ Standards are split into **rules** (concise, always loaded by agents) and **refe
 | `standards/logging.md` | Structured JSON logs, Monolog config, sensitive-field redaction |
 | `standards/api-contracts.md` | URL versioning, OpenAPI as contract, breaking-change protocol, deprecation headers |
 | `standards/data-migrations.md` | Schema evolution strategy, expand-contract, backfills, zero-downtime deploy matrix |
+| `standards/authorization.md` | Voter pattern, Subject VO, tenant scoping, RBAC + ABAC hybrid model |
+| `standards/i18n.md` | Locale negotiation, UI strings vs content translations, fallback chain, plurals/dates/currency formatting, vue-i18n |
+| `standards/gdpr-pii.md` | Four-tier PII classification, encryption, DSAR + RTBF workflow, consent ledger, sub-processors, DPIA |
+| `standards/attack-surface-hardening.md` | OWASP Top 10 coverage, CSP/HSTS, CSRF, SSRF (`SafeHttpClient`), XXE/SSTI, lockout, bot, SBOM, container scan, gitleaks, DAST |
+| `standards/llm-integration.md` | `LlmGatewayInterface` Domain seam, prompt versioning, JSON schema, retries/circuit breaker, cost spans, `PiiPromptGuard`, tool-use loop |
+| `standards/payments-and-money.md` | `Money` VO (integer minor units + ISO 4217), append-only ledger, deterministic webhook idempotency, state machines, multi-party splits, reconciliation |
+| `standards/file-and-media-storage.md` | Bucket layout, presigned PUT/GET, magic-byte verification, antivirus state machine, video transcode pipeline, retention, observability |
+| `standards/geo-search.md` | `geography(Point, 4326)` storage, GiST indexes, Postgres FTS before any dedicated search engine, `MatchScoreCalculator`, score → label translation |
+| `standards/audit-log.md` | Append-only `audit_log` table, AuditLogProjector wiring, same-tx-or-outbox synchrony, mandatory entries on success AND denial, retention |
+| `standards/feature-flags.md` | Flag taxonomy (release / operational / experiment / permission), registry, `FlagGatewayInterface` Domain seam, sticky bucketing, removal procedure |
+| `standards/analytics-readonly-projection.md` | Four-tier projection model (T1 read-on-operational / T2 materialized / T3 replica / T4 warehouse), schema isolation, replica lag, mandatory Voter |
+| `standards/pwa-offline.md` | Four progressive levels (L0 SPA → L3 offline writes + push), Workbox-generated SW, manifest, IndexedDB never holding Sensitive-PII, push consent per category |
+| `standards/digital-signature-integration.md` | `SignatureGatewayInterface` Domain seam, modality (simple / advanced / qualified), versioned templates, `SigningRequest` state machine, signed-document `document_sha256`, signature-verify-before-parse webhooks |
+| `standards/adr.md` | Architecture Decision Record format — ID convention, status lifecycle, structure, when to write one |
+| `standards/critical-paths/` | Curated rule subsets per feature kind (CRUD, auth, PII, payment, LLM, file upload, signature, geo-search, PWA, async handler, public-facing deploy) |
 | `standards/new-service-checklist.md` | Pre-commit checklist for new services |
 | `standards/quality-gates.md` | CI + pre-commit + Makefile quality rules (PHPStan L9, vue-tsc, tests) |
-| `scaffolds/` | Copy-verbatim PHP classes (AppController, etc.) |
+| `scaffolds/` | Copy-verbatim PHP classes (AppController, ApiExceptionSubscriber, LoggingMiddleware, SecurityHeadersSubscriber, Subject + Voter, Money + Currency + CurrencyMismatchException, SafeHttpClient + SsrfBlockedException, LlmGatewayInterface + LlmRequest + LlmResponse, AuditLogProjector, AssertMaxQueriesTrait + QueryCountMiddleware) |
 | `templates/ci/` | GitHub Actions workflow templates (backend + frontend) |
 | `templates/hooks/` | Git pre-commit hooks (backend + frontend) |
 | `templates/makefile/` | Makefile quality snippets to drop into a service Makefile |
