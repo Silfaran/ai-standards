@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.41.1](https://github.com/Silfaran/ai-standards/compare/v0.41.0...v0.41.1) (2026-05-01)
+
+
+### Changed
+
+* **build-plan:** tighten dev/tester bundle + DoD-checker tool-call budget ([#100](https://github.com/Silfaran/ai-standards/issues/100)) ([be34f3e](https://github.com/Silfaran/ai-standards/commit/be34f3e6eeb2ef01da6b7b61f74caa1de6f2c7bf))
+
 ## [0.41.0](https://github.com/Silfaran/ai-standards/compare/v0.40.0...v0.41.0) (2026-04-30)
 
 
