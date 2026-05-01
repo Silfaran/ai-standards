@@ -120,6 +120,7 @@ Use when the diff adds a controller + handler + repository (and optionally a fro
 
 This path covers these sections of `backend-review-checklist.md` / `frontend-review-checklist.md`:
 
+- §Hard blockers — BE-001, BE-002, BE-003, SE-001, SE-004, SC-001, LO-001, DM-001 (backend) + FE-001, FE-004 (frontend, when UI included)
 - §Architecture — BE-004, BE-005, BE-006, BE-007, BE-008, BE-009, BE-010, BE-013, BE-022, BE-023, BE-024 (Domain / Application / Infrastructure layering, services, aggregates, VOs — BE-011, BE-012, BE-014..BE-021 are NOT loaded; consult §Architecture if the diff touches them)
 - §Controllers — BE-025..BE-032 + AC-001
 - §Validation — BE-033..BE-037

@@ -9,7 +9,7 @@
 
 An orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that builds full-stack web applications — PHP/Symfony backend and Vue 3 frontend — using isolated AI agents that spec, implement, review, and test each feature.
 
-You describe a feature in plain language. The framework splits the work across seven specialized agents, each with its own context window, strict standards, and a single role. The result is implemented, reviewed, and tested code following Hexagonal Architecture, DDD, CQRS, and Event-Driven design.
+You describe a feature in plain language. The framework splits the work across nine specialized agents, each with its own context window, strict standards, and a single role. The result is implemented, reviewed, and tested code following Hexagonal Architecture, DDD, CQRS, and Event-Driven design.
 
 ---
 
