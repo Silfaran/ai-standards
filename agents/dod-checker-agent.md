@@ -45,6 +45,17 @@ For each `- [ ]` row under `## Definition of Done` in the task file:
 
 A spot-check is not a re-implementation of the verification gate — it is one tool call per row, asserting the literal artefact the Developer cited. If a row is unverifiable from the handoff alone (e.g. the Developer cited "test exists" without naming the test), downgrade to `✗` with the reason "Developer's `## DoD coverage` cited no path".
 
+## Tool-call budget per row (load-bearing)
+
+Empirical measurements show this agent over-runs the prescribed "one tool call per row" by ~2× when allowed to read full files for context. That overshoot is monetarily cheap (Haiku) but slows wall-clock and signals the agent is doing Reviewer work it should not be doing. Hard caps:
+
+- **Maximum 2 tool calls per row.** First call is the spot-check (grep / ls). Optional second call is a *targeted* `Read` with `offset` + `limit` (≤20 lines) ONLY if the grep returned a hit you need to verify the surrounding context for (e.g. "is this `Route(...)` actually inside a class annotated `#[Controller]`?").
+- **`Read` of a full file is forbidden.** If you find yourself wanting to read 100+ lines to "understand the context" of a row, you have stepped into Reviewer territory. Stop. Mark the row `⚠️ unverifiable from handoff — needs Reviewer context` and move on.
+- **Repeat reads of the same file are forbidden.** If the same file appears in three rows, run one combined `grep -nE "pattern1|pattern2|pattern3"` against it, not three separate Reads. Combined greps are correct here because the goal is "did the Developer cite this artefact?" — a single file scan answers all citations against that file at once. (This is different from the Reviewer's job of judging the artefact's quality, where per-row attention is correct.)
+- **Aggregate budget per run:** roughly 2× the number of `✓` rows, plus 1 per `⚠️` confirmation. If you exceed that by 50%, stop and emit BLOCKED with reason "DoD-checker budget exceeded — rows ambiguous from handoff alone, escalate to Reviewer or Developer for a clearer `## DoD coverage` next iteration."
+
+The escalation path (`⚠️ unverifiable` or BLOCKED with budget-exceeded) is correct behaviour, NOT failure. The framework prefers a fast, possibly-permissive DoD-checker over a thorough one — the Reviewer is the thorough gate. The DoD-checker's only job is to catch obviously-missing artefacts, not to audit quality.
+
 ## Decision Rule
 
 After walking every row:

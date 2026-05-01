@@ -32,6 +32,27 @@ Before spawning any subagent, generate **two bundle files** that distill the sta
 
 **Order matters: write each bundle MOST-STATIC FIRST, MOST-DYNAMIC LAST.** Anthropic's prompt cache (5-minute TTL) keys on the prefix of the prompt — content that is identical across the subagents spawned in this session reuses the cache; content that changes between subagents (or between iterations) invalidates the cache from that byte forward. Static-first ordering means the Developer's first call warms the cache for every later call.
 
+### Anti-duplication rule for both bundles
+
+**The spec is already in the subagent prompt's reading order (step 3 of the Developer / Tester / DevOps prompt template; step 4 of the Reviewer template). Do NOT reproduce spec content inside the bundle.** Reproducing 200-300 lines of spec inside a bundle that every subagent ALSO reads the spec for is duplicate context billed once per spawn.
+
+The spec section in each bundle below is a **pointer + a 5-10 line digest**, NEVER a copy:
+
+```markdown
+## Spec digest
+
+See `{spec_path}` § Technical Details (and § Definition of Done for the tester bundle).
+Key shape (for routing decisions only — read the spec for full requirements):
+
+- {1 line: aggregate(s) touched}
+- {1 line: write or read; sync or async; HTTP or message handler}
+- {1 line: external dependencies (LLM / payments / signature / file / geo)}
+- {1 line: surfaces a UI — yes/no}
+- {1 line: anything unusual the subagent should know to scope its reading}
+```
+
+If the spec digest of the dev bundle exceeds ~15 lines, the orchestrator wrote too much. Trim and re-emit. Same for the tester bundle's digest.
+
 ### Sections in the dev bundle
 
 Path: `{workspace_root}/handoffs/{feature-name}/dev-bundle.md`. Consumers: Developer, Dev+Tester, DevOps. Target size: **200-400 lines**.
@@ -41,7 +62,7 @@ Path: `{workspace_root}/handoffs/{feature-name}/dev-bundle.md`. Consumers: Devel
 3. **Selected standards sections** (from the plan's `Standards Scope`, extracted per feature type — skip frontend rules for a backend-only feature, skip backend rules for a frontend-only CSS feature). Include the full implementation surface: layering rules (Domain / Application / Infrastructure), service patterns, controller patterns, services.yaml wiring examples, console-command details, scaffold details.
 4. **`decisions.md` entries** that overlap with this feature's aggregates or services (project-level; same across the agents working on this feature)
 5. **`design-decisions.md` entries** when the feature has a frontend component (all entries — short, all relevant to visual consistency)
-6. **Spec digest** — the Technical Details section of the spec (the most feature-specific section; goes last so the prefix above remains identical across all subagents in this session)
+6. **Spec digest pointer** (5-10 lines, see anti-duplication rule above) — pointer to `{spec_path}` § Technical Details + a one-line-per-bullet routing summary. NOT a reproduction. Subagents read the spec separately at step 3 of their reading order.
 
 ### Sections in the tester bundle
 
@@ -52,7 +73,7 @@ Path: `{workspace_root}/handoffs/{feature-name}/tester-bundle.md`. Consumer: Tes
 3. **Logging + redaction rules** (full — the Tester writes assertions about which fields appear in which log lines)
 4. **GDPR / PII rules** (full — the Tester writes assertions that PII is not persisted/logged where it shouldn't be)
 5. **Attack-surface-hardening rules** (full when the project is internet-reachable — the Tester writes assertions for CSRF, lockout, rate-limit, redirect-allowlist, header presence)
-6. **Spec digest** — the Technical Details section AND the Definition of Done section of the spec
+6. **Spec digest pointer** (5-10 lines, see anti-duplication rule above) — pointer to `{spec_path}` § Technical Details AND § Definition of Done + a one-line-per-bullet routing summary. NOT a reproduction. The Tester reads the spec separately.
 7. **Lessons-learned filtered to test design** — entries marked `[Tester]` or otherwise about test patterns / fixture design / flaky-test workarounds. **Drop** entries exclusive to Domain Service / Controller / Application Service implementation
 8. **DROP from this bundle:** layering rules (Domain / Application / Infrastructure), service patterns, controller patterns, services.yaml wiring examples, console-command details, scaffold details. The Tester does not modify `src/`; those rules do not apply.
 
