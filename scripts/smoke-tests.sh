@@ -394,7 +394,45 @@ done
 [ $modes_fail -eq 0 ] && pass "Mode A + Mode B + Mode C declared with 'Three Invocation Modes' top header"
 
 # -----------------------------------------------------------------------------
-# Check 15 — dynamic smoke staleness reminder (non-fatal)
+# Check 15 — critical paths declare coverage map and trigger structure
+# -----------------------------------------------------------------------------
+# Coverage-aware checklist loading (added in v0.42.x) requires every critical
+# path to declare both ## Coverage map vs full checklist and ## When to load
+# this path with PRIMARY/SECONDARY/DO NOT load classification. Without these
+# the reviewer falls back to defensive full-checklist loading and the empirical
+# 30-50k Sonnet saving evaporates.
+section "Critical paths coverage + triggers"
+cp_struct_fail=0
+for f in standards/critical-paths/*.md; do
+  base=$(basename "$f")
+  [ "$base" = "README.md" ] && continue
+  if ! grep -qF "## Coverage map vs full checklist" "$f"; then
+    fail "$f: missing '## Coverage map vs full checklist' section"
+    cp_struct_fail=1
+  fi
+  if ! grep -qF "## When to load this path" "$f"; then
+    fail "$f: missing '## When to load this path' section"
+    cp_struct_fail=1
+  fi
+  # Each path's When-to-load must classify with PRIMARY/SECONDARY/DO NOT load.
+  # We check for the labels in any case (markdown bold or plain).
+  if ! grep -qE 'PRIMARY trigger' "$f"; then
+    fail "$f: '## When to load this path' missing 'PRIMARY trigger' classification"
+    cp_struct_fail=1
+  fi
+  if ! grep -qE 'SECONDARY trigger' "$f"; then
+    fail "$f: '## When to load this path' missing 'SECONDARY trigger' classification"
+    cp_struct_fail=1
+  fi
+  if ! grep -qE 'DO NOT load' "$f"; then
+    fail "$f: '## When to load this path' missing 'DO NOT load' classification"
+    cp_struct_fail=1
+  fi
+done
+[ $cp_struct_fail -eq 0 ] && pass "every critical path declares coverage map + PRIMARY/SECONDARY/DO NOT load triggers"
+
+# -----------------------------------------------------------------------------
+# Check 16 — dynamic smoke staleness reminder (non-fatal)
 # -----------------------------------------------------------------------------
 # Count commits since the most recent release tag that touched the structural
 # files exercised by `make smoke-dynamic` (agents/, build-plan-command.md,

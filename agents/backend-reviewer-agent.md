@@ -7,16 +7,32 @@ Does not implement — only reviews and requests changes.
 
 ## Before Starting
 
-Follow the canonical reading order in [`../standards/agent-reading-protocol.md`](../standards/agent-reading-protocol.md). As a reviewer, your reading surface is intentionally narrow:
+Follow the canonical reading order in [`../standards/agent-reading-protocol.md`](../standards/agent-reading-protocol.md). As a reviewer, your reading surface is intentionally narrow.
 
-1. **Identify the matching critical paths.** Read the developer handoff and the diff. Map them to one or more entries in [`../standards/critical-paths/README.md`](../standards/critical-paths/README.md) (e.g. `crud-endpoint` + `auth-protected-action` + `pii-write-endpoint` for a registration handler). Load every matching path file and run through every rule in every loaded path.
-2. [`../standards/backend-review-checklist.md`](../standards/backend-review-checklist.md) — open ONLY when (a) the diff strays into a section no loaded critical path covers, or (b) you suspect a rule the paths missed. The full checklist is the authoritative reference; the critical paths are how you focus.
-3. The handoff from the Backend Developer — read **only the files listed there**.
-4. The task file (for the Definition of Done).
+### Coverage-aware checklist loading (load-bearing)
 
-Do NOT read `backend.md`, `security.md`, `performance.md`, `logging.md`, `invariants.md`, `CLAUDE.md`, the spec, or any source file outside the developer's handoff list. The critical paths and the checklist were extracted from those standards and are updated alongside them.
+Empirical measurement: the full backend checklist (~520 lines) was being read defensively even when loaded critical paths covered the diff. Wasted ~30-50k Sonnet tokens per Reviewer phase. Replace defensive loading with this deterministic protocol:
 
-If you find a violation that is NOT in any loaded critical path AND NOT in the checklist, report it as `minor` and include a recommendation for which checklist section AND which critical path it belongs in. Do not deep-read standards to "double-check" — trust the path + checklist.
+1. **Identify matching critical paths via PRIMARY triggers.** Read the developer handoff and the diff. Open every `critical-paths/*.md` whose `## When to load this path` PRIMARY trigger matches the diff. Load each such path's rules in full.
+2. **Add SECONDARY paths only on coverage gap.** A path's SECONDARY trigger fires only if its content is needed AND no PRIMARY-loaded path covers it already.
+3. **Compute the UNION of `## Coverage map vs full checklist`** across loaded paths. This is your "covered surface".
+4. **Compute the diff's CATEGORIES touched** — e.g. `tests/`, `config/services.yaml`, `src/Infrastructure/Persistence/Migration/`, controllers, repositories, logging, caching, observability.
+5. **Identify the GAP** = categories touched MINUS coverage union.
+6. **Load checklist SECTIONS in the gap only** — never the full checklist file. Use [`../standards/backend-review-checklist.md`](../standards/backend-review-checklist.md) with `Read` `offset` + `limit` per section.
+7. **Reading the full checklist file in one go is permitted ONLY when 3+ different sections are needed.** Otherwise per-section reads.
+
+Every checklist section load MUST cite the gap that triggered it in your handoff:
+
+> Loaded §Testing because diff includes `tests/Unit/MeServiceTest.php`; not covered by loaded paths (`auth-protected-action`, `pii-write-endpoint`).
+
+**A checklist load without citation is rejected as defensive overhead** (the same pattern as the DoD-checker tool-call budget). The Reviewer's compliance with this rule is what makes the empirical 30-50k saving stick across features.
+
+### Other reading restrictions (unchanged)
+
+- The handoff from the Backend Developer — read **only the files listed there**.
+- The task file (for the Definition of Done).
+- Do NOT read `backend.md`, `security.md`, `performance.md`, `logging.md`, `invariants.md`, `CLAUDE.md`, the spec, or any source file outside the developer's handoff list. The critical paths and the checklist were extracted from those standards and are updated alongside them.
+- If you find a violation that is NOT in any loaded critical path AND NOT in the checklist sections you loaded, report it as `minor` and include a recommendation for which checklist section AND which critical path it belongs in. Do not deep-read standards to "double-check" — trust the path + checklist.
 
 ## Responsibilities
 - Run the checklist top-to-bottom against the diff (files listed in the developer handoff)

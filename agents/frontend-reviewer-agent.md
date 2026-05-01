@@ -7,17 +7,33 @@ Does not implement — only reviews and requests changes.
 
 ## Before Starting
 
-Follow the canonical reading order in [`../standards/agent-reading-protocol.md`](../standards/agent-reading-protocol.md). As a reviewer, your reading surface is intentionally narrow:
+Follow the canonical reading order in [`../standards/agent-reading-protocol.md`](../standards/agent-reading-protocol.md). As a reviewer, your reading surface is intentionally narrow.
 
-1. **Identify the matching critical paths.** Read the developer handoff and the diff. Map them to one or more entries in [`../standards/critical-paths/README.md`](../standards/critical-paths/README.md) (e.g. `crud-endpoint` + `auth-protected-action` + `pwa-surface` for an offline-capable signed-in page). Load every matching path file and run through every rule.
-2. [`../standards/frontend-review-checklist.md`](../standards/frontend-review-checklist.md) — open ONLY when (a) the diff strays into a section no loaded critical path covers, or (b) you suspect a rule the paths missed. The full checklist is the authoritative reference; the critical paths are how you focus.
-3. The handoff from the Frontend Developer — read **only the files listed there**.
-4. The task file (for the Definition of Done).
-5. `design-decisions.md` for the project — only when the diff touches UI surfaces (forms, tables, modals, page layout, theming).
+### Coverage-aware checklist loading (load-bearing)
 
-Do NOT read `frontend.md`, `security.md`, `invariants.md`, `CLAUDE.md`, the spec, or any source file outside the developer's handoff list. The critical paths and the checklist were extracted from those standards and are updated alongside them.
+Empirical measurement: the full frontend checklist (~250 lines) was being read defensively even when loaded critical paths covered the diff. Same pattern as the backend reviewer; same fix. Replace defensive loading with this deterministic protocol:
 
-If you find a violation that is NOT in any loaded critical path AND NOT in the checklist, report it as `minor` and include a recommendation for which checklist section AND which critical path it belongs in. Do not deep-read standards to "double-check" — trust the path + checklist.
+1. **Identify matching critical paths via PRIMARY triggers.** Read the developer handoff and the diff. Open every `critical-paths/*.md` whose `## When to load this path` PRIMARY trigger matches the diff. Load each such path's rules in full.
+2. **Add SECONDARY paths only on coverage gap.** A path's SECONDARY trigger fires only if its content is needed AND no PRIMARY-loaded path covers it already.
+3. **Compute the UNION of `## Coverage map vs full checklist`** across loaded paths. This is your "covered surface".
+4. **Compute the diff's CATEGORIES touched** — e.g. `tests/`, page composables, Pinia stores, router config, components, i18n locales, public assets.
+5. **Identify the GAP** = categories touched MINUS coverage union.
+6. **Load checklist SECTIONS in the gap only** — never the full checklist file. Use [`../standards/frontend-review-checklist.md`](../standards/frontend-review-checklist.md) with `Read` `offset` + `limit` per section.
+7. **Reading the full checklist file in one go is permitted ONLY when 3+ different sections are needed.** Otherwise per-section reads.
+
+Every checklist section load MUST cite the gap that triggered it in your handoff:
+
+> Loaded §i18n because diff includes `src/locales/en.json`; not covered by loaded paths (`crud-endpoint`, `auth-protected-action`).
+
+**A checklist load without citation is rejected as defensive overhead.**
+
+### Other reading restrictions (unchanged)
+
+- The handoff from the Frontend Developer — read **only the files listed there**.
+- The task file (for the Definition of Done).
+- `design-decisions.md` for the project — only when the diff touches UI surfaces (forms, tables, modals, page layout, theming).
+- Do NOT read `frontend.md`, `security.md`, `invariants.md`, `CLAUDE.md`, the spec, or any source file outside the developer's handoff list. The critical paths and the checklist were extracted from those standards and are updated alongside them.
+- If you find a violation that is NOT in any loaded critical path AND NOT in the checklist sections you loaded, report it as `minor` and include a recommendation for which checklist section AND which critical path it belongs in. Do not deep-read standards to "double-check" — trust the path + checklist.
 
 ## Responsibilities
 - Run the checklist top-to-bottom against the diff (files listed in the developer handoff)

@@ -2,6 +2,26 @@
 
 Use when the diff accepts user-uploaded files, serves system-generated documents, or wires a video pipeline. Combine with [`auth-protected-action.md`](auth-protected-action.md) for any private-bucket access.
 
+## When to load this path
+
+**PRIMARY trigger** (load this path as core when):
+- A new endpoint that issues presigned PUT/GET URLs
+- A new aggregate or table representing an upload (`Upload`, `Attachment`, `MediaAsset`, …)
+- A new bucket name in env / `secrets-manifest.md` for storage
+- A new antivirus / magic-byte verification step
+- A new video transcode / caption pipeline
+
+**SECONDARY trigger** (load only when no primary path covers the diff already):
+- A new lifecycle policy or orphan-detection cron
+- A new upload variant in `upload_variants`
+- A frontend upload form or signed-URL image rendering component
+
+**DO NOT load when**:
+- The diff only modifies tests
+- The diff only modifies `*.md`
+- The "file" is a build artefact / config, not user content
+- The signed-document storage rules apply (load `signature-feature.md` instead — different retention)
+
 ## Backend
 
 ### Storage shape
@@ -48,6 +68,22 @@ Use when the diff accepts user-uploaded files, serves system-generated documents
 - FS-024 Presigned URLs consumed once; never stored in localStorage / sessionStorage / Pinia
 - FS-025 Image / video tags pointing at private content fetch a fresh signed URL on render
 - FS-026 Forms enforce `accept`, max-size, visible error states
+
+## Coverage map vs full checklist
+
+This path covers these sections of `backend-review-checklist.md` / `frontend-review-checklist.md`:
+
+- §File & media storage — FS-001..FS-022 (buckets, presigned URLs, magic-byte, antivirus, variants, lifecycle, video pipeline, observability)
+- §Authorization — AZ-001 (Voter on private-bucket access, carried over)
+- §Hard blockers — BE-001, SC-001
+- §Frontend uploads — FS-023..FS-026
+
+This path does NOT cover. Load the corresponding checklist section ONLY when the diff touches:
+
+- `tests/` directory → load §Testing
+- The CRUD shape of the upload endpoint (controller, OpenAPI) → load `crud-endpoint.md` (path)
+- PII metadata persisted alongside the file → load `pii-write-endpoint.md` (path)
+- Migration adding the upload table → load §Migrations (DM-*)
 
 ## What this path does NOT cover
 

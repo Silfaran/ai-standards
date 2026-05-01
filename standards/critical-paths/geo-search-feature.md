@@ -2,6 +2,25 @@
 
 Use when the diff stores locations, searches by proximity, ranks candidates with a scoring engine, or renders a map. Combine with [`auth-protected-action.md`](auth-protected-action.md) for any tenant-scoped query.
 
+## When to load this path
+
+**PRIMARY trigger** (load this path as core when):
+- A new column of type `geography(Point, 4326)` or `tsvector`
+- A new GiST or GIN index in a migration
+- A new `MatchScoreCalculator` Domain service or `MatchLabelResolver`
+- A new endpoint accepting `bbox`, `radius`, or proximity parameters
+- A new `{project-docs}/match-weights.md` entry or version bump
+
+**SECONDARY trigger** (load only when no primary path covers the diff already):
+- A new `GeocoderGatewayInterface` adapter or geocoding entry-point
+- A frontend Map / search-input component
+- A new pg_trgm-based fuzzy match query
+
+**DO NOT load when**:
+- The diff only modifies tests
+- The diff only modifies `*.md`
+- The "search" is a simple `LIKE` / `ILIKE` filter on a non-geo, non-text-search column (regular SQL applies, no path needed)
+
 ## Backend
 
 ### Storage
@@ -55,6 +74,22 @@ Use when the diff stores locations, searches by proximity, ranks candidates with
 - GS-026 Search inputs debounced (~250 ms)
 - GS-027 User coordinates never inlined into HTML; never in `localStorage`
 - GS-028 Result lists render the qualitative `MatchLabel` and `explanations` translated via i18n; NEVER the raw score
+
+## Coverage map vs full checklist
+
+This path covers these sections of `backend-review-checklist.md` / `frontend-review-checklist.md`:
+
+- §Geo / search — GS-001..GS-023 (PostGIS storage, geo queries, FTS, MatchScoreCalculator, label resolver, pagination, privacy, observability, graduation)
+- §Authorization (carried over) — AZ-001
+- §Hard blockers — BE-001, LO-001
+- §Frontend Geo / search — GS-024..GS-028
+
+This path does NOT cover. Load the corresponding checklist section ONLY when the diff touches:
+
+- `tests/` directory → load §Testing
+- The CRUD shape of the search endpoint (controller, validation, OpenAPI) → load `crud-endpoint.md` (path)
+- Cache headers / Redis keys for search results → load §Caching
+- Migration adding the geo-indexed table → load §Migrations (DM-*)
 
 ## What this path does NOT cover
 

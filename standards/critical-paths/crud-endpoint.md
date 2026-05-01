@@ -2,6 +2,24 @@
 
 Use when the diff adds a controller + handler + repository (and optionally a frontend service + composable + page) for a non-sensitive aggregate. Combine with other paths for cross-cutting concerns (auth, PII, files, payments).
 
+## When to load this path
+
+**PRIMARY trigger** (load this path as core when):
+- The diff adds a new controller in `src/Infrastructure/Controller/` paired with a new handler in `src/Application/`
+- The diff adds a new aggregate under `src/Domain/{Aggregate}/` with `static create()` / `static from()`
+- The diff scaffolds a frontend page + composable + ApiService for a new resource
+
+**SECONDARY trigger** (load only when no primary path covers the diff already):
+- A migration adding a new table for a non-sensitive aggregate
+- An OpenAPI annotation added or edited on an existing controller
+- New paginated list endpoint added to an existing controller
+
+**DO NOT load when**:
+- The diff only modifies tests
+- The diff only modifies `*.md`
+- The aggregate stores PII (load `pii-write-endpoint.md` instead — its rules supersede)
+- The endpoint handles money (load `payment-endpoint.md` instead)
+
 ## Backend
 
 ### Hard blockers
@@ -97,6 +115,30 @@ Use when the diff adds a controller + handler + repository (and optionally a fro
 - FE-038 Empty state handled
 - FE-039 Submit disabled when invalid or pending
 - FE-040 `@submit.prevent`
+
+## Coverage map vs full checklist
+
+This path covers these sections of `backend-review-checklist.md` / `frontend-review-checklist.md`:
+
+- §Architecture — BE-004..BE-024 (Domain / Application / Infrastructure layering, services, aggregates, VOs)
+- §Controllers — BE-025..BE-032 + AC-001
+- §Validation — BE-033..BE-037
+- §Database — BE-038..BE-042 + PE-001
+- §Repositories — PE-003..PE-005 + SE-005
+- §API contracts — AC-002..AC-005
+- §Naming + Testing presence — BE-055..BE-067 + BE-061..BE-065
+- §Frontend Architecture — FE-005..FE-009 (when UI included)
+- §Frontend API/State — FE-017..FE-023 + AC-014 + FE-020
+- §Frontend UX states — FE-036..FE-040
+
+This path does NOT cover. Load the corresponding checklist section ONLY when the diff touches:
+
+- `tests/Unit/` or `tests/Integration/` → load §Testing (full)
+- `config/services.yaml` (wiring beyond bus injection) → load §Wiring
+- `src/Infrastructure/Persistence/Migration/` (beyond schema-add of this aggregate) → load §Migrations
+- Logging / redaction beyond LO-001 → load §Logging
+- Caching headers / Redis keys → load §Caching
+- Observability (spans, metrics, traces) → load §Observability
 
 ## What this path does NOT cover
 

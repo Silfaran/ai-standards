@@ -2,6 +2,24 @@
 
 Use when the diff adds an action that requires a Voter check, role gating, or tenant scoping. Almost every server-side action that mutates state matches this path.
 
+## When to load this path
+
+**PRIMARY trigger** (load this path as core when):
+- The diff adds a new Voter under `src/Domain/Authorization/Voter/`
+- The diff adds a new handler that mutates state (Command handler) on a tenant-scoped aggregate
+- The diff adds a `Subject` field to a new Command/Query
+- The diff adds `tenant_id UUID NOT NULL` to a new table
+
+**SECONDARY trigger** (load only when no primary path covers the diff already):
+- A new route guard with `meta.requiresAuth` / `meta.requiresRoles` in the frontend router
+- A 403 path / role-gated UI component in Vue
+- An endpoint that previously was public becoming gated
+
+**DO NOT load when**:
+- The diff only modifies tests
+- The diff only modifies `*.md`
+- The endpoint is genuinely public (no Voter, no role gate, no tenant scope) — verify in the spec before skipping
+
 ## Backend
 
 ### Authorization (the core of this path)
@@ -35,6 +53,22 @@ Use when the diff adds an action that requires a Voter check, role gating, or te
 - AZ-014 UI gating presentation-only; backend ALWAYS re-checks
 - AZ-015 Roles never in `localStorage`
 - AZ-016 403 treated as a UX state, never silently swallowed
+
+## Coverage map vs full checklist
+
+This path covers these sections of `backend-review-checklist.md` / `frontend-review-checklist.md`:
+
+- §Authorization — AZ-001..AZ-012 (Voter, Subject, tenant scoping, audit on denial)
+- §Audit (denials and successful sensitive actions) — AU-006..AU-008
+- §Hard blockers (carried over) — BE-001, SE-001, LO-001
+- §Frontend Authorization — AZ-013..AZ-016 (route guards, role-gated UI, 403 UX)
+
+This path does NOT cover. Load the corresponding checklist section ONLY when the diff touches:
+
+- `tests/` directory → load §Testing
+- Database schema (new tables, columns, migrations beyond `tenant_id` add) → load §Database + §Migrations
+- Logging beyond LO-001 → load §Logging
+- Audit beyond AU-006..AU-008 (retention, schema, projections) → load §Audit (full)
 
 ## What this path does NOT cover
 

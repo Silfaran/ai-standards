@@ -2,6 +2,25 @@
 
 Use when the diff configures the production-facing perimeter: response headers, CSP, cookie security, container build, dependency automation, secrets scanning, DAST. Almost every project's first deploy needs this path; subsequent diffs revisit it when a perimeter setting changes.
 
+## When to load this path
+
+**PRIMARY trigger** (load this path as core when):
+- A new or modified CSP / HSTS / cookie / COOP / CORP header config
+- A new `Dockerfile` or container hardening change (non-root, read-only fs)
+- A new entry in CI for Dependabot, Renovate, Trivy, gitleaks, OWASP ZAP
+- A first-time public deployment of a service (initial perimeter setup)
+- A new outbound-webhook signing implementation or rotation
+
+**SECONDARY trigger** (load only when no primary path covers the diff already):
+- A new SBOM generation step
+- A new anomaly metric (`auth_failures_total`, `csp_violations_total`, etc.)
+- A new redirect-allowlist entry (`isAllowedRedirect()`)
+
+**DO NOT load when**:
+- The diff only modifies tests
+- The diff only modifies `*.md`
+- The service is exclusively internal (no public ingress, no perimeter-facing URLs)
+
 ## Backend
 
 ### Browser-side hardening
@@ -50,6 +69,20 @@ Use when the diff configures the production-facing perimeter: response headers, 
 - AS-025 CDN third-party scripts carry `integrity` (SRI) + `crossorigin="anonymous"`; drop the dep if no SHA published
 - AS-026 No outbound URL from a user-supplied parameter without `isAllowedRedirect()` (SE-020 generalised)
 - AS-027 CSP violations from `report-uri` treated as defects; `csp_violations_total` reviewed weekly
+
+## Coverage map vs full checklist
+
+This path covers these sections of `backend-review-checklist.md` / `frontend-review-checklist.md`:
+
+- §Attack surface hardening — AS-001..AS-027 (browser hardening, anti-attack patterns, auth-adjacent, injection, supply chain, active scanning, frontend hardening)
+- §Hard blockers — BE-001, SC-001, SE-001..SE-018 (existing security checklist for headers, CORS, JWT, rate-limit on auth)
+
+This path does NOT cover. Load the corresponding checklist section ONLY when the diff touches:
+
+- `tests/` directory → load §Testing
+- A specific authentication flow change → load `auth-protected-action.md` (path) + §Security (SE-*)
+- A specific inbound-webhook flow → load `payment-endpoint.md` or `signature-feature.md` (paths)
+- Backend logging structure beyond LO-001 → load §Logging
 
 ## What this path does NOT cover
 

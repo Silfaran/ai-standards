@@ -2,6 +2,24 @@
 
 Use when the diff stores or updates personal data of a user (registration, profile edit, KYC submission, document upload that carries PII metadata). Always combine with [`auth-protected-action.md`](auth-protected-action.md).
 
+## When to load this path
+
+**PRIMARY trigger** (load this path as core when):
+- A new column whose tier is Internal-PII or Sensitive-PII (per `gdpr-pii.md` classification)
+- A new row in `{project-docs}/pii-inventory.md`
+- A new endpoint that writes/updates personal data (registration, profile edit, KYC submit, consent change)
+- A new sub-processor SDK integrated in code (must update `pii-inventory.md` in same commit)
+
+**SECONDARY trigger** (load only when no primary path covers the diff already):
+- An update to `LoggingMiddleware::SENSITIVE_FIELDS` or the redaction list
+- A consent UI component on the frontend
+- A new DSAR / RTBF endpoint or worker
+
+**DO NOT load when**:
+- The diff only modifies tests
+- The diff only modifies `*.md`
+- The personal data is exclusively contained inside an uploaded file (load `file-upload-feature.md` instead — handles file metadata classification)
+
 ## Backend
 
 ### PII classification & storage
@@ -42,6 +60,22 @@ Use when the diff stores or updates personal data of a user (registration, profi
 - GD-019 Analytics / observability calls carry hashed `user_id` only
 - IN-016 `Accept-Language` header set on Axios instance for the active locale
 - AZ-014 UI gating presentation-only; backend re-checks
+
+## Coverage map vs full checklist
+
+This path covers these sections of `backend-review-checklist.md` / `frontend-review-checklist.md`:
+
+- §GDPR / PII — GD-001..GD-014 (classification, encryption, DSAR/RTBF, sub-processors, consent, DPIA)
+- §Logging hard blocker — LO-001 (the redaction baseline)
+- §Audit — AU-006, AU-007 (entry on success and denial)
+- §Frontend PII collection — GD-015..GD-019 + IN-016 + AZ-014
+
+This path does NOT cover. Load the corresponding checklist section ONLY when the diff touches:
+
+- `tests/` directory → load §Testing
+- `LoggingMiddleware::SENSITIVE_FIELDS` field redaction patterns → load §Logging (LO-002..LO-007)
+- New encrypted column at the schema level → load §Database + §Migrations (DM-*)
+- Consent UI redesign beyond the GD-017..GD-018 minimum → load §Frontend UX states
 
 ## What this path does NOT cover
 
