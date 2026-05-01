@@ -432,7 +432,62 @@ done
 [ $cp_struct_fail -eq 0 ] && pass "every critical path declares coverage map + PRIMARY/SECONDARY/DO NOT load triggers"
 
 # -----------------------------------------------------------------------------
-# Check 16 — dynamic smoke staleness reminder (non-fatal)
+# Check 16 — reviewer agents enforce gap citation on checklist section loads
+# -----------------------------------------------------------------------------
+# PR #102 made the citation requirement load-bearing: every checklist section
+# the reviewer loads must cite the gap that triggered it ("Loaded §X because
+# diff includes Y; not covered by loaded paths Z"). Without this, the reviewer
+# slides back to defensive full-checklist loading and the 30-50k Sonnet saving
+# evaporates. Assert both reviewer agents retain the two anchor phrases that
+# make the rule enforceable.
+section "Reviewer gap-citation enforcement"
+cite_fail=0
+for f in agents/backend-reviewer-agent.md agents/frontend-reviewer-agent.md; do
+  if ! grep -qF "rejected as defensive overhead" "$f"; then
+    fail "$f: missing 'rejected as defensive overhead' enforcement clause — citation requirement is unenforceable"
+    cite_fail=1
+  fi
+  if ! grep -qF "cite the gap" "$f"; then
+    fail "$f: missing 'cite the gap' phrase — citation anchor is gone"
+    cite_fail=1
+  fi
+done
+[ $cite_fail -eq 0 ] && pass "both reviewer agents enforce gap citation on checklist section loads"
+
+# -----------------------------------------------------------------------------
+# Check 17 — DoD-checker tool-call budget intact
+# -----------------------------------------------------------------------------
+# PR #100 capped DoD-checker tool calls per row to keep Haiku-tier cost
+# bounded (empirical: 36 calls for 26 rows before, ~2 calls/row after).
+# The ceiling lives in agents/dod-checker-agent.md as a `## Tool-call budget
+# per row (load-bearing)` section. A future cleanup that drops it would
+# silently regress the cheapest agent's cost ceiling.
+section "DoD-checker tool-call budget"
+if grep -qF "Tool-call budget per row" agents/dod-checker-agent.md; then
+  pass "agents/dod-checker-agent.md declares its tool-call budget"
+else
+  fail "agents/dod-checker-agent.md: missing 'Tool-call budget per row' section — Haiku cost ceiling unprotected"
+fi
+
+# -----------------------------------------------------------------------------
+# Check 18 — build-plan anti-duplication rule intact
+# -----------------------------------------------------------------------------
+# PR #100 added an anti-duplication rule for both per-phase bundles: the spec
+# is in the subagent prompt's reading order separately, so reproducing spec
+# content inside the bundle is duplicate context billed once per spawn. The
+# rule lives in commands/build-plan-command.md as a `### Anti-duplication
+# rule for both bundles` block. A silent removal regresses bundle size by
+# 200-300 lines per spawn.
+section "build-plan anti-duplication rule"
+if grep -qF "Anti-duplication rule for both bundles" commands/build-plan-command.md \
+   && grep -qF "Do NOT reproduce spec content" commands/build-plan-command.md; then
+  pass "commands/build-plan-command.md retains the anti-duplication rule"
+else
+  fail "commands/build-plan-command.md: missing 'Anti-duplication rule for both bundles' header or 'Do NOT reproduce spec content' anchor — bundle size ceiling unprotected"
+fi
+
+# -----------------------------------------------------------------------------
+# Check 19 — dynamic smoke staleness reminder (non-fatal)
 # -----------------------------------------------------------------------------
 # Count commits since the most recent release tag that touched the structural
 # files exercised by `make smoke-dynamic` (agents/, build-plan-command.md,

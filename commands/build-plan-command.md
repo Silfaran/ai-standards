@@ -288,27 +288,28 @@ When done, write your handoff to: {handoff_path}
 
 Same cache-friendly ordering rule: most-static first, dynamic-per-iteration last. The reviewer's `previous_developer_handoff_path` changes every iteration of the loop — placing it after the static reads keeps the cache warm for iterations 2 and 3.
 
+**The full review checklist is NOT pre-loaded.** Reviewers follow the coverage-aware protocol in their agent definition: PRIMARY paths first, SECONDARY only on coverage gap, then per-section reads of the checklist with gap citation. Pre-loading `backend-review-checklist.md` / `frontend-review-checklist.md` here would defeat the optimisation by burning ~30-50k Sonnet tokens per spawn before step 1 of the protocol can decide what is actually needed.
+
 ```
 You are the {Backend|Frontend} Reviewer agent for the {Project Name} project.
 
 Read these files in order before doing anything else:
-1. {agent_definition_path}                        ← most static (per role, across features)
-2. {critical_path_files}                          ← critical-paths/{kind}.md matching the diff (load every matching path)
-3. {checklist_path}                               ← full review-checklist.md (open only on strays)
-4. {task_path}                                    ← stable across this feature
-{conditional: 5. design-decisions.md              ← only for Frontend Reviewer when the diff touches UI}
-6. {previous_developer_handoff_path}              ← dynamic across iterations — read ONLY the files listed in this handoff
+1. {agent_definition_path}                        ← most static (per role, across features); declares the 7-step coverage-aware protocol
+2. {critical_path_files}                          ← critical-paths/{kind}.md matching the diff (load every path with a matching PRIMARY trigger; add SECONDARY only on coverage gap)
+3. {task_path}                                    ← stable across this feature
+{conditional: 4. design-decisions.md              ← only for Frontend Reviewer when the diff touches UI}
+5. {previous_developer_handoff_path}              ← dynamic across iterations — read ONLY the files listed in this handoff
 
-Do NOT read the dev/tester bundle, individual standards files, the spec, or any source file outside the developer's handoff list. The critical paths + checklist are your authoritative review surface — they contain every verifiable rule extracted from the standards.
+Do NOT pre-load the full review-checklist.md, the dev/tester bundle, individual standards files, the spec, or any source file outside the developer's handoff list. Follow the 7-step coverage-aware protocol declared in your agent definition: identify PRIMARY paths from the diff, add SECONDARY only on coverage gap, compute the union of each path's `## Coverage map vs full checklist`, then load checklist SECTIONS in the gap only via `Read` `offset` + `limit`. Reading the full checklist file in one go is permitted ONLY when 3+ different sections are needed. Every section load MUST cite the gap that triggered it in your handoff — a checklist load without citation is rejected as defensive overhead.
 
-Run the loaded critical paths against the diff. Open the full checklist only when the diff strays into a section no loaded path covers. For each violation, report severity (critical/major/minor), file:line, and the rule ID that was violated. If you find a violation NOT covered by any loaded path AND NOT in the checklist, report it as `minor` and flag it for inclusion in a future critical path / checklist update.
+For each violation, report severity (critical/major/minor), file:line, and the rule ID that was violated. If you find a violation NOT covered by any loaded path AND NOT in the sections you loaded, report it as `minor` and flag it for inclusion in a future critical path / checklist update.
 
 This is review iteration {N} of max 3.
 
 When done, write your handoff to: {handoff_path}
 ```
 
-> **Why reviewers do not get a bundle:** the bundles (dev + tester) are for implementation and test design (rules + examples + design context). Review is verification — a closed list of checks against a diff. The checklist is shorter, denser, and unambiguous. Re-deriving rules from prose every iteration wastes tokens and produces inconsistent reviews.
+> **Why reviewers do not get a bundle:** the bundles (dev + tester) are for implementation and test design (rules + examples + design context). Review is verification — a closed list of checks against a diff. The critical paths plus per-section checklist reads are shorter, denser, and unambiguous. Re-deriving rules from prose every iteration wastes tokens and produces inconsistent reviews.
 
 ### Files per phase
 
@@ -319,8 +320,8 @@ When done, write your handoff to: {handoff_path}
 | Frontend Dev | `agents/frontend-developer-agent.md` | `opus` | Dev bundle | `devops-handoff.md` (if exists) | `frontend-dev-handoff.md` |
 | DoD-checker (backend) | `agents/dod-checker-agent.md` | `haiku` | **No** — only task DoD + dev handoff `## DoD coverage` | `backend-dev-handoff.md` (only `## DoD coverage`) | `backend-dod-checker-handoff.md` |
 | DoD-checker (frontend) | `agents/dod-checker-agent.md` | `haiku` | **No** — only task DoD + dev handoff `## DoD coverage` | `frontend-dev-handoff.md` (only `## DoD coverage`) | `frontend-dod-checker-handoff.md` |
-| Backend Reviewer | `agents/backend-reviewer-agent.md` | `sonnet` | **No** — uses `standards/backend-review-checklist.md` | `backend-dev-handoff.md` (after DoD-checker APPROVED) | `backend-reviewer-handoff.md` |
-| Frontend Reviewer | `agents/frontend-reviewer-agent.md` | `sonnet` | **No** — uses `standards/frontend-review-checklist.md` (+ `design-decisions.md` if UI diff) | `frontend-dev-handoff.md` (after DoD-checker APPROVED) | `frontend-reviewer-handoff.md` |
+| Backend Reviewer | `agents/backend-reviewer-agent.md` | `sonnet` | **No** — uses critical-paths/*.md (PRIMARY-matched) + per-section reads of `standards/backend-review-checklist.md` (gap-cited) | `backend-dev-handoff.md` (after DoD-checker APPROVED) | `backend-reviewer-handoff.md` |
+| Frontend Reviewer | `agents/frontend-reviewer-agent.md` | `sonnet` | **No** — uses critical-paths/*.md (PRIMARY-matched) + per-section reads of `standards/frontend-review-checklist.md` (gap-cited) (+ `design-decisions.md` if UI diff) | `frontend-dev-handoff.md` (after DoD-checker APPROVED) | `frontend-reviewer-handoff.md` |
 | Tester | `agents/tester-agent.md` | `sonnet` | Tester bundle | `backend-reviewer-handoff.md`, `frontend-reviewer-handoff.md` | `tester-handoff.md` |
 | Dev+Tester (simple) | `agents/{role}-developer-agent.md` | `opus` | Dev bundle | `devops-handoff.md` (if exists) | `dev-tester-handoff.md` |
 

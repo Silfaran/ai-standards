@@ -82,7 +82,7 @@ Use when the diff adds or modifies a Symfony Messenger handler reachable on an *
 
 This path covers these sections of `backend-review-checklist.md`:
 
-- §Architecture & Domain purity — BE-004..BE-024 + BE-069 (Domain layering, aggregates, VOs, exception factories)
+- §Architecture & Domain purity — BE-004, BE-005, BE-007, BE-009, BE-010, BE-022, BE-023, BE-024, BE-065, BE-069 (Domain layering, aggregates, VOs, exception factories — BE-006/BE-008/BE-011..BE-021 are NOT loaded; consult §Architecture if the diff touches them)
 - §Message contracts — BE-043 + BE-046 + AC-008 (messageName, FQCN, breaking changes)
 - §Transports & wiring — BE-044, BE-045, BE-047 + LO-002 (Symfony serializer, default_bus, composer sync, LoggingMiddleware)
 - §Resilience — BE-048..BE-051 + BE-072 (retry, DLQ, idempotency, UnrecoverableMessageHandlingException wrapping)
@@ -110,8 +110,4 @@ Open additional paths when the handler also touches:
 
 ## Compositional usage
 
-A "send welcome email on user_registered" feature combines this path with `pii-write-endpoint.md` (the welcome notification carries the user's email handle). A "render a PDF contract on contract_signed" feature combines this path with `file-upload-feature.md` + `signature-feature.md`.
-
-## Compositional rules-loaded count
-
-~28 rules. The reviewer NEVER skips a rule that appears in this path; it narrows the search, it does not relax the bar.
+A "send welcome email on user_registered" feature combines this path with `pii-write-endpoint.md` (the welcome notification carries the user's email handle). A "render a PDF contract on contract_signed" feature combines this path with `file-upload-feature.md` + `signature-feature.md`. The reviewer NEVER skips a rule that appears in this path; it narrows the search, it does not relax the bar.
