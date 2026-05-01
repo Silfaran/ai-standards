@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.41.2](https://github.com/Silfaran/ai-standards/compare/v0.41.1...v0.41.2) (2026-05-01)
+
+
+### Changed
+
+* **reviewer:** coverage-aware checklist loading + sharpened path triggers ([#102](https://github.com/Silfaran/ai-standards/issues/102)) ([1f2368b](https://github.com/Silfaran/ai-standards/commit/1f2368b1e6d3d1410ca592c33f252d4042279846))
+
 ## [0.41.1](https://github.com/Silfaran/ai-standards/compare/v0.41.0...v0.41.1) (2026-05-01)
 
 
