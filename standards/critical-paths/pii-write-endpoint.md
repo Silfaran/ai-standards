@@ -68,7 +68,7 @@ This path covers these sections of `backend-review-checklist.md` / `frontend-rev
 - §GDPR / PII — GD-001..GD-014 (classification, encryption, DSAR/RTBF, sub-processors, consent, DPIA)
 - §Logging hard blocker — LO-001 (the redaction baseline)
 - §Audit — AU-006, AU-007 (entry on success and denial)
-- §Frontend PII collection — GD-015..GD-019 + IN-016 + AZ-014
+- §Frontend PII collection — GD-015..GD-019 + IN-016 (Accept-Language header only — full §i18n loaded on demand) + AZ-014
 
 This path does NOT cover. Load the corresponding checklist section ONLY when the diff touches:
 

@@ -7,10 +7,10 @@ Use when the diff calls a Large Language Model at runtime (Claude / OpenAI / Gem
 **PRIMARY trigger** (load this path as core when):
 - A new class implements `LlmGatewayInterface` or a new prompt template class with `VERSION` constant
 - A new handler invokes `$llmGateway->complete(...)` (or equivalent)
-- A new entry in `pii-inventory.md` for an LLM provider (sub-processor)
 - A new tool-use loop or `ToolDefinition` registered
 
 **SECONDARY trigger** (load only when no primary path covers the diff already):
+- A new entry in `pii-inventory.md` for an LLM provider (sub-processor) — `pii-write-endpoint.md` owns the GD-011 sub-processor row when fired in parallel; this path adds it only when no PII-writing diff is present
 - A bumped `VERSION` constant on an existing prompt template
 - A new circuit-breaker / retry config for an existing LLM gateway
 - New observability / cost metrics specific to LLM calls

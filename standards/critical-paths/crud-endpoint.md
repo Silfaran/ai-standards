@@ -120,15 +120,15 @@ Use when the diff adds a controller + handler + repository (and optionally a fro
 
 This path covers these sections of `backend-review-checklist.md` / `frontend-review-checklist.md`:
 
-- §Architecture — BE-004..BE-024 (Domain / Application / Infrastructure layering, services, aggregates, VOs)
+- §Architecture — BE-004, BE-005, BE-006, BE-007, BE-008, BE-009, BE-010, BE-013, BE-022, BE-023, BE-024 (Domain / Application / Infrastructure layering, services, aggregates, VOs — BE-011, BE-012, BE-014..BE-021 are NOT loaded; consult §Architecture if the diff touches them)
 - §Controllers — BE-025..BE-032 + AC-001
 - §Validation — BE-033..BE-037
 - §Database — BE-038..BE-042 + PE-001
 - §Repositories — PE-003..PE-005 + SE-005
 - §API contracts — AC-002..AC-005
-- §Naming + Testing presence — BE-055..BE-067 + BE-061..BE-065
-- §Frontend Architecture — FE-005..FE-009 (when UI included)
-- §Frontend API/State — FE-017..FE-023 + AC-014 + FE-020
+- §Naming + Testing presence — BE-055, BE-057, BE-061, BE-062, BE-064, BE-065, BE-067 (BE-056, BE-058..BE-060, BE-063, BE-066 are NOT loaded — consult §Testing if the diff touches in-memory transports, fixture rules, or unit-test patterns)
+- §Frontend Architecture — FE-005, FE-007, FE-009 (when UI included)
+- §Frontend API/State — FE-017, FE-019, FE-020, FE-023 + AC-014
 - §Frontend UX states — FE-036..FE-040
 
 This path does NOT cover. Load the corresponding checklist section ONLY when the diff touches:
