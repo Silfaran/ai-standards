@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.41.4](https://github.com/Silfaran/ai-standards/compare/v0.41.3...v0.41.4) (2026-05-01)
+
+
+### Fixed
+
+* **coverage-map:** declare hard blockers + align public docs counts ([#106](https://github.com/Silfaran/ai-standards/issues/106)) ([c2932b9](https://github.com/Silfaran/ai-standards/commit/c2932b9035709e22fb60292f6f0e141c4cad5f18))
+
 ## [0.41.3](https://github.com/Silfaran/ai-standards/compare/v0.41.2...v0.41.3) (2026-05-01)
 
 
