@@ -81,6 +81,8 @@ This path covers these sections of `backend-review-checklist.md` / `frontend-rev
 
 - §Geo / search — GS-001..GS-023 (PostGIS storage, geo queries, FTS, MatchScoreCalculator, label resolver, pagination, privacy, observability, graduation)
 - §Authorization (carried over) — AZ-001
+- §API contracts (carried over) — AC-002, AC-003 (verified via GS-018: search endpoints paginated)
+- §GDPR / PII (carried over) — GD-005 (verified via GS-020: user exact coordinates never logged / inlined)
 - §Hard blockers — BE-001, LO-001
 - §Frontend Geo / search — GS-024..GS-028
 

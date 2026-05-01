@@ -66,6 +66,8 @@ This path covers these sections of `backend-review-checklist.md`:
 
 - §LLM integration — LL-001..LL-014 (Gateway seam, prompt versions, JSON schema, retries, circuit breaker, cost spans, PII guard, tool use)
 - §Sub-processor inventory — GD-011 (provider declared in `pii-inventory.md`)
+- §Authorization (carried over) — AZ-001 (verified via LL-013: tool-driven writes go through Voters)
+- §Architecture (carried over) — BE-051 (verified via LL-008: idempotent surrounding handlers)
 - §Hard blockers — BE-001, SC-001, LO-001
 
 This path does NOT cover. Load the corresponding checklist section ONLY when the diff touches:

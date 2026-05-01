@@ -158,18 +158,40 @@ ai-standards/
 │   ├── expected/                   ← Per-fixture JSON invariants
 │   └── README.md                   ← When to run, how to add a fixture, what the harness intercepts
 └── standards/
-    ├── invariants.md               ← Non-negotiable rules — security, code, git, agent behavior
-    ├── agent-reading-protocol.md   ← Canonical reading order for every agent (build-plan + standalone)
-    ├── tech-stack.md               ← Authoritative versions (minimums, open to update) + upgrade procedure
-    ├── quality-gates.md            ← CI + pre-commit + Makefile quality rules (PHPStan L9, vue-tsc, tests)
-    ├── backend.md                  ← PHP/Symfony architecture rules (concise, always loaded)
-    ├── backend-reference.md        ← Full code examples, configs, test patterns (loaded on demand)
-    ├── frontend.md                 ← Vue 3/TypeScript rules (concise, always loaded)
-    ├── frontend-reference.md       ← Full code examples, interceptor setup, test patterns (loaded on demand)
-    ├── logging.md                  ← Structured JSON logs, Monolog config, sensitive field redaction
-    ├── security.md                 ← HTTP headers, CORS, JWT lifecycle, rate limiting, input validation
-    ├── performance.md              ← Database indexes, pagination, N+1 prevention, lazy loading
-    └── new-service-checklist.md    ← Bootstrap checklist — each item includes the error it prevents
+    ├── invariants.md                       ← Non-negotiable rules — security, code, git, agent behavior
+    ├── agent-reading-protocol.md           ← Canonical reading order for every agent (build-plan + standalone)
+    ├── tech-stack.md                       ← Authoritative versions (minimums, open to update) + upgrade procedure
+    ├── quality-gates.md                    ← CI + pre-commit + Makefile quality rules (PHPStan L9, vue-tsc, tests)
+    ├── adr.md                              ← Architecture Decision Record format and lifecycle
+    ├── backend.md                          ← PHP/Symfony architecture rules (concise, always loaded)
+    ├── backend-reference.md                ← Full code examples, configs, test patterns (loaded on demand)
+    ├── backend-review-checklist.md         ← Closed list of verifiable rules consumed by the Backend Reviewer
+    ├── frontend.md                         ← Vue 3/TypeScript rules (concise, always loaded)
+    ├── frontend-reference.md               ← Full code examples, interceptor setup, test patterns (loaded on demand)
+    ├── frontend-review-checklist.md        ← Closed list of verifiable rules consumed by the Frontend Reviewer
+    ├── api-contracts.md                    ← URL versioning, OpenAPI as contract, breaking-change protocol
+    ├── data-migrations.md                  ← Schema evolution, expand-contract, backfills, zero-downtime matrix
+    ├── caching.md                          ← HTTP cache headers, Redis keys/TTLs, invalidation, stampede protection
+    ├── observability.md                    ← OpenTelemetry tracing, RED metrics, health endpoints, SLO shape
+    ├── logging.md                          ← Structured JSON logs, Monolog config, sensitive field redaction
+    ├── security.md                         ← HTTP headers, CORS, JWT lifecycle, rate limiting, input validation
+    ├── secrets.md                          ← Secret classification, project manifest, injection matrix, rotation
+    ├── performance.md                      ← Database indexes, pagination, N+1 prevention, frontend perf budget
+    ├── authorization.md                    ← Voter pattern, Subject VO, tenant scoping, RBAC + ABAC hybrid
+    ├── audit-log.md                        ← Append-only audit_log, AuditLogProjector, success + denial entries
+    ├── i18n.md                             ← Locale negotiation, translations storage, fallback chain, vue-i18n
+    ├── gdpr-pii.md                         ← Four-tier PII classification, encryption, DSAR + RTBF, consent
+    ├── attack-surface-hardening.md         ← OWASP Top 10 coverage, CSP/HSTS, CSRF, SSRF, lockout, SBOM, DAST
+    ├── feature-flags.md                    ← Flag taxonomy, registry, FlagGatewayInterface, sticky bucketing
+    ├── analytics-readonly-projection.md    ← Four-tier projection model (T1..T4), replica lag, warehouse loaders
+    ├── llm-integration.md                  ← LlmGatewayInterface seam, prompt versions, JSON schema, cost spans
+    ├── payments-and-money.md               ← Money VO, append-only ledger, webhook idempotency, state machines
+    ├── file-and-media-storage.md           ← Bucket layout, presigned URLs, antivirus, video pipeline
+    ├── geo-search.md                       ← PostGIS, FTS, MatchScoreCalculator, score → label translation
+    ├── pwa-offline.md                      ← Service worker, manifest, offline reads/writes, push consent
+    ├── digital-signature-integration.md    ← SignatureGatewayInterface, modality, document_sha256, retention
+    ├── new-service-checklist.md            ← Bootstrap checklist — each item includes the error it prevents
+    └── critical-paths/                     ← Curated rule subsets per feature kind (11 paths)
 ```
 
 > Per-project agent mistakes live in `{project-name}-docs/lessons-learned/` — never inside `ai-standards/`. If a lesson recurs across projects, promote it to the relevant standard/command/agent doc in the same commit.

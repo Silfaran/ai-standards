@@ -487,7 +487,48 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# Check 19 — dynamic smoke staleness reminder (non-fatal)
+# Check 19 — handoff template carries the v0.40.0 contract sections
+# -----------------------------------------------------------------------------
+# Smoke check 13 already verifies that backend / frontend developer agents
+# describe the `## Quality-Gate Results` and `## DoD coverage` sections, and
+# that the tester agent describes the `## Quality-gate re-execution policy`.
+# But the canonical handoff template at `templates/feature-handoff-template.md`
+# is what the agent-reading-protocol tells every output-producing agent to
+# follow when emitting a handoff. If the template lacks the contract sections,
+# a developer reading it literally produces malformed handoffs and the whole
+# Dev → DoD-checker → Reviewer → Tester chain breaks silently. Anchor the three
+# section headers + the Iteration counter cited by tester-agent.md.
+section "Handoff template contract sections"
+ht=templates/feature-handoff-template.md
+ht_fail=0
+for header in "## Iteration" "## Quality-Gate Results" "## DoD coverage"; do
+  if ! grep -qF "$header" "$ht"; then
+    fail "$ht: missing '$header' section — v0.40.0 handoff contract incomplete"
+    ht_fail=1
+  fi
+done
+[ $ht_fail -eq 0 ] && pass "$ht declares the v0.40.0 contract sections (Iteration, Quality-Gate Results, DoD coverage)"
+
+# -----------------------------------------------------------------------------
+# Check 20 — dynamic-smoke fixture regex covers all rule-ID prefixes
+# -----------------------------------------------------------------------------
+# tests/expected/standard.json asserts that the backend-reviewer-handoff cites
+# a recognised rule ID. The original 10-prefix alternation pre-dated the rule
+# ID expansion (BE|FE|SE|PE|OB|CA|SC|DM|AC|LO → +13 more). When the regex went
+# stale, a reviewer citing only newer-prefix violations (AZ-001, GD-005, PA-006,
+# AS-027, etc.) would silently slip through the assertion. Anchor on the same
+# valid_prefix alternation used in Check 7 so future prefix additions surface
+# as a single coordinated update.
+section "Dynamic-smoke fixture rule-prefix coverage"
+fx=tests/expected/standard.json
+if grep -qF "BE|FE|SE|PE|OB|CA|SC|DM|AC|LO|AZ|IN|GD|LL|PA|FS|GS|AU|FF|AN|PW|DS|AS" "$fx"; then
+  pass "$fx asserts on the full 23-prefix rule-ID alternation"
+else
+  fail "$fx: rule-ID regex out of sync with the 23-prefix valid_prefix set in Check 7 — newer-prefix violations slip through silently"
+fi
+
+# -----------------------------------------------------------------------------
+# Check 21 — dynamic smoke staleness reminder (non-fatal)
 # -----------------------------------------------------------------------------
 # Count commits since the most recent release tag that touched the structural
 # files exercised by `make smoke-dynamic` (agents/, build-plan-command.md,

@@ -83,6 +83,7 @@ Use when the diff initiates, observes (webhook), or verifies a legally binding d
 This path covers these sections of `backend-review-checklist.md` / `frontend-review-checklist.md`:
 
 - §Digital signatures — DS-001..DS-020 (Gateway seam, modality, templates, state machine, storage, webhooks, sub-processor, audit, privacy of signer data, authorization, observability, secrets)
+- §Sub-processor inventory (carried over) — GD-011 (verified via DS-013: provider declared in `pii-inventory.md`)
 - §Hard blockers — BE-001, SC-001
 - §Frontend Signatures — DS-021..DS-024
 
