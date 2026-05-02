@@ -77,6 +77,13 @@ complete | blocked | failed | incomplete
 ## Status reason
 (One line; required when `Status ≠ complete`.)
 
+## Abstract
+outcome: <e.g. "Verified 22/22 DoD rows; 0 gaps" or "Verified 18/22 DoD rows; 4 gaps in tests/auth + migrations">
+verdict: APPROVED | BLOCKED
+files: 0 created, 0 modified, 0 deleted
+next_phase: <reviewer | "dev re-spawn for gaps" | "stop, surface to human">
+open_questions: 0
+
 ## Verdict
 APPROVED | BLOCKED
 

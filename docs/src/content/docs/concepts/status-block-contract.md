@@ -60,3 +60,42 @@ This is the canonical way for subagents to ask the human a question. `AskUserQue
 - Each agent's `## Output` section in its definition file declares the Status contract for its specific failure modes (e.g. Backend Developer's `failed` covers tool/env errors; Reviewer's `blocked` covers unreadable dev handoffs).
 
 Together these anchors prevent silent regression: if any of them is dropped, CI fails on the smoke check.
+
+## The Abstract block (orchestrator's structured routing index)
+
+Status alone is enough for the gate decision (advance / stop). For the rest of the orchestrator's routing — choosing the next phase, constructing re-spawn prompts, surfacing blockers to the human — Status is too coarse. The pass-5 audit added a structured `## Abstract` block right after `## Status reason` so the orchestrator can route on parsed fields instead of scanning the rest of the handoff prose.
+
+The Abstract carries five fields:
+
+```yaml
+outcome: <1-line description of what the agent achieved or why it stopped>
+verdict: <APPROVED | REQUEST_CHANGES | BLOCKED | n/a>
+files: <N created, M modified, K deleted>
+next_phase: <expected next agent role | "stop, surface to human" | "n/a">
+open_questions: <integer count>
+```
+
+`verdict` is the routing-critical field for Reviewers and the DoD-checker. Other agents fill it `n/a`.
+
+### Selective reading protocol (orchestrator-side)
+
+The orchestrator does NOT read the full handoff after every phase transition. It reads:
+
+- **Always**: `## Status` (1 line), `## Status reason` (1 line), `## Abstract` (~5-10 lines). ~10-30 lines per phase, ~1-3k tokens.
+- **Conditionally** (only when the Abstract triggers it):
+  - `Status: blocked` AND `open_questions > 0` → read `## Open Questions` and surface to human
+  - `verdict: REQUEST_CHANGES` (Reviewer) → read `## Findings` / `## Change requests` to construct upstream Dev's next-iteration prompt
+  - `verdict: BLOCKED` (DoD-checker) → read `## Gaps` to re-spawn upstream Dev
+  - End-of-feature commit step → read `## Files Created` + `## Files Modified` + `## Key Decisions` for the commit message body
+
+What the orchestrator never deep-reads as part of routing: `## Quality-Gate Results` (the Tester reads them directly via path), `## DoD coverage` (the DoD-checker validated them), `## Iteration` (orchestrator tracks independently), `## For the Next Agent` (this is for the next agent, not the orchestrator).
+
+This protocol drops orchestrator-side handoff reading from ~30-120k tokens per /build-plan to ~10-40k. The next subagent still receives the full handoff via path reference — its own behaviour is unchanged. Only the orchestrator's reading workload changes.
+
+### Why the Abstract is in addition to (not instead of) the detailed sections
+
+The Abstract is an **index**, not a replacement. The detailed sections (Files Created, Files Modified, Quality-Gate Results, DoD coverage, Findings, Open Questions, Key Decisions) remain authoritative for the next agent, which still reads the full handoff via path reference in its own isolated context. This preserves the existing quality contract while removing waste from the orchestrator's reading layer.
+
+### Enforcement
+
+- **Smoke check 24** anchors `## Abstract` + the five field markers in the template, AND the *"Handoff reading protocol"* / *"Always read"* / *"Conditional deep-reads"* anchors in `commands/build-plan-command.md`. Without these the orchestrator regresses to full-handoff reads with no CI signal.

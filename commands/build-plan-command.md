@@ -11,7 +11,7 @@ For full-stack features, Backend Developer and Frontend Developer run **in paral
 
 ## Step 0 — Spec sign-off (mandatory, before spawning any agent)
 
-1. Read the spec file, plan file, task file, and every `*.md` file under the project's lessons-learned directory (path defined in `{project-docs}/workspace.md` under the `lessons-learned:` key — typically `{project-name}-docs/lessons-learned/`; resolve `{project-docs}` from `ai-standards/.workspace-config-path`).
+1. Read the spec file, plan file, and task file. **Lazy-load lessons-learned**: do NOT read all `*.md` under the project's lessons-learned directory at sign-off time. Instead, run `ls {project-docs}/lessons-learned/*.md` to discover which files exist. The lessons-learned directory path is in `{project-docs}/workspace.md` under the `lessons-learned:` key (typically `{project-name}-docs/lessons-learned/`; resolve `{project-docs}` from `ai-standards/.workspace-config-path`). Specific files are read later, only when constructing each subagent's prompt — `back.md` for Backend phases, `front.md` for Frontend phases, `infra.md` for DevOps, `general.md` for Tester. This trims orchestrator-side reading from ~all-files (growing with the project) to ~one-file-per-spawn.
 2. Display a summary to the developer:
    - Feature name and affected services
    - Phases that will run and in what order
@@ -380,6 +380,51 @@ When running in parallel with other agents, never stop or restart other services
 
 ---
 
+## Handoff reading protocol (orchestrator-side, load-bearing)
+
+After every subagent spawn, the orchestrator reads the handoff. **The orchestrator is NOT the next agent** — the next agent receives the handoff path via its own prompt and reads it independently in its isolated context. The orchestrator's read is purely for ITS OWN routing decisions. So the orchestrator must NOT eagerly read the full handoff (200-800 lines = 30-120k tokens accumulated across 6-8 phases per /build-plan); it reads selectively per the rules below.
+
+**Always read (4 fields, ~10-30 lines):**
+
+1. `## Status` — gate decision per the Failure Handling section below.
+2. `## Status reason` — surfaced verbatim to human when `Status ≠ complete`.
+3. `## Abstract` — the five structured fields (`outcome`, `verdict`, `files`, `next_phase`, `open_questions`). This is the routing index.
+
+That is the orchestrator's default read budget per phase transition. ~1-3k tokens, not 30-120k.
+
+**Conditional deep-reads (only when the Abstract triggers them):**
+
+| Trigger in Abstract | Orchestrator additionally reads | Why |
+|---|---|---|
+| `Status: blocked` AND `open_questions > 0` | `## Open Questions` section verbatim | Surface to human; pipeline stops |
+| `verdict: REQUEST_CHANGES` (Reviewer) | `## Findings` / `## Change requests` / review report sections | Construct upstream Dev's next-iteration prompt with the verbatim findings |
+| `verdict: BLOCKED` (DoD-checker) | `## Gaps` section | Construct upstream Dev's re-spawn prompt with the gap list |
+| End-of-feature commit step (after Tester completes) | `## Files Created` + `## Files Modified` + `## Key Decisions` (per affected handoff) | Build the commit message body with files touched + design rationale |
+| Sanity check fails (e.g. `Abstract.files` count mismatches `## Files Modified` line count) | The mismatched section, to investigate | Fail-loud — corrupt handoff |
+
+**What the orchestrator NEVER deep-reads as part of routing:**
+
+- `## Quality-Gate Results` — the Tester reads these directly when applying its quality-gate trust policy. The orchestrator only needs to know that gates ran, which is captured in `outcome`.
+- `## DoD coverage` — the DoD-checker validated this; the orchestrator only needs the resulting `verdict` field.
+- `## Iteration` — the orchestrator already tracks the iteration counter independently (max 3 for Reviewer loop).
+- `## For the Next Agent` — this is for the next agent, not the orchestrator. The next agent reads the full handoff via path.
+
+This protocol drops orchestrator-side reading from ~30-120k tokens per /build-plan to ~10-40k. The 50-90k savings is the largest single contributor to the orchestrator-overhead reduction in the pass-5 audit.
+
+## Progress reporting style (orchestrator-side narration)
+
+To keep orchestrator narration cheap (~10-20k savings per /build-plan vs verbose prose):
+
+- **Between phases** — emit ONE line per phase transition with this shape:
+  ```
+  [Phase {N}/{total}] {role} {iter}: {status}, {tokens_if_known}, {duration} → {next_phase_or_outcome}
+  ```
+  Example: `[Phase 4/7] Backend Reviewer iter 1: complete, 84,434 tokens, 5m19s → REQUEST_CHANGES, re-spawning Backend Developer`.
+- **Sign-off (Step 0)**: keep the full summary — this is the human-gate, signal density matters.
+- **Blocker / failure surfacing**: keep verbatim — quoting the agent's `## Status reason` + `## Open Questions` is exactly the value the human needs.
+- **End-of-feature merge prompt + Token Usage Report**: keep full — this is the audit trail for the run.
+- **Tool-result narration during routine ops** (git status, Read of an Abstract): suppress unless the operation surfaces a problem.
+
 ## Failure Handling
 
 **Status gate (mandatory before advancing to the next phase):**
@@ -436,16 +481,53 @@ Steps:
 1. Collect the `total_tokens`, `tool_uses` and `duration_ms` from every `<usage>` block returned by the subagents this run (one per phase, including bundle-generation, retries and reviewer-loop iterations).
 2. Sum `total_tokens` across phases. Note: `total_tokens` already accumulates across each subagent's tool uses (each tool call replays the prefix), so it is the right field to sum — do NOT also add per-tool-use estimates on top.
 3. Display a markdown table with columns: `Phase | Model | Tool uses | Total tokens | Duration`. Add a `Total subagents` row.
-4. After the table, add a one-line note that the orchestrator's own context (this conversation) is **not** captured in those `<usage>` blocks; ballpark it at **+200-400k tokens** for a `standard` run, more for `complex`. Format:
+4. **Orchestrator overhead instrumentation** — the orchestrator's own context (this conversation) is **not** captured in subagent `<usage>` blocks. Three tiers of instrumentation, in order of accuracy:
 
+   **Tier A (most accurate, when supported by the runtime)** — if your runtime exposes session-total tokens via a slash command (e.g. Claude Code's `/cost`), prompt the developer to capture it after the report:
+
+   ```text
+   Orchestrator overhead — capture exact figure now:
+
+   Run `/cost` in this session. Subtract the subagent total ({sum}) from the
+   reported session total to get orchestrator overhead. Append below for
+   audit trail.
+
+   Session total (run `/cost`): _____ tokens
+   Orchestrator overhead = session_total − {sum} = _____ tokens
+   Orchestrator share = orchestrator / session_total = _____%
    ```
+
+   **Tier B (heuristic baseline if Tier A is unavailable)** — emit:
+
+   ```text
+   Orchestrator overhead (estimated): ~25-35% of subagent total ≈ {0.25 * sum}–{0.35 * sum} tokens.
+   Empirical baseline (red-profesionales, N=2): orchestrator share fell in the 30-40% range.
+   This estimate is a heuristic — capture exact via `/cost` for trend tracking.
+   ```
+
+   **Tier C (per-flow ballparks for sanity check)** — if neither Tier A nor B applies, document `simple`: ~50-150k overhead, `standard`: ~200-400k, `complex`: ~300-500k.
+
+5. **Append the run to the project's token-baseline log** (when the orchestrator can write to `{project-docs}/`):
+
+   ```text
+   File: {project-docs}/token-baseline.md (append-only)
+
+   ## {YYYY-MM-DD} — {feature-name} ({complexity})
+
+   Subagents:
+   {markdown table from step 3}
+
    Subagent total: {sum} tokens across {N} phases.
-   Orchestrator overhead (not included): ~200-400k tokens for `standard`, more for `complex`.
+   Orchestrator overhead: {Tier-A exact | Tier-B estimate range}.
+   Orchestrator share: {Tier-A %| Tier-B 25-35%}.
+   Notes: {anything anomalous, e.g. "Tester ran 2 iters; bundle generator ran twice due to retry"}.
    ```
 
-5. Optional cost note (skip if unsure): a rough rule of thumb is `opus ≈ $15/Mtok in, sonnet ≈ $3/Mtok in, haiku ≈ $0.80/Mtok in` for input — output is ~5× input but tiny in agent flows. State a $-range only if the per-tier subtotals are clearly separable from the table.
+   This log is append-only; future audits / scheduled agents can compute medians, detect regressions, and gate scorecard bumps on empirical data instead of estimates. If `{project-docs}/token-baseline.md` does not yet exist, create it with a brief header explaining its purpose.
 
-**Why this replaces the old `lines × 8` formula:** that estimate undercounted by ~30-50% because it treated each file as read once, while subagents replay the prefix on every tool call. With the runtime's `total_tokens` field readily available, there is no reason to estimate.
+6. Optional cost note (skip if unsure): a rough rule of thumb is `opus ≈ $15/Mtok in, sonnet ≈ $3/Mtok in, haiku ≈ $0.80/Mtok in` for input — output is ~5× input but tiny in agent flows. State a $-range only if the per-tier subtotals are clearly separable from the table.
+
+**Why this replaces the old `lines × 8` formula:** that estimate undercounted by ~30-50% because it treated each file as read once, while subagents replay the prefix on every tool call. With the runtime's `total_tokens` field readily available there is no reason to estimate. The orchestrator-overhead piece is genuinely unmeasurable from inside the orchestrator's own session (the SDK reports per-subagent, not session-self) — Tier A makes it exact via the runtime's own slash command; the append-only log makes the data trendable across features.
 
 ## Context Checkpoint
 
