@@ -53,13 +53,26 @@ Key shape (for routing decisions only — read the spec for full requirements):
 
 If the spec digest of the dev bundle exceeds ~15 lines, the orchestrator wrote too much. Trim and re-emit. Same for the tester bundle's digest.
 
+### Cheap-extraction protocol for standards (load-bearing)
+
+Before writing the bundles, the orchestrator must extract sections from individual standards files **without reading their full bodies**. Empirical baseline: the bundle generator was costing ~111k Sonnet tokens per `/build-plan` because it read every in-scope standard's full body to decide which sections to copy. Roughly 95% of that cost was reading-to-decide, not writing.
+
+Use this protocol for steps 3 (dev bundle) and 3-5 (tester bundle):
+
+1. **Index first.** For each standard listed in the plan's `Standards Scope`, run `grep -nE "^##+ " standards/<name>.md` ONCE to get the section index (line numbers + heading text). Roughly 50-100 tokens per file vs. ~3-5k for a full read.
+2. **Match feature type to sections.** The plan's `Standards Scope` already names the relevant sections (e.g. `§Authorization → AZ-001..AZ-012`). Match heading text to the named sections; do NOT re-derive relevance from prose.
+3. **Read targeted ranges.** For each matched section, use `Read` with `offset` + `limit` against the line range from step 1. Reading ~150 lines × N matched sections costs far less than reading 8-12 standards × ~300 lines each.
+4. **Full-file read permitted ONLY when 4+ sections of the SAME standard are matched.** At that point the offset+limit overhead exceeds the saving and a single full-file read is cheaper.
+
+Same shape as the Reviewer's coverage-aware loading (PR #102) but applied to the bundle-generator's read pattern. Estimated savings: 60-90k Sonnet tokens per `/build-plan` (bundle phase 111k → ~20-50k).
+
 ### Sections in the dev bundle
 
 Path: `{workspace_root}/handoffs/{feature-name}/dev-bundle.md`. Consumers: Developer, Dev+Tester, DevOps. Target size: **200-400 lines**.
 
 1. **Invariants** (`invariants.md`, full — non-negotiable, identical across every project + feature)
 2. **Naming conventions + git rules** (from `CLAUDE.md` — identical across projects)
-3. **Selected standards sections** (from the plan's `Standards Scope`, extracted per feature type — skip frontend rules for a backend-only feature, skip backend rules for a frontend-only CSS feature). Include the full implementation surface: layering rules (Domain / Application / Infrastructure), service patterns, controller patterns, services.yaml wiring examples, console-command details, scaffold details.
+3. **Selected standards sections** (from the plan's `Standards Scope`, extracted per feature type via the **cheap-extraction protocol above** — skip frontend rules for a backend-only feature, skip backend rules for a frontend-only CSS feature). Include the full implementation surface: layering rules (Domain / Application / Infrastructure), service patterns, controller patterns, services.yaml wiring examples, console-command details, scaffold details. **Do NOT read full standards bodies to decide what to include — index by `grep -nE "^##+ "` first, then `Read` with `offset` + `limit`.**
 4. **`decisions.md` entries** that overlap with this feature's aggregates or services (project-level; same across the agents working on this feature)
 5. **`design-decisions.md` entries** when the feature has a frontend component (all entries — short, all relevant to visual consistency)
 6. **Spec digest pointer** (5-10 lines, see anti-duplication rule above) — pointer to `{spec_path}` § Technical Details + a one-line-per-bullet routing summary. NOT a reproduction. Subagents read the spec separately at step 3 of their reading order.
@@ -70,9 +83,9 @@ Path: `{workspace_root}/handoffs/{feature-name}/tester-bundle.md`. Consumer: Tes
 
 1. **Invariants** (`invariants.md`, full — same prefix as the dev bundle so cache reuse works across roles)
 2. **Naming + git rules** (from `CLAUDE.md`, compacted — keep the canonical names + branch naming, drop the prose around the convention table)
-3. **Logging + redaction rules** (full — the Tester writes assertions about which fields appear in which log lines)
-4. **GDPR / PII rules** (full — the Tester writes assertions that PII is not persisted/logged where it shouldn't be)
-5. **Attack-surface-hardening rules** (full when the project is internet-reachable — the Tester writes assertions for CSRF, lockout, rate-limit, redirect-allowlist, header presence)
+3. **Logging + redaction rules** — the Tester writes assertions about which fields appear in which log lines. Apply the cheap-extraction protocol above: index `logging.md` headings, include only sections matching the spec's logging assertions (typically `§Sensitive fields redaction` + `§JSON shape`); full-file read only when 4+ sections match.
+4. **GDPR / PII rules** — the Tester writes assertions that PII is not persisted/logged where it shouldn't be. Apply the cheap-extraction protocol: include only the sections referenced by the feature's `pii-inventory.md` rows (typically `§Classification` + `§Encryption at rest` when sensitive fields exist). Full-file read only when 4+ sections match.
+5. **Attack-surface-hardening rules** (when the project is internet-reachable) — the Tester writes assertions for CSRF, lockout, rate-limit, redirect-allowlist, header presence. Apply the cheap-extraction protocol: include only sections matching the spec's attack-surface assertions (typically `§CSRF` + `§Headers` + `§Rate limiting` for an auth feature, `§Lockout` for a login feature). Full-file read only when 4+ sections match.
 6. **Spec digest pointer** (5-10 lines, see anti-duplication rule above) — pointer to `{spec_path}` § Technical Details AND § Definition of Done + a one-line-per-bullet routing summary. NOT a reproduction. The Tester reads the spec separately.
 7. **Lessons-learned filtered to test design** — entries marked `[Tester]` or otherwise about test patterns / fixture design / flaky-test workarounds. **Drop** entries exclusive to Domain Service / Controller / Application Service implementation
 8. **DROP from this bundle:** layering rules (Domain / Application / Infrastructure), service patterns, controller patterns, services.yaml wiring examples, console-command details, scaffold details. The Tester does not modify `src/`; those rules do not apply.

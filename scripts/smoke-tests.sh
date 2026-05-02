@@ -562,7 +562,37 @@ fi
 [ $status_fail -eq 0 ] && pass "handoff template + orchestrator gate enforce the four-value Status contract"
 
 # -----------------------------------------------------------------------------
-# Check 22 — dynamic smoke staleness reminder (non-fatal)
+# Check 22 — bundle generator cheap-extraction protocol
+# -----------------------------------------------------------------------------
+# Pass-4 audit (token efficiency #3) showed the bundle generator was costing
+# ~111k Sonnet tokens per /build-plan because it read every in-scope standard's
+# full body to decide which sections to extract. The cheap-extraction protocol
+# (grep -nE "^##+ " for index, then Read with offset+limit per section) cuts
+# that to ~20-50k. The protocol prose is the contract — without it the
+# orchestrator slides back to full-file reads. Anchor the load-bearing phrases.
+section "Bundle generator cheap-extraction protocol"
+ce_fail=0
+if ! grep -qF "Cheap-extraction protocol for standards" commands/build-plan-command.md; then
+  fail "commands/build-plan-command.md: missing 'Cheap-extraction protocol for standards' section header"
+  ce_fail=1
+fi
+if ! grep -qF "grep -nE \"^##+ \"" commands/build-plan-command.md; then
+  fail "commands/build-plan-command.md: missing the heading-index grep recipe — orchestrator will fall back to full reads"
+  ce_fail=1
+fi
+if ! grep -qF "Read" commands/build-plan-command.md \
+   || ! grep -qE "offset.*limit|offset\` \+ \`limit" commands/build-plan-command.md; then
+  fail "commands/build-plan-command.md: missing 'Read offset+limit' anchor — section-targeted reads not enforced"
+  ce_fail=1
+fi
+if ! grep -qF "Full-file read permitted ONLY when 4+ sections" commands/build-plan-command.md; then
+  fail "commands/build-plan-command.md: missing the 4+ sections fall-back rule for full-file reads"
+  ce_fail=1
+fi
+[ $ce_fail -eq 0 ] && pass "bundle generator cheap-extraction protocol intact (index → offset+limit → 4+sections fallback)"
+
+# -----------------------------------------------------------------------------
+# Check 23 — dynamic smoke staleness reminder (non-fatal)
 # -----------------------------------------------------------------------------
 # Count commits since the most recent release tag that touched the structural
 # files exercised by `make smoke-dynamic` (agents/, build-plan-command.md,
