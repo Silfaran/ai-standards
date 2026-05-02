@@ -481,16 +481,53 @@ Steps:
 1. Collect the `total_tokens`, `tool_uses` and `duration_ms` from every `<usage>` block returned by the subagents this run (one per phase, including bundle-generation, retries and reviewer-loop iterations).
 2. Sum `total_tokens` across phases. Note: `total_tokens` already accumulates across each subagent's tool uses (each tool call replays the prefix), so it is the right field to sum — do NOT also add per-tool-use estimates on top.
 3. Display a markdown table with columns: `Phase | Model | Tool uses | Total tokens | Duration`. Add a `Total subagents` row.
-4. After the table, add a one-line note that the orchestrator's own context (this conversation) is **not** captured in those `<usage>` blocks; ballpark it at **+200-400k tokens** for a `standard` run, more for `complex`. Format:
+4. **Orchestrator overhead instrumentation** — the orchestrator's own context (this conversation) is **not** captured in subagent `<usage>` blocks. Three tiers of instrumentation, in order of accuracy:
 
+   **Tier A (most accurate, when supported by the runtime)** — if your runtime exposes session-total tokens via a slash command (e.g. Claude Code's `/cost`), prompt the developer to capture it after the report:
+
+   ```text
+   Orchestrator overhead — capture exact figure now:
+
+   Run `/cost` in this session. Subtract the subagent total ({sum}) from the
+   reported session total to get orchestrator overhead. Append below for
+   audit trail.
+
+   Session total (run `/cost`): _____ tokens
+   Orchestrator overhead = session_total − {sum} = _____ tokens
+   Orchestrator share = orchestrator / session_total = _____%
    ```
+
+   **Tier B (heuristic baseline if Tier A is unavailable)** — emit:
+
+   ```text
+   Orchestrator overhead (estimated): ~25-35% of subagent total ≈ {0.25 * sum}–{0.35 * sum} tokens.
+   Empirical baseline (red-profesionales, N=2): orchestrator share fell in the 30-40% range.
+   This estimate is a heuristic — capture exact via `/cost` for trend tracking.
+   ```
+
+   **Tier C (per-flow ballparks for sanity check)** — if neither Tier A nor B applies, document `simple`: ~50-150k overhead, `standard`: ~200-400k, `complex`: ~300-500k.
+
+5. **Append the run to the project's token-baseline log** (when the orchestrator can write to `{project-docs}/`):
+
+   ```text
+   File: {project-docs}/token-baseline.md (append-only)
+
+   ## {YYYY-MM-DD} — {feature-name} ({complexity})
+
+   Subagents:
+   {markdown table from step 3}
+
    Subagent total: {sum} tokens across {N} phases.
-   Orchestrator overhead (not included): ~200-400k tokens for `standard`, more for `complex`.
+   Orchestrator overhead: {Tier-A exact | Tier-B estimate range}.
+   Orchestrator share: {Tier-A %| Tier-B 25-35%}.
+   Notes: {anything anomalous, e.g. "Tester ran 2 iters; bundle generator ran twice due to retry"}.
    ```
 
-5. Optional cost note (skip if unsure): a rough rule of thumb is `opus ≈ $15/Mtok in, sonnet ≈ $3/Mtok in, haiku ≈ $0.80/Mtok in` for input — output is ~5× input but tiny in agent flows. State a $-range only if the per-tier subtotals are clearly separable from the table.
+   This log is append-only; future audits / scheduled agents can compute medians, detect regressions, and gate scorecard bumps on empirical data instead of estimates. If `{project-docs}/token-baseline.md` does not yet exist, create it with a brief header explaining its purpose.
 
-**Why this replaces the old `lines × 8` formula:** that estimate undercounted by ~30-50% because it treated each file as read once, while subagents replay the prefix on every tool call. With the runtime's `total_tokens` field readily available, there is no reason to estimate.
+6. Optional cost note (skip if unsure): a rough rule of thumb is `opus ≈ $15/Mtok in, sonnet ≈ $3/Mtok in, haiku ≈ $0.80/Mtok in` for input — output is ~5× input but tiny in agent flows. State a $-range only if the per-tier subtotals are clearly separable from the table.
+
+**Why this replaces the old `lines × 8` formula:** that estimate undercounted by ~30-50% because it treated each file as read once, while subagents replay the prefix on every tool call. With the runtime's `total_tokens` field readily available there is no reason to estimate. The orchestrator-overhead piece is genuinely unmeasurable from inside the orchestrator's own session (the SDK reports per-subagent, not session-self) — Tier A makes it exact via the runtime's own slash command; the append-only log makes the data trendable across features.
 
 ## Context Checkpoint
 
