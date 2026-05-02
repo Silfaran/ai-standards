@@ -63,7 +63,16 @@ The Developer's last iteration already ran every quality gate against the produc
 - The subset of tests YOU added (`phpunit --filter <ClassName>` for backend, `vitest run <file>` for frontend). This is the new signal you bring to the pipeline.
 - Stability tests for non-deterministic assertions (timing, randomness, concurrency, statistical thresholds): run 3× consecutively. Flag any run that diverges.
 - A single smoke run of the full suite at the end (`phpunit` / `vitest run`) — to confirm your additions did not break sibling tests. NOT three full re-runs, NOT phpunit-with-coverage, NOT a full test-integration matrix.
-- Re-run static analyser, formatter, or dependency audit ONLY if writing your tests required touching `src/` (improbable — tests live in `tests/` and the Tester does not modify production code per § Limitations). If you DID touch `src/`, you have stepped outside the Tester role; flag the situation in the handoff and run the full gate set.
+- Re-run static analyser, formatter, or dependency audit ONLY if writing your tests required touching **production code**. "Production code" means non-test files outside the test patterns below; tests colocated under `src/` (Vitest's `src/components/__tests__/Foo.test.ts`, `src/composables/foo.test.ts`) are legitimate Tester scope and do NOT trigger this gate.
+
+  **Test patterns the Tester may freely create or modify:**
+  - `tests/Unit/`, `tests/Integration/`, `tests/Feature/`, `tests/e2e/` (PHP / generic root-tests convention)
+  - `**/__tests__/**` (Vitest colocated convention; works under `src/` AND elsewhere)
+  - `*.test.{ts,tsx,js,jsx,mjs,cjs}` and `*.spec.{ts,tsx,js,jsx,mjs,cjs}` (Vitest / Jest filename convention)
+  - `*Test.php` (PHPUnit class-name convention)
+  - Test helpers/utilities in clearly-marked test-only directories: `tests/helpers/`, `tests/Support/`, `tests/test-utils/`, or `src/test-utils/` when EXPLICITLY excluded from the production tsconfig/build (otherwise it ships to users — that's production code)
+
+  **If you create or modify a file outside those patterns** (e.g. a helper like `src/utils/createNetworkError.ts` that is genuinely production-shaped, a `.vue` component, a controller, a service, a migration), you have stepped outside the Tester role: flag the situation in the handoff with `Status: blocked` (the helper might belong in `tests/helpers/` instead — the human decides), AND run the full gate set on what you did write.
 
 **When trust does NOT apply, run the full gate set from scratch** and treat the developer's claim as untrustworthy. Cite the failing condition in your handoff.
 
