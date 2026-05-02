@@ -281,7 +281,9 @@ Read these files in order before doing anything else:
 Working directory: {service_path}
 {conditional: Warnings from past features: {relevant_lessons — entries from the project's lessons-learned file matching this agent's role (back.md / front.md / infra.md / general.md)}}
 
-When done, write your handoff to: {handoff_path}
+When done, write your handoff to: {handoff_path}.
+
+The handoff MUST start with a `## Status` block per `templates/feature-handoff-template.md` — value `complete` (finished cleanly), `blocked` (hit ambiguity, populated `## Open Questions`, no destructive change), `failed` (unrecoverable error, populate `## Status reason`), or `incomplete` (hit budget, populate `## Status reason`). The orchestrator parses this block to decide whether to advance — absent or unrecognised value is treated as `failed`.
 ```
 
 ### Reviewer prompt template (Backend Reviewer / Frontend Reviewer)
@@ -306,7 +308,9 @@ For each violation, report severity (critical/major/minor), file:line, and the r
 
 This is review iteration {N} of max 3.
 
-When done, write your handoff to: {handoff_path}
+When done, write your handoff to: {handoff_path}.
+
+The handoff MUST start with a `## Status` block per `templates/feature-handoff-template.md` — value `complete` (review finished, verdict APPROVED or REQUEST_CHANGES), `blocked` (could not review — unreadable handoff, missing files cited by Dev), `failed` (tooling error: PHPStan / vue-tsc crashed and you could not work around it), or `incomplete` (hit turn budget). The orchestrator gates on this block before routing the verdict.
 ```
 
 > **Why reviewers do not get a bundle:** the bundles (dev + tester) are for implementation and test design (rules + examples + design context). Review is verification — a closed list of checks against a diff. The critical paths plus per-section checklist reads are shorter, denser, and unambiguous. Re-deriving rules from prose every iteration wastes tokens and produces inconsistent reviews.
@@ -365,9 +369,23 @@ When running in parallel with other agents, never stop or restart other services
 
 ## Failure Handling
 
-**Subagent returns an error:**
+**Status gate (mandatory before advancing to the next phase):**
+
+Every handoff produced by a subagent MUST start with a `## Status` block per `templates/feature-handoff-template.md`. The orchestrator parses this block before reading anything else and decides:
+
+| Status value | Orchestrator behaviour |
+|---|---|
+| `complete` | Advance to the next phase as planned |
+| `blocked` | Stop pipeline. Read `## Status reason` and `## Open Questions` from the handoff. Surface to the human verbatim. Do NOT re-spawn the same agent — the ambiguity needs human input |
+| `failed` | Stop pipeline. Read `## Status reason`. Report to human with the reason and the failing handoff path |
+| `incomplete` | Stop pipeline. Read `## Status reason` (which budget was hit). Ask human: retry with extended budget, accept-with-gaps, or abort |
+| Absent / unrecognised | Treat as `failed` — fail-loud safe default. Never advance on missing signal |
+
+The DoD-checker's existing `APPROVED` / `BLOCKED` verdict is independent of `Status` — `APPROVED` is a semantic verification of the developer's work; `Status` is the agent's own self-report of run health. A DoD-checker handoff with `Status: complete` + verdict `BLOCKED` means the agent ran cleanly AND verified the developer's work has gaps; both signals are needed.
+
+**Subagent returns a tool-level error (Agent tool itself fails):**
 - Stop immediately — do not continue to the next phase
-- Report the failure to the developer with a clear description
+- Report the failure to the developer with the error message verbatim
 - Wait for the developer to decide: retry, skip, or abort
 
 **DoD-checker returns `BLOCKED`:**

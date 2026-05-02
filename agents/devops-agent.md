@@ -88,6 +88,7 @@ Every time a feature introduces a new database table or modifies an existing one
 - Verify migrations run correctly before handing off to the Backend Developer
 
 ## Output
+- A `## Status` block at the **top** of the handoff per `templates/feature-handoff-template.md` — value `complete` when infrastructure provisioned + verified (`docker build .` succeeds), `blocked` when a configuration ambiguity stopped you (populate `## Open Questions`), `failed` when a tooling / network / build error you cannot recover from (populate `## Status reason`), `incomplete` when you hit turn / context budget (populate `## Status reason`). The orchestrator gates on this — absent value is treated as `failed`.
 - `docker-compose.yml` per service (app containers + shared network)
 - Root `docker-compose.yml` (shared infrastructure only — updated only when new infra is needed)
 - `Dockerfile` per service

@@ -83,6 +83,7 @@ Runs once, after all developers and reviewers have completed their work:
 8. Verify all Definition of Done conditions related to testing — including any `⚠️ Tester scope` items the Developer flagged for browser/Playwright verification
 
 ## Output
+- A `## Status` block at the **top** of the handoff per `templates/feature-handoff-template.md` — value `complete` when all tests run + verdict produced (pass / fail per gate), `blocked` when an ambiguity in DoD test items stopped you (populate `## Open Questions`), `failed` when a Docker / runner / Playwright environment error you cannot recover from (populate `## Status reason`), `incomplete` when you hit turn / context budget (populate `## Status reason`). The orchestrator gates on this — absent value is treated as `failed`.
 - Unit test files + integration test files
 - Full test run report
 - Change requests to the corresponding developer when tests fail

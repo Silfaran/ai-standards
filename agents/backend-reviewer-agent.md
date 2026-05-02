@@ -43,6 +43,7 @@ Every checklist section load MUST cite the gap that triggered it in your handoff
 - Approve when every checklist item passes and DoD is met
 
 ## Output
+- A `## Status` block at the **top** of the handoff per `templates/feature-handoff-template.md` — value `complete` when review finished (verdict APPROVED or REQUEST_CHANGES), `blocked` when you could not review (unreadable dev handoff, missing files cited by Dev, populate `## Open Questions`), `failed` when PHPStan / vue-tsc tooling crashed and you could not work around it (populate `## Status reason`), `incomplete` when you hit turn / context budget (populate `## Status reason`). The orchestrator gates on this — absent value is treated as `failed`. `Status` is independent of the review verdict; a clean review run with REQUEST_CHANGES verdict has `Status: complete`.
 - Review report grouped by severity: critical / major / minor
 - Change requests to the Backend Developer if issues found
 - Approval confirmation once all issues are resolved

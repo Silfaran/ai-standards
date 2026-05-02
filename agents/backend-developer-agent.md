@@ -63,6 +63,7 @@ Before writing the handoff:
 **Tone rule:** report `✓` only when you actually executed the check this iteration. `✓ from iteration 1` is not allowed for items the iteration-2 diff might have invalidated — re-verify on every iteration. The cost of the gate is bounded; the cost of escaping a `✗` into the Reviewer loop is not.
 
 ## Output
+- A `## Status` block at the **top** of the handoff per `templates/feature-handoff-template.md` — value `complete` when implementation finished + all gates green + DoD coverage marked, `blocked` when a spec ambiguity stopped you (populate `## Open Questions`), `failed` when a tool / env error you cannot recover from (populate `## Status reason`), `incomplete` when you hit turn / context budget (populate `## Status reason`). The orchestrator gates on this — absent value is treated as `failed`.
 - Implemented code
 - Phinx migration and seed files
 - Updated task file marking completed Definition of Done conditions

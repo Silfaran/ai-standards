@@ -528,7 +528,41 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# Check 21 — dynamic smoke staleness reminder (non-fatal)
+# Check 21 — handoff template Status block contract
+# -----------------------------------------------------------------------------
+# Pass-4 audit introduced a mandatory `## Status` block at the top
+# of every handoff so the orchestrator can gate phase advancement on a
+# machine-readable success signal. Absent / unrecognised value is treated as
+# `failed` — fail-loud safe default. The four valid values must remain
+# documented in the canonical template; if any value is silently dropped
+# from the template, agents reading the template literally will produce
+# malformed handoffs and the orchestrator's gate gets less useful.
+section "Handoff Status block contract"
+ht=templates/feature-handoff-template.md
+status_fail=0
+if ! grep -qF "## Status" "$ht"; then
+  fail "$ht: missing '## Status' section header"
+  status_fail=1
+fi
+for value in "complete" "blocked" "failed" "incomplete"; do
+  if ! grep -qE "\\\`$value\\\`" "$ht"; then
+    fail "$ht: '## Status' block missing documented value \`$value\`"
+    status_fail=1
+  fi
+done
+if ! grep -qF "## Status reason" "$ht"; then
+  fail "$ht: missing '## Status reason' section (mandatory when Status ≠ complete)"
+  status_fail=1
+fi
+# build-plan must enforce the gate; verify the orchestrator-side prose anchor.
+if ! grep -qF "Absent / unrecognised" commands/build-plan-command.md; then
+  fail "commands/build-plan-command.md: missing 'Absent / unrecognised' fail-loud gate prose for Status"
+  status_fail=1
+fi
+[ $status_fail -eq 0 ] && pass "handoff template + orchestrator gate enforce the four-value Status contract"
+
+# -----------------------------------------------------------------------------
+# Check 22 — dynamic smoke staleness reminder (non-fatal)
 # -----------------------------------------------------------------------------
 # Count commits since the most recent release tag that touched the structural
 # files exercised by `make smoke-dynamic` (agents/, build-plan-command.md,
