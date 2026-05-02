@@ -398,18 +398,23 @@ Do not continue to the Tester until both sides are either approved or explicitly
 
 ### Token Usage Report
 
-After the final status report, display an estimated token usage summary:
+After the final status report, display an actual token usage summary using the figures the runtime returns from each `Agent` call. Each subagent's final message includes a `<usage>` block with `total_tokens`, `tool_uses` and `duration_ms` — these are authoritative; do not estimate from line counts.
 
-1. List each subagent phase that ran and the standards files it read
-2. Count the approximate lines read per phase (use the line counts from the files you provided in each prompt)
-3. Multiply total lines by 8 to estimate input tokens
-4. Display:
+Steps:
+
+1. Collect the `total_tokens`, `tool_uses` and `duration_ms` from every `<usage>` block returned by the subagents this run (one per phase, including bundle-generation, retries and reviewer-loop iterations).
+2. Sum `total_tokens` across phases. Note: `total_tokens` already accumulates across each subagent's tool uses (each tool call replays the prefix), so it is the right field to sum — do NOT also add per-tool-use estimates on top.
+3. Display a markdown table with columns: `Phase | Model | Tool uses | Total tokens | Duration`. Add a `Total subagents` row.
+4. After the table, add a one-line note that the orchestrator's own context (this conversation) is **not** captured in those `<usage>` blocks; ballpark it at **+200-400k tokens** for a `standard` run, more for `complex`. Format:
+
    ```
-   Estimated token usage:
-   - Phases executed: {N}
-   - Total files read across all phases: {N}
-   - Estimated input tokens: ~{total}
+   Subagent total: {sum} tokens across {N} phases.
+   Orchestrator overhead (not included): ~200-400k tokens for `standard`, more for `complex`.
    ```
+
+5. Optional cost note (skip if unsure): a rough rule of thumb is `opus ≈ $15/Mtok in, sonnet ≈ $3/Mtok in, haiku ≈ $0.80/Mtok in` for input — output is ~5× input but tiny in agent flows. State a $-range only if the per-tier subtotals are clearly separable from the table.
+
+**Why this replaces the old `lines × 8` formula:** that estimate undercounted by ~30-50% because it treated each file as read once, while subagents replay the prefix on every tool call. With the runtime's `total_tokens` field readily available, there is no reason to estimate.
 
 ## Context Checkpoint
 
