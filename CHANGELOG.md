@@ -6,6 +6,14 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.41.6](https://github.com/Silfaran/ai-standards/compare/v0.41.5...v0.41.6) (2026-05-02)
+
+
+### Changed
+
+* **build-plan:** use real total_tokens from &lt;usage&gt; blocks instead of lines×8 estimate ([e62da8b](https://github.com/Silfaran/ai-standards/commit/e62da8bf04f17609bc93f2574e0385a576c21b51))
+* **build-plan:** use real total_tokens instead of lines×8 estimate ([973e6b8](https://github.com/Silfaran/ai-standards/commit/973e6b8240f4ab51ce0ceed5f0418d7e50efd2fc))
+
 ## [0.41.5](https://github.com/Silfaran/ai-standards/compare/v0.41.4...v0.41.5) (2026-05-01)
 
 
