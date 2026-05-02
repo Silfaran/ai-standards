@@ -545,7 +545,7 @@ if ! grep -qF "## Status" "$ht"; then
   status_fail=1
 fi
 for value in "complete" "blocked" "failed" "incomplete"; do
-  if ! grep -qE "\\\`$value\\\`" "$ht"; then
+  if ! grep -qF "\`$value\`" "$ht"; then
     fail "$ht: '## Status' block missing documented value \`$value\`"
     status_fail=1
   fi
