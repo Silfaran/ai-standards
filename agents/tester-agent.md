@@ -93,6 +93,7 @@ Runs once, after all developers and reviewers have completed their work:
 
 ## Output
 - A `## Status` block at the **top** of the handoff per `templates/feature-handoff-template.md` — value `complete` when all tests run + verdict produced (pass / fail per gate), `blocked` when an ambiguity in DoD test items stopped you (populate `## Open Questions`), `failed` when a Docker / runner / Playwright environment error you cannot recover from (populate `## Status reason`), `incomplete` when you hit turn / context budget (populate `## Status reason`). The orchestrator gates on this — absent value is treated as `failed`.
+- A `## Abstract` block (after `## Status reason`, before `## Iteration`) per the template — five structured fields (`outcome`, `verdict: n/a` since you do not approve/reject the diff, `files` count of test files written, `next_phase: update-specs`, `open_questions`). The orchestrator reads this instead of scanning the full handoff for routing. Detailed sections below remain authoritative.
 - Unit test files + integration test files
 - Full test run report
 - Change requests to the corresponding developer when tests fail

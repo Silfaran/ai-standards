@@ -47,6 +47,7 @@ Before writing the handoff:
 
 ## Output
 - A `## Status` block at the **top** of the handoff per `templates/feature-handoff-template.md` — value `complete` when implementation finished + all gates green + DoD coverage marked, `blocked` when a spec / design-decisions ambiguity stopped you (populate `## Open Questions`), `failed` when a tool / env error you cannot recover from (populate `## Status reason`), `incomplete` when you hit turn / context budget (populate `## Status reason`). The orchestrator gates on this — absent value is treated as `failed`.
+- A `## Abstract` block (after `## Status reason`, before `## Iteration`) per the template — five structured fields (`outcome`, `verdict: n/a`, `files`, `next_phase: dod-checker`, `open_questions`). The orchestrator reads this instead of scanning the full handoff for routing. Detailed sections below remain authoritative for the next agent.
 - Implemented Vue 3 code
 - Updated task file marking completed Definition of Done conditions
 - Handoff summary listing every file created/modified and key decisions
