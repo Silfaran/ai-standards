@@ -70,6 +70,13 @@ The handoff is a short, structured document — not a review report:
 ```markdown
 # {Feature Name} — DoD Checker Handoff
 
+## Status
+complete | blocked | failed | incomplete
+(Independent of `## Verdict` below — `Status` is the agent's run health, `Verdict` is the semantic DoD result. A clean run with `BLOCKED` verdict still has `Status: complete`. `Status: blocked` is only when the agent itself could not run — e.g. dev handoff malformed and unreadable. `Status: failed` covers tool errors.)
+
+## Status reason
+(One line; required when `Status ≠ complete`.)
+
 ## Verdict
 APPROVED | BLOCKED
 

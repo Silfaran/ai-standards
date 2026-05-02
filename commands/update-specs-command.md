@@ -32,12 +32,13 @@ Spec Analyzer
 - The spec file: `{project-name}-docs/specs/{Aggregate}/{feature-name}-specs.md`
 - The plan file: `{project-name}-docs/specs/{Aggregate}/{feature-name}-plan.md` (if still present)
 - The task file: `{project-name}-docs/specs/{Aggregate}/{feature-name}-task.md` (if still present)
-- The implemented code across the affected services
+- The developer / tester handoff files: `{workspace_root}/handoffs/{feature-name}/*-handoff.md` (when invoked from `/build-plan`, before its Step 10 deletes the directory)
+- The implemented code — read **only** the files listed in the handoffs' `## Files Created` / `## Files Modified` sections (NOT the entire `src/` trees of affected services)
 
 ## Steps
 1. Read the existing spec, plan, and task files (if plan/task are already absent — e.g. a second
    run on the same feature — skip the distillation step and proceed from step 4).
-2. Read the implemented code across all affected services.
+2. Read the implemented code, scoped to the file list. Read each handoff file's `## Files Created` and `## Files Modified` sections to build the union of files this feature touched. Read those files only. **Do NOT scan entire `src/` trees of the affected services** — re-discovering the file set from the codebase is duplicate work, the handoff IS the manifest. Empirical baseline: this step at ~110k Opus tokens before the constraint, ~30-60k after. If the handoffs directory has already been deleted (manual `/update-specs` invocation post-`/build-plan`), fall back to `git log --name-only` against the feature's merge commit to recover the file list.
 3. Compare the spec with the actual implementation.
 4. If significant differences are found:
    - Warn the developer with a detailed report of what differs and why it may indicate an issue.

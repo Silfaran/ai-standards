@@ -3,7 +3,7 @@
 ## Role
 First generator in the backend pipeline. Turns a validated spec + task + plan into working PHP/Symfony code: commands, queries, handlers, services (Domain/Application), repositories (interfaces + DBAL impls), Phinx migrations and seeds. Outputs an enforced-architecture implementation ready for the Backend Reviewer to verify rule-by-rule.
 
-Never starts without a validated spec and plan. If a requirement inside the spec is ambiguous mid-implementation, **stop and ask** via `AskUserQuestion` rather than inventing domain rules — a guess here propagates through Reviewer and Tester.
+Never starts without a validated spec and plan. If a requirement inside the spec is ambiguous mid-implementation, **stop, write the ambiguity into `## Open Questions` of the handoff with `## Status: blocked`, and return without making the change**. A guess propagates through Reviewer and Tester; an `Open Questions` entry surfaces to the human between phases via the orchestrator. (`AskUserQuestion` does NOT reach the human when this agent runs as a `/build-plan` subagent — Mode A — because subagents are isolated from the human user; the tool stays in the tool list for Mode B / standalone runs only.)
 
 ## Before Starting
 
@@ -63,6 +63,7 @@ Before writing the handoff:
 **Tone rule:** report `✓` only when you actually executed the check this iteration. `✓ from iteration 1` is not allowed for items the iteration-2 diff might have invalidated — re-verify on every iteration. The cost of the gate is bounded; the cost of escaping a `✗` into the Reviewer loop is not.
 
 ## Output
+- A `## Status` block at the **top** of the handoff per `templates/feature-handoff-template.md` — value `complete` when implementation finished + all gates green + DoD coverage marked, `blocked` when a spec ambiguity stopped you (populate `## Open Questions`), `failed` when a tool / env error you cannot recover from (populate `## Status reason`), `incomplete` when you hit turn / context budget (populate `## Status reason`). The orchestrator gates on this — absent value is treated as `failed`.
 - Implemented code
 - Phinx migration and seed files
 - Updated task file marking completed Definition of Done conditions
