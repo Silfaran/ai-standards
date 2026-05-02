@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.44.0](https://github.com/Silfaran/ai-standards/compare/v0.43.0...v0.44.0) (2026-05-02)
+
+
+### Added
+
+* **orchestrator:** handoff Abstract + selective routing + lazy lessons + overhead instrumentation ([#119](https://github.com/Silfaran/ai-standards/issues/119)) ([44ea9f4](https://github.com/Silfaran/ai-standards/commit/44ea9f4eba9f7aa2b65a1f4994cfc8847aba8922))
+
 ## [0.43.0](https://github.com/Silfaran/ai-standards/compare/v0.42.0...v0.43.0) (2026-05-02)
 
 
