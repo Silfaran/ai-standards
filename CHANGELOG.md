@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.43.0](https://github.com/Silfaran/ai-standards/compare/v0.42.0...v0.43.0) (2026-05-02)
+
+
+### Added
+
+* **docs:** public Astro Starlight site with auto-sync from repo sources ([#117](https://github.com/Silfaran/ai-standards/issues/117)) ([70b8f1d](https://github.com/Silfaran/ai-standards/commit/70b8f1d8b6f4b2f3186739e1caa75f192e0a5210))
+
 ## [0.42.0](https://github.com/Silfaran/ai-standards/compare/v0.41.7...v0.42.0) (2026-05-02)
 
 
