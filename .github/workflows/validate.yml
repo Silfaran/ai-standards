@@ -27,7 +27,12 @@ jobs:
             --no-progress
             --verbose
             --exclude-path '.git'
+            --exclude-path 'docs/node_modules'
+            --exclude-path 'docs/dist'
+            --exclude-path 'docs/.astro'
+            --exclude-path 'docs/src/content/docs'
             './**/*.md'
+            './**/*.mdx'
           fail: true
 
   format:

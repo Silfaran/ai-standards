@@ -5,6 +5,18 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/Silfaran/ai-standards/validate.yml?branch=master&label=CI)](https://github.com/Silfaran/ai-standards/actions/workflows/validate.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+📚 **[Read the docs](https://silfaran.github.io/ai-standards/)** — concepts, agent reference, token economics, full standards catalogue.
+
+<!--
+DEMO_GIF — record a 30-second LICEcap (or similar) showing /build-plan running end-to-end with the per-phase token table at the end. Recommended:
+  1. Open Claude Code in a workspace with a refined spec ready.
+  2. Start LICEcap (or asciinema for a terminal recording) at 800-1000px wide, 60s max.
+  3. Record: `/build-plan`, the developer confirming the spec sign-off, and the orchestrator emitting the token-cost table at the end.
+  4. Save to `docs/public/demo.gif` (or .cast for asciinema) and replace this comment with: ![demo](docs/public/demo.gif).
+The site at silfaran.github.io/ai-standards is the long-form story; this GIF is the 30-second pitch in the README.
+-->
+
+
 > **Status: work in progress.** This is an active, evolving framework — not a stable release. Breaking changes to standards, agent prompts, commands and repo layout land between `0.x` releases as the design matures. If you adopt it today, pin a tag (the latest is shown in the badge above; details in [`CHANGELOG.md`](CHANGELOG.md)) and expect to re-read that file before every upgrade. Feedback and issues are welcome.
 
 An orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) that builds full-stack web applications — PHP/Symfony backend and Vue 3 frontend — using isolated AI agents that spec, implement, review, and test each feature.

@@ -1,0 +1,15 @@
+# Astro build artefacts
+node_modules
+dist
+.astro
+
+# Synced content — regenerated from repo sources by `npm run sync` on every
+# build. Single source of truth for these files lives at the repo root, not
+# here. See `docs/scripts/sync.mjs` and the `## Always-up-to-date guarantee`
+# section of `concepts/standards-and-critical-paths.md`.
+src/content/docs/reference/agents/
+src/content/docs/reference/commands/
+src/content/docs/reference/critical-paths/
+src/content/docs/project/architecture.md
+src/content/docs/project/usage.md
+src/content/docs/project/changelog.md

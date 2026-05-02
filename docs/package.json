@@ -1,0 +1,22 @@
+{
+  "name": "ai-standards-docs",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Public documentation site for the ai-standards framework. Source of truth for prose; agent / command / standard content is synced from the parent repo on every build.",
+  "scripts": {
+    "sync": "node scripts/sync.mjs",
+    "dev": "npm run sync && astro dev",
+    "build": "npm run sync && astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.30.0",
+    "astro": "^5.0.0",
+    "sharp": "^0.33.5"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

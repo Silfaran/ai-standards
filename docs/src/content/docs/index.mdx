@@ -1,0 +1,65 @@
+---
+title: ai-standards
+description: A Claude Code orchestration framework that builds full-stack applications via isolated AI agents — spec, implement, review, and test each feature against enforced architectural standards.
+template: splash
+hero:
+  tagline: An orchestration framework for Claude Code that builds full-stack applications. Nine specialised AI agents — spec, implement, review, test — each with its own context window, strict standards, and a single role.
+  actions:
+    - text: Quickstart
+      link: /ai-standards/guides/quickstart/
+      icon: right-arrow
+      variant: primary
+    - text: GitHub
+      link: https://github.com/Silfaran/ai-standards
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## What it does
+
+You describe a feature in plain language. The framework splits the work across nine isolated AI agents, runs them through a deterministic pipeline (spec → implement → DoD-check → review → test), and produces implemented, reviewed, and tested code following Hexagonal Architecture, DDD, CQRS, and Event-Driven design.
+
+Each agent runs in its own context window. Handoffs between agents are structured markdown files; failures fail loud via a four-value Status block (`complete` / `blocked` / `failed` / `incomplete`). The orchestrator never advances on missing signal.
+
+<CardGrid>
+  <Card title="6 commands" icon="setting">
+    `/init-project`, `/create-specs`, `/refine-specs`, `/build-plan`, `/update-specs`, `/check-web` — every step of the pipeline is a slash command.
+  </Card>
+  <Card title="9 isolated agents" icon="puzzle">
+    Spec Analyzer, Backend Developer, Frontend Developer, DoD-checker, Backend Reviewer, Frontend Reviewer, Tester, DevOps, Web Auditor — each with strict tools and a single role.
+  </Card>
+  <Card title="33 standards" icon="document">
+    Backend, frontend, security, performance, observability, GDPR/PII, payments, LLM integration, file storage, geo-search, audit log, feature flags, …
+  </Card>
+  <Card title="11 critical paths" icon="approve-check">
+    Reviewers load only the rules relevant to the current diff via a coverage-aware protocol — no defensive full-checklist reads.
+  </Card>
+</CardGrid>
+
+## Why it exists
+
+Most "AI builds an app" frameworks operate on vibes and a single big prompt. ai-standards constrains the AI with:
+
+- **Spec before code.** No agent writes a line without a validated spec.
+- **Stable rule IDs.** Every architectural rule has a stable identifier (`BE-015`, `AZ-001`, `PA-006`, …) reviewers cite by ID, never paraphrased prose.
+- **Per-phase bundles.** The orchestrator distills only the rules relevant to the current feature into two bundles (dev + tester). Subagents read the bundle, not the full standards directory.
+- **Coverage-aware checklist loading.** Reviewers walk matched critical paths first; the full review checklist is consulted per-section only on real coverage gaps, with mandatory citation.
+- **Real cost telemetry.** Every subagent reports `total_tokens` from the Anthropic SDK; the orchestrator emits a per-phase cost table at the end of every `/build-plan` run.
+- **Self-validating.** 23 static smoke checks + dynamic smoke fixtures keep the framework's contracts from drifting silently.
+
+## Status
+
+Active. Pre-1.0 (`0.42.x`). Empirical Reviewer-savings of 30-50k Sonnet tokens per phase confirmed at N=2 in real consumer use. See [Token economics](/ai-standards/concepts/token-economics/) for the full numbers.
+
+## Honest limitations
+
+- **Single stack.** Today this builds PHP/Symfony + Vue 3 applications. Standards, scaffolds, and reference files would need rewriting for a different stack. The orchestration patterns (agents, handoffs, spec-first, coverage-aware loading) are portable; the implementation details are not.
+- **Claude Code only.** Agent orchestration relies on Claude Code's subagent system. Adapting to another AI tool requires significant work.
+- **Developer in the loop.** This does not replace the developer. You describe features, approve specs, confirm git operations, and make decisions the AI cannot make alone.
+- **Opinionated architecture.** Hexagonal + DDD + CQRS is enforced, not suggested. If your project does not follow these patterns, the standards will fight your codebase.
+
+---
+
+Built and maintained by [Mario Marco Esteve](https://github.com/Silfaran). MIT licensed.

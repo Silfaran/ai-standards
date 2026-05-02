@@ -592,7 +592,46 @@ fi
 [ $ce_fail -eq 0 ] && pass "bundle generator cheap-extraction protocol intact (index → offset+limit → 4+sections fallback)"
 
 # -----------------------------------------------------------------------------
-# Check 23 — dynamic smoke staleness reminder (non-fatal)
+# Check 23 — docs site sync coverage (Astro Starlight)
+# -----------------------------------------------------------------------------
+# The docs/ Astro site is the single public-facing documentation surface.
+# Agent / command / critical-path / project-doc content is NOT duplicated in
+# the site — it is synced from the repo on every build via docs/scripts/sync.mjs.
+# That single source of truth guarantee depends on the sync script's job list
+# covering every content category the site renders. If a new content category
+# is added (e.g. templates/) without extending sync.mjs, the site silently
+# stops covering it.
+#
+# Anchor: the sync script must list every directory referenced in the docs
+# site's astro.config.mjs sidebar (autogenerate entries) AND the orchestrator
+# prose (project-side files like ARCHITECTURE / USAGE / CHANGELOG).
+section "Docs site sync coverage"
+docs_fail=0
+sync=docs/scripts/sync.mjs
+if [ ! -f "$sync" ]; then
+  fail "$sync: missing — docs site cannot stay in sync with repo sources"
+  docs_fail=1
+else
+  # Every content category referenced from astro.config.mjs's sidebar's
+  # autogenerate directives must have a corresponding sync job.
+  for category in "agents" "commands" "critical-paths"; do
+    if ! grep -qF "targetDir: 'reference/$category'" "$sync"; then
+      fail "$sync: missing sync job for reference/$category — astro.config.mjs sidebar autogenerates from this directory"
+      docs_fail=1
+    fi
+  done
+  # Project-doc files cited from the sidebar.
+  for f in "ARCHITECTURE.md" "USAGE.md" "CHANGELOG.md"; do
+    if ! grep -qF "$f" "$sync"; then
+      fail "$sync: missing $f in sync job filter — astro.config.mjs sidebar references project/${f%.md} as a synced page"
+      docs_fail=1
+    fi
+  done
+fi
+[ $docs_fail -eq 0 ] && pass "docs/scripts/sync.mjs covers every content category the site renders"
+
+# -----------------------------------------------------------------------------
+# Check 24 — dynamic smoke staleness reminder (non-fatal)
 # -----------------------------------------------------------------------------
 # Count commits since the most recent release tag that touched the structural
 # files exercised by `make smoke-dynamic` (agents/, build-plan-command.md,
