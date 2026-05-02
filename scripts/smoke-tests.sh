@@ -631,7 +631,45 @@ fi
 [ $docs_fail -eq 0 ] && pass "docs/scripts/sync.mjs covers every content category the site renders"
 
 # -----------------------------------------------------------------------------
-# Check 24 — dynamic smoke staleness reminder (non-fatal)
+# Check 24 — handoff Abstract section + selective reading protocol
+# -----------------------------------------------------------------------------
+# Pass-5 audit added the ## Abstract block (5 structured fields) at the top
+# of every handoff so the orchestrator can route on parsed data instead of
+# scanning prose. Without the Abstract anchored in the template AND the
+# selective-reading protocol anchored in build-plan-command.md, the
+# orchestrator slides back to reading the full handoff after every phase
+# (~30-120k tokens of waste per /build-plan).
+section "Handoff Abstract + selective reading protocol"
+abs_fail=0
+ht=templates/feature-handoff-template.md
+if ! grep -qF "## Abstract" "$ht"; then
+  fail "$ht: missing '## Abstract' section header"
+  abs_fail=1
+fi
+for field in "outcome:" "verdict:" "files:" "next_phase:" "open_questions:"; do
+  if ! grep -qF "$field" "$ht"; then
+    fail "$ht: '## Abstract' missing structured field '$field'"
+    abs_fail=1
+  fi
+done
+# Orchestrator-side protocol prose intact in build-plan.
+if ! grep -qF "Handoff reading protocol" commands/build-plan-command.md; then
+  fail "commands/build-plan-command.md: missing 'Handoff reading protocol' section — orchestrator will fall back to full-handoff reads"
+  abs_fail=1
+fi
+if ! grep -qF "ALWAYS read" commands/build-plan-command.md \
+   && ! grep -qF "Always read" commands/build-plan-command.md; then
+  fail "commands/build-plan-command.md: missing 'Always read' anchor in handoff reading protocol"
+  abs_fail=1
+fi
+if ! grep -qF "Conditional deep-reads" commands/build-plan-command.md; then
+  fail "commands/build-plan-command.md: missing 'Conditional deep-reads' anchor in handoff reading protocol"
+  abs_fail=1
+fi
+[ $abs_fail -eq 0 ] && pass "handoff Abstract + orchestrator selective-reading protocol intact"
+
+# -----------------------------------------------------------------------------
+# Check 25 — dynamic smoke staleness reminder (non-fatal)
 # -----------------------------------------------------------------------------
 # Count commits since the most recent release tag that touched the structural
 # files exercised by `make smoke-dynamic` (agents/, build-plan-command.md,
