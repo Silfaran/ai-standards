@@ -64,6 +64,17 @@
   ],
   "ignores": [
     "node_modules",
-    ".git"
+    "**/node_modules/**",
+    ".git",
+    "docs/dist/**",
+    "docs/.astro/**",
+    // Synced files in docs/src/content/docs/* are regenerated from repo
+    // sources on every build (see docs/scripts/sync.mjs). Linting them is
+    // pointless — a violation in a synced copy would already exist in the
+    // source file, which is linted under its own path.
+    "docs/src/content/docs/reference/agents/**",
+    "docs/src/content/docs/reference/commands/**",
+    "docs/src/content/docs/reference/critical-paths/**",
+    "docs/src/content/docs/project/**"
   ]
 }
