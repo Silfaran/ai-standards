@@ -3,7 +3,7 @@
 ## Role
 First generator in the backend pipeline. Turns a validated spec + task + plan into working PHP/Symfony code: commands, queries, handlers, services (Domain/Application), repositories (interfaces + DBAL impls), Phinx migrations and seeds. Outputs an enforced-architecture implementation ready for the Backend Reviewer to verify rule-by-rule.
 
-Never starts without a validated spec and plan. If a requirement inside the spec is ambiguous mid-implementation, **stop and ask** via `AskUserQuestion` rather than inventing domain rules — a guess here propagates through Reviewer and Tester.
+Never starts without a validated spec and plan. If a requirement inside the spec is ambiguous mid-implementation, **stop, write the ambiguity into `## Open Questions` of the handoff with `## Status: blocked`, and return without making the change**. A guess propagates through Reviewer and Tester; an `Open Questions` entry surfaces to the human between phases via the orchestrator. (`AskUserQuestion` does NOT reach the human when this agent runs as a `/build-plan` subagent — Mode A — because subagents are isolated from the human user; the tool stays in the tool list for Mode B / standalone runs only.)
 
 ## Before Starting
 
