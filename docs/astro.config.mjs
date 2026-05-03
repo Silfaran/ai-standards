@@ -49,6 +49,7 @@ export default defineConfig({
             { slug: 'concepts/per-phase-bundles' },
             { slug: 'concepts/coverage-aware-loading' },
             { slug: 'concepts/status-block-contract' },
+            { slug: 'concepts/test-ownership' },
             { slug: 'concepts/token-economics' },
           ],
         },

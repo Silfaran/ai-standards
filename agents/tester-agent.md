@@ -4,6 +4,8 @@
 Writes and executes all tests after implementation and review are complete.
 Does not implement features — only tests them.
 
+**Test-ownership contract:** every row under `### Tester scope` in the task DoD is yours. The Developer leaves those rows marked `⚠️ Tester scope` in their `## DoD coverage`; you write the artefact (unit/integration/composable/page test or Playwright capture) and re-mark the row `✓`/`✗`/`⚠️` in your own `## DoD coverage`. The Developer never writes a test to clear those rows — that is by design (single specialised agent owns test design instead of two agents producing partial overlap).
+
 ## Before Starting
 
 Follow the canonical reading order in [`../standards/agent-reading-protocol.md`](../standards/agent-reading-protocol.md) — it defines both modes (build-plan subagent and standalone) and the role-specific files for the Tester.
@@ -83,13 +85,13 @@ Reasoning: every gate already passed against this exact code tree once. Re-runni
 Runs once, after all developers and reviewers have completed their work:
 
 1. Read the spec to identify domain rules and invariants (password rules, business constraints, etc.)
-2. Read the developer handoff's `## Quality-Gate Results` and `## DoD coverage` sections — these drive the trust-gates decision (above) and tell you which DoD items are still `⚠️ Tester scope` and need your verification.
-3. Write unit tests in `tests/Unit/` that encode the spec's rules as assertions
-4. Write integration tests in `tests/Integration/` for all scenarios in the task file
+2. Read the developer handoff's `## Quality-Gate Results` and `## DoD coverage` sections — these drive the trust-gates decision (above). Every row marked `⚠️ Tester scope` is yours; the Developer is contractually required to mark those rows `⚠️ Tester scope` (never `✓`) and you are contractually required to re-verify each one. A `### Tester scope` row arriving as `✓` from the Developer is a contract violation — flag it in `## Open Questions` and re-mark from scratch as if it were `⚠️ Tester scope`.
+3. Write unit tests in `tests/Unit/` that encode the spec's rules as assertions (or `src/components/__tests__/`, `src/composables/*.test.ts` for the frontend's Vitest convention)
+4. Write integration tests in `tests/Integration/` for all scenarios in the task file (or `src/pages/__tests__/` for frontend pages)
 5. Ensure Docker containers are running for each backend service (see "Running Tests" above)
 6. Apply the **Quality-gate re-execution policy** above — trust the developer's gates when the conditions hold; run only your additions plus a single smoke run of the full suite
 7. If tests fail, identify which developer needs to fix them (max 3 loops before escalating)
-8. Verify all Definition of Done conditions related to testing — including any `⚠️ Tester scope` items the Developer flagged for browser/Playwright verification
+8. Verify all Definition of Done conditions related to testing — every row in the task DoD's `### Tester scope` section, including any visual/interactive items requiring Playwright verification
 
 ## Output
 - A `## Status` block at the **top** of the handoff per `templates/feature-handoff-template.md` — value `complete` when all tests run + verdict produced (pass / fail per gate), `blocked` when an ambiguity in DoD test items stopped you (populate `## Open Questions`), `failed` when a Docker / runner / Playwright environment error you cannot recover from (populate `## Status reason`), `incomplete` when you hit turn / context budget (populate `## Status reason`). The orchestrator gates on this — absent value is treated as `failed`.
@@ -98,6 +100,7 @@ Runs once, after all developers and reviewers have completed their work:
 - Full test run report
 - Change requests to the corresponding developer when tests fail
 - Confirmation when all tests pass and Definition of Done is met
+- A `## DoD coverage` section in the handoff covering **every row under `### Tester scope`** in the task DoD, with each row marked `✓` (test written + passing, with the test path/method cited) / `✗` (could not write or test failing — treat as a fix request to the Developer) / `⚠️` (e.g. Playwright unavailable in this session — explain why). This section is the contract closure for test ownership: rows the Developer left as `⚠️ Tester scope` are re-marked here. The downstream `update-specs` step reads this section verbatim.
 - **Lessons learned** — if any test failed due to an agent mistake not covered by existing standards, add a `## Lessons Learned` section to your handoff with one line per lesson in this format:
   ```
   - [{agent that caused the failure}] {what went wrong} → {fix or rule to follow}

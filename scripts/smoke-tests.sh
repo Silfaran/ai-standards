@@ -669,7 +669,75 @@ fi
 [ $abs_fail -eq 0 ] && pass "handoff Abstract + orchestrator selective-reading protocol intact"
 
 # -----------------------------------------------------------------------------
-# Check 25 — dynamic smoke staleness reminder (non-fatal)
+# Check 25 — test-ownership contract (Dev defers tests to Tester)
+# -----------------------------------------------------------------------------
+# Single specialised agent owns test design — duplicating it across Dev + Tester
+# inflates Opus tokens by ~15-25k per feature with no quality gain. The contract
+# lives in four places that must stay in lock-step:
+#   - feature-task-template.md declares a `### Tester scope` DoD section, and
+#     never lists test-related rows under `### Backend` or `### Frontend`.
+#   - Both Dev agents declare the `⚠️ Tester scope` mark in their DoD gate
+#     and forbid writing tests to clear those rows.
+#   - The Tester agent owns the test-ownership contract in its Role.
+#   - The DoD-checker agent carries `⚠️ Tester scope` rows forward without
+#     re-verification.
+# Drop any of these and the framework regresses to the Dev-writes-tests-then-
+# Tester-rewrites-them duplication this contract was introduced to eliminate.
+section "Test-ownership contract"
+to_fail=0
+tt=templates/feature-task-template.md
+
+# 25.1 — task template declares Tester scope partition
+if ! grep -qF "### Tester scope" "$tt"; then
+  fail "$tt: missing '### Tester scope' DoD partition — Dev will be forced to write tests"
+  to_fail=1
+fi
+
+# 25.2 — task template never puts test rows under Dev's sections.
+# Extract Backend + Frontend DoD blocks; if either contains a 'tests written'
+# or 'tests pass' line, the partition leaks Tester work into Dev scope.
+for section_header in "### Backend" "### Frontend"; do
+  block=$(awk -v h="$section_header" '
+    $0 == h { in_block=1; next }
+    in_block && /^### / { exit }
+    in_block { print }
+  ' "$tt")
+  if printf "%s" "$block" | grep -qiE "tests? written|tests? pass|composable test|page test|integration test"; then
+    fail "$tt: '$section_header' contains a test row — must be moved to '### Tester scope'"
+    to_fail=1
+  fi
+done
+
+# 25.3 — both Dev agents declare the ⚠️ Tester scope mark + the never-write-tests rule
+for f in agents/backend-developer-agent.md agents/frontend-developer-agent.md; do
+  if ! grep -qF "⚠️ Tester scope" "$f"; then
+    fail "$f: missing '⚠️ Tester scope' mark in DoD verification gate — Dev may attempt to write tests to clear DoD"
+    to_fail=1
+  fi
+done
+
+# 25.4 — Tester agent declares test-ownership contract in its Role
+if ! grep -qF "Test-ownership contract" agents/tester-agent.md; then
+  fail "agents/tester-agent.md: missing 'Test-ownership contract' anchor in Role section"
+  to_fail=1
+fi
+
+# 25.5 — DoD-checker handles the ⚠️ Tester scope mark without re-verification
+if ! grep -qF "⚠️ Tester scope" agents/dod-checker-agent.md; then
+  fail "agents/dod-checker-agent.md: missing '⚠️ Tester scope' handling — checker will false-positive on deferred test rows"
+  to_fail=1
+fi
+
+# 25.6 — Spec-analyzer declares the DoD partitioning rule
+if ! grep -qF "### Tester scope" agents/spec-analyzer-agent.md; then
+  fail "agents/spec-analyzer-agent.md: missing '### Tester scope' guidance — analyzer may produce mis-partitioned task DoDs"
+  to_fail=1
+fi
+
+[ $to_fail -eq 0 ] && pass "test-ownership contract anchored in template + 4 agents + DoD-checker"
+
+# -----------------------------------------------------------------------------
+# Check 26 — dynamic smoke staleness reminder (non-fatal)
 # -----------------------------------------------------------------------------
 # Count commits since the most recent release tag that touched the structural
 # files exercised by `make smoke-dynamic` (agents/, build-plan-command.md,

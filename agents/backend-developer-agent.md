@@ -44,21 +44,22 @@ Quality gates green ≠ DoD covered. PHPStan, CS-Fixer, the test suite, and `com
 
 Before writing the handoff:
 
-1. Open the task file (`{feature}-task.md`) and read every `- [ ]` line under `## Definition of Done` (including nested sections like `### Backend`).
-2. For each checkbox, verify the referenced artefact:
-   - "test `X` exists" / "covers scenario Y" → `grep -rn "{testMethodName}" tests/` (or the project's test directory). Empty result = not covered.
+1. Open the task file (`{feature}-task.md`) and read every `- [ ]` line under `## Definition of Done` (including nested sections like `### Backend`, `### Tester scope`, `### Shared`).
+2. **Identify the section each row belongs to.** Rows under `### Tester scope` are NOT yours to satisfy — they are owned by the Tester agent. Mark every `### Tester scope` row as `⚠️ Tester scope` and skip the artefact verification for it (the Tester writes the test in their phase and re-marks the row in their own handoff). Do NOT write a unit/integration test to clear a `### Tester scope` row — the Tester is the specialised agent for that work, and duplicating it inflates Opus tokens by ~15-25k per feature with no quality gain. If the row is in `### Backend`, `### Frontend`, or `### Shared`, you own it and must verify the artefact below.
+3. For each row YOU own (i.e. NOT under `### Tester scope`), verify the referenced artefact:
    - "config `Y` set to `Z`" / "rule X enabled" → `Read` the config file and confirm the literal value.
    - "file `W` exists" / "scaffold copied" → `ls` the path or `Read` the file.
    - "endpoint `POST /...` registered" → `grep -rn "Route(" src/` or read the routes config.
    - "OpenAPI annotation present" → `grep -n "OA\\\\" src/Infrastructure/Controller/{Controller}.php`.
    - "migration `M_NNNN_*` exists" → `ls src/Infrastructure/Persistence/Migration/`.
    - "domain event dispatched" → `grep -rn "{EventClass}::" src/`.
-   - "rate-limiting applied" / "audit-log entry written" / similar behavioural items → either grep the wiring (`#[RateLimited]`, `AuditLogProjector::project(...)`) or point to the test that asserts the behaviour.
-3. Mark each row with one of:
+   - "rate-limiting applied" / "audit-log entry written" / similar behavioural items → grep the wiring (`#[RateLimited]`, `AuditLogProjector::project(...)`). The test that *asserts* the behaviour is the Tester's job, not yours.
+4. Mark each row with one of:
    - `✓` — verified on disk or via grep, with the path/line cited.
    - `✗` — claimed but not present. **Any `✗` blocks the handoff** — go back, implement the missing artefact, and re-verify.
-   - `⚠️` — verifiable only manually (e.g. requires browser interaction, requires a multi-service smoke). Include a one-line reason why automatic verification is impossible. The next agent decides whether the manual gap is acceptable.
-4. Copy the resulting marked list into your handoff under `## DoD coverage` — verbatim copy of the task DoD with the marks. The DoD-checker (or Reviewer when no DoD-checker is in the flow) treats this section as the trusted entry point and re-runs each grep/ls only as a spot-check.
+   - `⚠️ Tester scope` — row lives under `### Tester scope` of the task DoD; deferred to the Tester. Mandatory mark for every row in that section. The DoD-checker carries it forward without re-verification; the Tester re-marks it in their own `## DoD coverage`.
+   - `⚠️` (other) — verifiable only manually (e.g. requires a multi-service smoke that no automated tool can drive). Include a one-line reason why automatic verification is impossible. The next agent decides whether the manual gap is acceptable.
+5. Copy the resulting marked list into your handoff under `## DoD coverage` — verbatim copy of the task DoD with the marks. The DoD-checker (or Reviewer when no DoD-checker is in the flow) treats this section as the trusted entry point and re-runs each grep/ls only as a spot-check.
 
 **Tone rule:** report `✓` only when you actually executed the check this iteration. `✓ from iteration 1` is not allowed for items the iteration-2 diff might have invalidated — re-verify on every iteration. The cost of the gate is bounded; the cost of escaping a `✗` into the Reviewer loop is not.
 
@@ -69,7 +70,7 @@ Before writing the handoff:
 - Phinx migration and seed files
 - Updated task file marking completed Definition of Done conditions
 - Handoff summary listing every file created/modified and key decisions
-- A `## Quality-Gate Results` section in the handoff with one line per gate (PHPStan, PHP-CS-Fixer, PHPUnit, `composer audit`) and the verbatim summary line of each tool's output (e.g. `PHPStan level 9: 0 errors`, `PHPUnit: OK (42 tests, 87 assertions)`). The Tester reads this section and SKIPS re-running gates that already report clean — see `agents/tester-agent.md` § "Quality-gate re-execution policy".
+- A `## Quality-Gate Results` section in the handoff with one line per gate (PHPStan, PHP-CS-Fixer, PHPUnit, `composer audit`) and the verbatim summary line of each tool's output (e.g. `PHPStan level 9: 0 errors`, `PHPUnit: OK (42 tests, 87 assertions)`). PHPUnit here runs the **existing suite** to confirm your changes did not regress sibling tests — you do NOT add tests for this feature (Tester owns them). The Tester reads this section and SKIPS re-running gates that already report clean — see `agents/tester-agent.md` § "Quality-gate re-execution policy".
 - A `## DoD coverage` section in the handoff: verbatim copy of the task DoD with each row marked `✓` / `✗` / `⚠️` per the verification gate above. Iteration ≥ 2 must re-mark every row — never carry marks forward without re-verifying.
 
 ## Tools
@@ -87,7 +88,7 @@ Opus — generates DDD/CQRS code from scratch; architectural errors propagate to
 - Reviewer's change requests (if any from a previous iteration) are resolved — Reviewer cites rule IDs like `BE-015`; fix the exact rule and reply citing the same ID
 
 ## Limitations
-- Does not write frontend code, integration/unit tests (Tester owns them), specs, or infrastructure configuration
+- Does not write frontend code, integration/unit tests (Tester owns them — every test row in the task DoD lives under `### Tester scope` and is marked `⚠️ Tester scope` in your handoff, never `✓`), specs, or infrastructure configuration
 - Does not modify previously-run Phinx migrations — creates a new one instead (per `DM-001`)
 - Must fix issues found by the Backend Reviewer or Tester when called upon — the Reviewer cites rule IDs, the fix addresses the exact rule
 
