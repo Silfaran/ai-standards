@@ -6,6 +6,13 @@ The project follows [Semantic Versioning](https://semver.org/) with pre-1.0 sema
 while on `0.x`, minor bumps may include breaking changes (called out explicitly in the **Breaking** section).
 A `1.0.0` release will signal a stable public surface.
 
+## [0.45.0](https://github.com/Silfaran/ai-standards/compare/v0.44.0...v0.45.0) (2026-05-03)
+
+
+### Added
+
+* partitioned task DoD + ⚠️ Tester scope mark to remove Dev/Tester test duplication ([#121](https://github.com/Silfaran/ai-standards/issues/121)) ([7c6a3e1](https://github.com/Silfaran/ai-standards/commit/7c6a3e1645628f5139136dcec839468d1b6c95e6))
+
 ## [0.44.0](https://github.com/Silfaran/ai-standards/compare/v0.43.0...v0.44.0) (2026-05-02)
 
 
