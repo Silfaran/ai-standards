@@ -1,6 +1,6 @@
 ---
 title: Smoke checks
-description: Static framework self-checks that run on every push — 23 hard checks plus a non-fatal staleness reminder.
+description: Static framework self-checks that run on every push — 25 hard checks plus a non-fatal staleness reminder.
 ---
 
 `scripts/smoke-tests.sh` runs on every push to `master` (via `.github/workflows/validate.yml`) and locally via `make smoke`. It catches framework regressions that markdownlint and link-checking cannot.
@@ -33,7 +33,10 @@ The checks are deliberately mechanical — no LLM calls, deterministic, fast. Th
 | 20 | Dynamic-smoke fixture rule-prefix coverage | `tests/expected/standard.json` regex carries the full 23-prefix alternation |
 | 21 | Handoff Status block contract | `templates/feature-handoff-template.md` declares `## Status` with the 4 values + `## Status reason`; orchestrator gate prose intact |
 | 22 | Bundle generator cheap-extraction protocol | `commands/build-plan-command.md` declares the index → offset+limit → 4+sections fallback |
-| 23 | Dynamic smoke staleness | Non-fatal — reminds when structural files changed since last release without `make smoke-dynamic` running |
+| 23 | Docs site sync coverage | `docs/scripts/sync.mjs` covers every content category the Astro Starlight sidebar renders |
+| 24 | Handoff Abstract + selective reading protocol | Template declares `## Abstract` with 5 fields + `commands/build-plan-command.md` retains *"Handoff reading protocol"* / *"Always read"* / *"Conditional deep-reads"* |
+| 25 | Test-ownership contract | `feature-task-template.md` declares `### Tester scope` partition + dev agents declare `⚠️ Tester scope` mark + Tester agent owns the contract + DoD-checker carries `⚠️ Tester scope` rows forward without verification |
+| 26 | Dynamic smoke staleness | Non-fatal — reminds when structural files changed since last release without `make smoke-dynamic` running |
 
 ## Why these specifically
 
@@ -43,7 +46,9 @@ Each check anchors a load-bearing pattern that, if silently removed, would degra
 - **v0.40.0 contract checks (10-14)** — lock the per-phase bundle split, DoD-checker wiring, fast re-review mode, quality-gate trust contract, and three-invocation-mode declaration introduced in PR #98.
 - **Coverage-aware checks (15-18)** — lock the wins of PRs #100/#102/#104 (critical-paths structure, gap citation, DoD-checker budget, anti-duplication).
 - **Pass-3 + pass-4 checks (19-22)** — lock the handoff template contract (PR #108), the rule-prefix regex alignment (PR #108), the Status block (PR #112), and the cheap-extraction protocol (PR #112).
-- **Staleness reminder (23)** — non-fatal hint that the dynamic smoke (real subagent runs) has not been exercised since the last release; CI stays green either way.
+- **Public site + pass-5 checks (23-24)** — lock the docs site auto-sync (PR #117) and the orchestrator's selective-reading Abstract (PR #119).
+- **Test-ownership check (25)** — lock the partitioned DoD + `⚠️ Tester scope` mark introduced to remove Dev/Tester duplication on test rows. See [Test ownership](/concepts/test-ownership/).
+- **Staleness reminder (26)** — non-fatal hint that the dynamic smoke (real subagent runs) has not been exercised since the last release; CI stays green either way.
 
 ## Dynamic smoke
 

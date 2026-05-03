@@ -29,11 +29,11 @@ The reading surface is deliberately tiny because the work is mechanical — each
 
 For each `- [ ]` row under `## Definition of Done` in the task file:
 
-1. Read the corresponding row in the Developer's `## DoD coverage` section. The mark is one of `✓` / `✗` / `⚠️`.
+1. Read the corresponding row in the Developer's `## DoD coverage` section. The mark is one of `✓` / `✗` / `⚠️ Tester scope` / `⚠️` (other).
 2. **`✗` rows** → carry forward to the BLOCKED list. The Developer flagged it themselves; no further verification needed.
-3. **`⚠️` rows** → confirm the Developer's justification is reasonable (e.g. "browser-only check — Tester scope" is fine; "I didn't get to it" is not — re-mark as `✗`). Carry forward to APPROVED if the justification holds.
-4. **`✓` rows** → spot-check the cited artefact:
-   - "test `X` exists at `path/to/Test.php`" → run `grep -n "{testMethodName}" path/to/Test.php` (or `ls path/to/Test.php`).
+3. **`⚠️ Tester scope` rows** → carry forward to APPROVED **without verification**. Test artefacts (unit/integration/composable/page tests, Playwright captures) are the Tester's exclusive scope — the Tester re-marks each row in their own `## DoD coverage` after the Reviewer is done. Verifying these rows here would either duplicate the Tester's work (if a test happened to exist) or cause a false `✗` (if it does not exist YET because the Tester has not run). Cross-check that the row actually lives under `### Tester scope` in the task DoD — if the Developer used the `⚠️ Tester scope` mark on a row outside that section (e.g. an architecture row), re-mark as `✗` with the reason "non-test row improperly deferred to Tester".
+4. **`⚠️` (other) rows** → confirm the Developer's justification is reasonable (e.g. "needs multi-service smoke" is fine; "I didn't get to it" is not — re-mark as `✗`). Carry forward to APPROVED if the justification holds.
+5. **`✓` rows** → spot-check the cited artefact (Note: test artefacts never appear here — those are always `⚠️ Tester scope` per the test-ownership contract; if a `✓` cites a test path, re-mark as `✗` with reason "test row improperly marked `✓` by Developer; should be `⚠️ Tester scope`"):
    - "config `Y` set to `Z` in `path/to/file.yaml`" → `Read` the file at the cited line.
    - "endpoint `POST /...` registered" → `grep -rn "{Route attribute}" src/` (path narrowed to the modified files from `## Files Modified`).
    - "scaffold `AppController.php` copied" → `ls src/Infrastructure/Controller/AppController.php`.

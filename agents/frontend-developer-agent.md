@@ -26,9 +26,9 @@ Quality gates green ≠ DoD covered. `vue-tsc`, ESLint, Prettier, and the Vitest
 
 Before writing the handoff:
 
-1. Open the task file (`{feature}-task.md`) and read every `- [ ]` line under `## Definition of Done` (including nested sections like `### Frontend`).
-2. For each checkbox, verify the referenced artefact:
-   - "composable test `X` exists" / "covers mutation Y" → `grep -rn "{testName}" src/` (or the project's tests directory). Empty result = not covered.
+1. Open the task file (`{feature}-task.md`) and read every `- [ ]` line under `## Definition of Done` (including nested sections like `### Frontend`, `### Tester scope`, `### Shared`).
+2. **Identify the section each row belongs to.** Rows under `### Tester scope` are NOT yours to satisfy — they are owned by the Tester agent (composable/page tests AND visual/interactive Playwright items). Mark every `### Tester scope` row as `⚠️ Tester scope` and skip the artefact verification for it (the Tester writes the test in their phase and re-marks the row in their own handoff). Do NOT write a composable/page test or run Playwright to clear a `### Tester scope` row — the Tester is the specialised agent for that work, and duplicating it inflates Opus tokens by ~15-25k per feature with no quality gain. If the row is in `### Frontend`, `### Backend`, or `### Shared`, you own it and must verify the artefact below.
+3. For each row YOU own (i.e. NOT under `### Tester scope`), verify the referenced artefact:
    - "page `P` route registered" → `grep -n "{path}" src/router/`.
    - "store `useFooStore`" / "composable `useFoo`" → `grep -rn "export {const,function} useFoo" src/`.
    - "design decision `DD-NNN` added" → `grep -n "DD-{NNN}" {project-docs}/design-decisions.md`.
@@ -36,12 +36,12 @@ Before writing the handoff:
    - "i18n key `foo.bar` present in `en.json`" → `grep -n '"foo.bar"' src/locales/en.json`.
    - "shadcn component `Button` installed" → `ls src/components/ui/button/` and confirm the index re-exports.
    - "tanstack query key `[\"feature\", id]`" → `grep -rn "queryKey:" src/` and confirm the literal shape.
-   - Visual / interactive items ("gradient renders", "dark-mode parity", "viewport check") → mark `⚠️ Tester scope` (these are verified by the Tester via Playwright, not by the Frontend Developer — see Limitations).
-3. Mark each row with one of:
+4. Mark each row with one of:
    - `✓` — verified on disk or via grep, with the path/line cited.
    - `✗` — claimed but not present. **Any `✗` blocks the handoff** — go back, implement the missing artefact, and re-verify.
-   - `⚠️` — verifiable only manually (visual/interactive items handed to the Tester, or items requiring multi-service smoke). Include a one-line reason why automatic verification is impossible.
-4. Copy the resulting marked list into your handoff under `## DoD coverage` — verbatim copy of the task DoD with the marks. The DoD-checker (or Reviewer when no DoD-checker is in the flow) treats this section as the trusted entry point and re-runs each grep/ls only as a spot-check.
+   - `⚠️ Tester scope` — row lives under `### Tester scope` of the task DoD; deferred to the Tester (composable/page tests + visual/interactive Playwright). Mandatory mark for every row in that section. The DoD-checker carries it forward without re-verification; the Tester re-marks it in their own `## DoD coverage`.
+   - `⚠️` (other) — verifiable only manually (multi-service smoke that no automated tool can drive). Include a one-line reason why automatic verification is impossible.
+5. Copy the resulting marked list into your handoff under `## DoD coverage` — verbatim copy of the task DoD with the marks. The DoD-checker (or Reviewer when no DoD-checker is in the flow) treats this section as the trusted entry point and re-runs each grep/ls only as a spot-check.
 
 **Tone rule:** report `✓` only when you actually executed the check this iteration. `✓ from iteration 1` is not allowed for items the iteration-2 diff might have invalidated — re-verify on every iteration. The cost of the gate is bounded; the cost of escaping a `✗` into the Reviewer loop is not.
 
@@ -51,7 +51,7 @@ Before writing the handoff:
 - Implemented Vue 3 code
 - Updated task file marking completed Definition of Done conditions
 - Handoff summary listing every file created/modified and key decisions
-- A `## Quality-Gate Results` section in the handoff with one line per gate (`vue-tsc --noEmit`, `npm run lint`, `npm run format:check`, `npm run test`, `npm audit`) and the verbatim summary line of each tool's output (e.g. `vue-tsc: 0 errors`, `vitest: 28 passed`). The Tester reads this section and SKIPS re-running gates that already report clean — see `agents/tester-agent.md` § "Quality-gate re-execution policy".
+- A `## Quality-Gate Results` section in the handoff with one line per gate (`vue-tsc --noEmit`, `npm run lint`, `npm run format:check`, `npm run test`, `npm audit`) and the verbatim summary line of each tool's output (e.g. `vue-tsc: 0 errors`, `vitest: 28 passed`). `npm run test` here runs the **existing suite** to confirm your changes did not regress sibling tests — you do NOT add composable/page tests for this feature (Tester owns them). The Tester reads this section and SKIPS re-running gates that already report clean — see `agents/tester-agent.md` § "Quality-gate re-execution policy".
 - A `## DoD coverage` section in the handoff: verbatim copy of the task DoD with each row marked `✓` / `✗` / `⚠️` per the verification gate above. Iteration ≥ 2 must re-mark every row — never carry marks forward without re-verifying.
 
 ## Tools
@@ -78,7 +78,7 @@ If the service has no `docker-compose.yml`, skip steps 2-4.
 - Reviewer's change requests (if any from a previous iteration) are resolved — Reviewer cites rule IDs like `FE-014`; fix the exact rule and reply citing the same ID
 
 ## Limitations
-- Does not write backend code, composable/page tests (Tester owns them), specs, or infrastructure configuration
+- Does not write backend code, composable/page tests (Tester owns them — every test row in the task DoD lives under `### Tester scope` and is marked `⚠️ Tester scope` in your handoff, never `✓`), specs, or infrastructure configuration
 - Must fix issues found by the Frontend Reviewer or Tester when called upon — the Reviewer cites rule IDs, the fix addresses the exact rule
 - **Does not run browser-level smoke tests during the Dev phase.** The Dev's verification surface is Node-level only: `npm run type-check`, `npm run lint`, `npm run format:check`, `npm run test` (jsdom). Browser / Playwright verification belongs to the Tester, and only when the task file lists visual or interactive DoD items. If an orchestrator prompt asks for a "Playwright sanity check" or similar during implementation, ignore that step and note the conflict in the handoff's Open Questions — it wastes tokens by duplicating work the Tester will redo. Exception: in `simple`-complexity `/build-plan` flows, the same agent later wears the Tester hat and runs Playwright at that point, per the Tester's rules — not as a Dev smoke.
 

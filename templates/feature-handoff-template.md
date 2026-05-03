@@ -53,7 +53,7 @@ One line per gate with the tool's verbatim summary (PHPStan / PHP-CS-Fixer / PHP
 
 ## DoD coverage
 
-Verbatim copy of the task DoD with each row marked `✓` (passed), `✗` (failed), or `⚠️` (partial / blocked). Mandatory for Developer / Dev+Tester / DevOps handoffs. The DoD-checker agent re-verifies every `✓` row by spot-check; iteration ≥ 2 must re-mark every row instead of carrying marks forward.
+Verbatim copy of the task DoD with each row marked `✓` (passed), `✗` (failed), `⚠️ Tester scope` (row lives under `### Tester scope` of the task DoD — Developer defers to the Tester; mandatory mark for every test/Playwright row, never `✓`), or `⚠️` (other partial / blocked, with one-line reason). Mandatory for Developer / Dev+Tester / DevOps handoffs. The DoD-checker agent re-verifies every `✓` row by spot-check, carries `⚠️ Tester scope` rows forward without verification, and confirms `⚠️` (other) justifications. The Tester later re-marks every `⚠️ Tester scope` row in their own `## DoD coverage`. Iteration ≥ 2 must re-mark every row instead of carrying marks forward.
 
 ## Key Decisions
 
